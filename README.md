@@ -76,11 +76,13 @@ This simple example demonstrates the core functionality for the initial JSON imp
 
 ## Round-Trip Example
 
-`lodum` makes it easy to convert data between supported formats. For example, you can deserialize a YAML string and re-serialize it as a JSON string.
+`lodum` ensures that your data can be reliably converted between formats. Here's an example of a full round-trip conversion, starting with JSON, converting to YAML, and then back to JSON, verifying that the data remains consistent.
 
 ```python
-from lodum.yaml import from_yaml
-from lodum.json import to_json
+import json
+from lodum import serializable
+from lodum.json import from_json, to_json
+from lodum.yaml import from_yaml, to_yaml
 
 @serializable
 class ServerConfig:
@@ -89,22 +91,26 @@ class ServerConfig:
         self.port = port
         self.services = services
 
-# Deserialize a YAML string into a Python object
-yaml_data = """
-host: 127.0.0.1
-port: 8080
-services:
-  - users
-  - products
-  - inventory
-"""
-config = from_yaml(ServerConfig, yaml_data)
+# 1. Start with a JSON string
+original_json = '{"host": "127.0.0.1", "port": 8080, "services": ["users", "products", "inventory"]}'
 
-# Re-serialize the object into a JSON string
-json_output = to_json(config)
+# 2. Deserialize the JSON to a Python object
+config_from_json = from_json(ServerConfig, original_json)
 
-print(json_output)
-# -> {"host": "127.0.0.1", "port": 8080, "services": ["users", "products", "inventory"]}
+# 3. Serialize the object to YAML
+yaml_output = to_yaml(config_from_json)
+
+# 4. Deserialize the YAML back to a Python object
+config_from_yaml = from_yaml(ServerConfig, yaml_output)
+
+# 5. Serialize the final object back to JSON
+final_json = to_json(config_from_yaml)
+
+# 6. Verify that the final JSON matches the original
+# We load them into dictionaries to ignore any formatting differences
+assert json.loads(original_json) == json.loads(final_json)
+
+print("Round-trip conversion successful!")
 ```
 
 ## Field Customization
