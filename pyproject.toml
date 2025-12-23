@@ -7,14 +7,14 @@ name = "lodum"
 version = "0.0.1"
 description = "A Python serialization/deserialization library (AKA LOad/DUMp) inspired by Rust's serde."
 readme = "README.md"
-license = "MIT"
+license = "Apache-2.0"
 authors = [
     { name = "Michael R. Bernstein", email = "zopemaven@gmail.com" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",

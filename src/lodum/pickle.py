@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
+# SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: MIT
 import pickle

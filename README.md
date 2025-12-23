@@ -74,6 +74,39 @@ print(f"Name: {barbara.name}, Age: {barbara.age}, Active: {barbara.is_active}")
 
 This simple example demonstrates the core functionality for the initial JSON implementation.
 
+## Round-Trip Example
+
+`lodum` makes it easy to convert data between supported formats. For example, you can deserialize a YAML string and re-serialize it as a JSON string.
+
+```python
+from lodum.yaml import from_yaml
+from lodum.json import to_json
+
+@serializable
+class ServerConfig:
+    def __init__(self, host: str, port: int, services: list[str]):
+        self.host = host
+        self.port = port
+        self.services = services
+
+# Deserialize a YAML string into a Python object
+yaml_data = """
+host: 127.0.0.1
+port: 8080
+services:
+  - users
+  - products
+  - inventory
+"""
+config = from_yaml(ServerConfig, yaml_data)
+
+# Re-serialize the object into a JSON string
+json_output = to_json(config)
+
+print(json_output)
+# -> {"host": "127.0.0.1", "port": 8080, "services": ["users", "products", "inventory"]}
+```
+
 ## Field Customization
 
 You can customize the behavior of individual fields by using the `field()` function as a default value in your `__init__` method.
@@ -122,6 +155,14 @@ user = from_json(User, user_data)
 * `default_factory=callable`: Provide a zero-argument function to call for a default value.
 * `serializer=callable`: A function to call to serialize the field's value.
 * `deserializer=callable`: A function to call to deserialize the field's value.
+
+## Supported Formats
+
+`lodum` is designed to be format-agnostic, and new formats can be added by implementing the `Serializer` and `Deserializer` protocols. The following formats are currently supported:
+
+* **JSON**: `lodum.json`
+* **YAML**: `lodum.yaml`
+* **Pickle**: `lodum.pickle`
 
 ## Supported Types
 
