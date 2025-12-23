@@ -22,7 +22,7 @@ Here is a quick example of how to serialize a simple Python object to JSON and d
 Use the `@serializable` decorator on your class. Make sure to include type hints, as `lodum` uses them to understand your data.
 
 ```python
-from lodum.core import serializable
+from lodum import serializable
 
 @serializable
 class User:
