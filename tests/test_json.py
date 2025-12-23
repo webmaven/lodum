@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: MIT
-from typing import Any, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Generic, List, Optional, Set, Tuple, TypeVar, Union
 import pytest
 from datetime import datetime
 from enum import Enum
@@ -10,6 +10,67 @@ from lodum.core import serializable
 from lodum.exception import DeserializationError
 from lodum.field import field
 from lodum.json import to_json, from_json
+
+# --- Test Data Structures ---
+
+@serializable
+class Simple:
+    def __init__(self, a: int, b: str):
+        self.a = a
+        self.b = b
+
+@serializable
+class Nested:
+    def __init__(self, simple: Simple, c: bool):
+        self.simple = simple
+        self.c = c
+
+class UserRole(Enum):
+    ADMIN = "admin"
+    USER = "user"
+    GUEST = "guest"
+
+@serializable
+class ComplexObject:
+    def __init__(self, created_at: datetime, role: UserRole, permissions: Set[str]):
+        self.created_at = created_at
+        self.role = role
+        self.permissions = permissions
+
+@serializable
+class TypingObject:
+    def __init__(
+        self,
+        optional_field: Optional[int],
+        union_field: Union[str, bool, UserRole],
+        any_field: Any,
+    ):
+        self.optional_field = optional_field
+        self.union_field = union_field
+        self.any_field = any_field
+
+T = TypeVar("T")
+
+@serializable
+class GenericObject(Generic[T]):
+    def __init__(self, value: T):
+        self.value = value
+
+@serializable
+class CustomizedUser:
+    def __init__(
+        self,
+        full_name: str,
+        user_id: int = field(rename="id", default=0),
+        password_hash: str = field(skip_serializing=True, default=""),
+        prefs: dict = field(default_factory=dict),
+        company: str = field(default="Pyserde Inc.")
+    ):
+        self.user_id = user_id
+        self.full_name = full_name
+        self.password_hash = password_hash
+        self.prefs = prefs
+        self.company = company
 
 # --- Test Cases ---
 
@@ -29,12 +90,6 @@ def test_deserialize_primitives():
     assert from_json(bool, "true") is True
     assert from_json(type(None), "null") is None
 
-@serializable
-class Simple:
-    def __init__(self, a: int, b: str):
-        self.a = a
-        self.b = b
-
 def test_serialize_simple_class():
     """Tests serialization of a simple user-defined class."""
     instance = Simple(a=10, b="world")
@@ -48,12 +103,6 @@ def test_deserialize_simple_class():
     assert isinstance(instance, Simple)
     assert instance.a == 10
     assert instance.b == "world"
-
-@serializable
-class Nested:
-    def __init__(self, simple: Simple, c: bool):
-        self.simple = simple
-        self.c = c
 
 def test_serialize_nested_class():
     """Tests serialization of a nested user-defined class."""
@@ -91,12 +140,11 @@ def test_deserialize_list_of_objects():
     assert obj_list[1].b == "two"
 
 def test_deserialization_missing_field_raises_error():
-    """Tests that deserializing an object with a missing field raises KeyError."""
+    """Tests that deserializing an object with a missing field raises an error."""
     json_string = '{"a": 10}' # Missing field 'b' for Simple class
-    with pytest.raises(DeserializationError):
+    with pytest.raises(DeserializationError) as exc_info:
         from_json(Simple, json_string)
-
-# --- Tests for Newly Supported Types ---
+    assert "Missing required field 'b' for class Simple" in str(exc_info.value)
 
 def test_datetime_serialization():
     """Tests serialization of datetime objects."""
@@ -108,11 +156,6 @@ def test_datetime_deserialization():
     dt_str = '"2025-11-21T10:30:00"'
     dt = from_json(datetime, dt_str)
     assert dt == datetime(2025, 11, 21, 10, 30, 0)
-
-class UserRole(Enum):
-    ADMIN = "admin"
-    USER = "user"
-    GUEST = "guest"
 
 def test_enum_serialization():
     """Tests serialization of Enum members."""
@@ -137,7 +180,6 @@ def test_tuple_deserialization():
 def test_set_serialization():
     """Tests serialization of sets."""
     # Note: set order is not guaranteed, so we test the elements.
-    # Use `2` instead of `1` to avoid hash collision with `True`.
     result = to_json({2, "a", True})
     assert '"a"' in result
     assert '2' in result
@@ -148,13 +190,6 @@ def test_set_deserialization():
     result = from_json(Set[str], '["a", "b", "c"]')
     assert isinstance(result, set)
     assert result == {"a", "b", "c"}
-
-@serializable
-class ComplexObject:
-    def __init__(self, created_at: datetime, role: UserRole, permissions: Set[str]):
-        self.created_at = created_at
-        self.role = role
-        self.permissions = permissions
 
 def test_nested_new_types_serialization():
     """Tests serialization of an object containing the new types."""
@@ -180,21 +215,6 @@ def test_nested_new_types_deserialization():
     assert instance.role == UserRole.ADMIN
     assert instance.permissions == {"read", "write"}
 
-# --- Tests for Typing Module ---
-
-@serializable
-class TypingObject:
-    def __init__(
-        self,
-        optional_field: Optional[int],
-        union_field: Union[str, bool, UserRole],
-        any_field: Any,
-    ):
-        self.optional_field = optional_field
-        self.union_field = union_field
-        self.any_field = any_field
-
-
 def test_optional_field():
     """Tests that Optional fields are correctly deserialized."""
     # Test with the value present
@@ -204,7 +224,6 @@ def test_optional_field():
     # Test with the value missing (should be None)
     instance = from_json(TypingObject, '{"optional_field": null, "union_field": "a", "any_field": null}')
     assert instance.optional_field is None
-
 
 def test_union_field():
     """Tests that Union fields are correctly deserialized."""
@@ -220,7 +239,6 @@ def test_union_field():
     instance = from_json(TypingObject, '{"optional_field": null, "union_field": "admin", "any_field": null}')
     assert instance.union_field == UserRole.ADMIN
 
-
 def test_any_field():
     """Tests that Any fields are correctly deserialized."""
     # Test with a string
@@ -231,16 +249,6 @@ def test_any_field():
     instance = from_json(TypingObject, '{"optional_field": null, "union_field": "a", "any_field": [1, 2, 3]}')
     assert instance.any_field == [1, 2, 3]
 
-
-from typing import Generic
-
-T = TypeVar("T")
-
-@serializable
-class GenericObject(Generic[T]):
-    def __init__(self, value: T):
-        self.value = value
-
 def test_typevar_field():
     """Tests that TypeVar fields are correctly deserialized."""
     instance = from_json(GenericObject[int], '{"value": 10}')
@@ -248,25 +256,6 @@ def test_typevar_field():
 
     instance = from_json(GenericObject[str], '{"value": "hello"}')
     assert instance.value == "hello"
-
-
-# --- Tests for Field Customizations ---
-
-@serializable
-class CustomizedUser:
-    def __init__(
-        self,
-        full_name: str,
-        user_id: int = field(rename="id", default=0),
-        password_hash: str = field(skip_serializing=True, default=""),
-        prefs: dict = field(default_factory=dict),
-        company: str = field(default="Pyserde Inc.")
-    ):
-        self.user_id = user_id
-        self.full_name = full_name
-        self.password_hash = password_hash
-        self.prefs = prefs
-        self.company = company
 
 def test_field_rename():
     """Tests that the `rename` option works for both ser and de."""
@@ -310,7 +299,6 @@ def test_field_default_factory():
     instance2 = from_json(CustomizedUser, json_data)
     assert instance.prefs is not instance2.prefs
 
-
 def test_custom_serializer_and_deserializer():
     """
     Tests that custom serializer and deserializer functions are correctly used.
@@ -346,3 +334,36 @@ def test_custom_serializer_and_deserializer():
     json_data = f'{{"name": "Another Event", "timestamp": {dt.timestamp()}}}'
     event = from_json(Event, json_data)
     assert event.timestamp == dt
+
+def test_serialization_handler_cache():
+    # This test is more about ensuring the caching doesn't break anything.
+    # We serialize the same type of object multiple times.
+    users = [Simple(20 + i, f"User {i}") for i in range(5)]
+    json_outputs = [to_json(u) for u in users]
+    assert len(json_outputs) == 5
+    assert json_outputs[0] == '{"a": 20, "b": "User 0"}'
+
+def test_incorrect_type_in_struct_deserialization():
+    json_str = '{"a": "this should be an int", "b": "thirty"}'
+    with pytest.raises(DeserializationError) as exc_info:
+        from_json(Simple, json_str)
+    assert "Error deserializing field 'a'" in str(exc_info.value)
+    assert "Expected int, got str" in str(exc_info.value)
+
+def test_deserialize_wrong_main_type():
+    json_list = '[{"a": "Alice", "b": 30}]'
+    with pytest.raises(DeserializationError) as exc_info:
+        from_json(Simple, json_list)
+    assert "Expected a dictionary to deserialize into class Simple" in str(exc_info.value)
+
+@serializable
+class UserWithList:
+    def __init__(self, name: str, posts: List[str]):
+        self.name = name
+        self.posts = posts
+
+def test_nested_list_deserialization():
+    json_str = '{"name": "Blog Pwner", "posts": ["First post", "Second post"]}'
+    user = from_json(UserWithList, json_str)
+    assert user.name == "Blog Pwner"
+    assert user.posts == ["First post", "Second post"]

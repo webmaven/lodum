@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
+# SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: MIT
 import json
@@ -45,14 +45,34 @@ def serialize(obj: Any, serializer: Serializer) -> Any:
     handler = _get_serialize_handler(type(obj))
     return handler(obj, serializer)
 
+_SERIALIZE_HANDLER_CACHE: Dict[Type, Callable] = {}
+
 def _get_serialize_handler(t: Type) -> Callable:
+    """
+    Retrieves the appropriate serialization handler for a given type, with caching.
+    """
+    if t in _SERIALIZE_HANDLER_CACHE:
+        return _SERIALIZE_HANDLER_CACHE[t]
+
+    # Direct match in dispatch table
     if t in SERIALIZE_DISPATCH:
-        return SERIALIZE_DISPATCH[t]
+        handler = SERIALIZE_DISPATCH[t]
+        _SERIALIZE_HANDLER_CACHE[t] = handler
+        return handler
+
+    # Serializable struct
     if inspect.isclass(t) and getattr(t, '_lodum_serializable', False):
+        _SERIALIZE_HANDLER_CACHE[t] = _serialize_struct
         return _serialize_struct
+
+    # Check for subclass relationships
     for super_t, handler in SERIALIZE_DISPATCH.items():
-        if issubclass(t, super_t):
+        # We check `inspect.isclass` because `super_t` can be things like `enum.Enum`,
+        # which are classes, but `t` could be an instance.
+        if inspect.isclass(t) and issubclass(t, super_t):
+            _SERIALIZE_HANDLER_CACHE[t] = handler
             return handler
+
     raise SerializationError(f"Object of type {t.__name__} is not serializable")
 
 def _serialize_primitive(obj: Any, serializer: Serializer) -> Any:
@@ -194,31 +214,93 @@ def _deserialize_dict(cls: Type[T], d: Deserializer) -> T:
 
 def _deserialize_union(cls: Type[T], d: Deserializer) -> T:
     """
-    Deserializes a union type by trying each type in the union in order.
-    The first one that succeeds is returned.
+    Deserializes a union type by inspecting the data and trying to deserialize into
+    the most specific types first.
     """
     data = d.as_any()
-    # Prioritize types that are more specific.
-    def sort_key(t):
-        if isinstance(t, type):
-            if issubclass(t, enum.Enum) and isinstance(data, str):
+    deserializer_for_attempt = JsonDeserializer(data)
+
+    # A very explicit priority mapping to determine the order of attempts.
+    # Higher numbers are tried first.
+    def get_priority(t: Type) -> int:
+        origin = get_origin(t) or t
+        if origin is Any: return 0
+        if data is None: return 100 if origin is type(None) else -1
+
+        if isinstance(data, bool):
+            return 90 if origin is bool else -1
+
+        if isinstance(data, int):
+            if origin is int: return 90
+            if origin is float: return 85
+            if inspect.isclass(origin) and issubclass(origin, enum.Enum):
                 try:
-                    t(data)
-                    return (3, t.__name__)
-                except (ValueError, TypeError):
-                    pass
-            if isinstance(data, t):
-                return (2, t.__name__)
-        return (0, str(t))
+                    _ = origin(data)
+                    return 70
+                except ValueError:
+                    return -1
+            return -1
 
-    types = sorted(get_args(cls), key=sort_key, reverse=True)
+        if isinstance(data, float):
+            return 90 if origin is float else -1
 
+        if isinstance(data, str):
+            if origin is datetime.datetime:
+                # Be more specific: only treat strings with a time component as datetimes.
+                if 'T' in data and ':' in data:
+                    try:
+                        datetime.datetime.fromisoformat(data)
+                        return 90
+                    except ValueError:
+                        return -1
+                else:
+                    return -1
+            if inspect.isclass(origin) and issubclass(origin, enum.Enum):
+                first_member = next(iter(origin))
+                value_type = type(first_member.value)
+                if value_type is str:
+                    try:
+                        _ = origin(data)
+                        return 85 # Higher than str
+                    except (ValueError, KeyError):
+                        return -1
+                else: # e.g. enum with int values, but data is string
+                    return -1
+            if origin is str: return 80
+            return -1
+
+        if isinstance(data, list):
+            if origin in (list, tuple, set):
+                return 90
+            return -1
+
+        if isinstance(data, dict):
+            if origin is dict: return 90
+            if inspect.isclass(origin) and getattr(origin, '_lodum_serializable', False):
+                return 80
+            return -1
+
+        return 10 # Should not be reached for known JSON types
+
+    # Sort types by priority, highest first.
+    types = sorted(get_args(cls), key=get_priority, reverse=True)
+
+    errors = []
     for inner_type in types:
-        try:
-            return deserialize(inner_type, d)
-        except (DeserializationError, ValueError, TypeError, KeyError, AttributeError):
+        # Skip types that are impossible matches
+        if get_priority(inner_type) < 0:
             continue
-    raise DeserializationError(f"Could not deserialize data into any of the types in {cls}")
+        try:
+            return deserialize(inner_type, deserializer_for_attempt)
+        except (DeserializationError, ValueError, TypeError, KeyError, AttributeError) as e:
+            errors.append(f" - Failed to deserialize as {inner_type}: {e}")
+            continue
+
+    error_details = "\n".join(errors)
+    raise DeserializationError(
+        f"Could not deserialize data into any of the types in {cls}.\n"
+        f"Attempted types:\n{error_details}"
+    )
 
 
 def _deserialize_optional(cls: Type[T], d: Deserializer) -> T:
@@ -236,24 +318,38 @@ def _deserialize_optional(cls: Type[T], d: Deserializer) -> T:
 
 def _deserialize_struct(cls: Type[T], deserializer: Deserializer) -> T:
     fields: Dict[str, Field] = getattr(cls, '_lodum_fields', {})
-    data = {k: v for k, v in deserializer.as_dict()}
+
+    try:
+        data = {k: v for k, v in deserializer.as_dict()}
+    except DeserializationError:
+        raise DeserializationError(f"Expected a dictionary to deserialize into class {cls.__name__}, but received a different type.")
+
     constructor_args = {}
 
     for field_info in fields.values():
         field_name_in_json = field_info.rename if field_info.rename else field_info.name
 
-        if field_name_in_json in data:
-            field_deserializer = data[field_name_in_json]
-            if field_info.deserializer:
-                constructor_args[field_info.name] = field_info.deserializer(field_deserializer.as_any())
+        try:
+            if field_name_in_json in data:
+                field_deserializer = data[field_name_in_json]
+                if field_info.deserializer:
+                    constructor_args[field_info.name] = field_info.deserializer(field_deserializer.as_any())
+                else:
+                    constructor_args[field_info.name] = deserialize(field_info.type, field_deserializer)
+            elif field_info.has_default:
+                constructor_args[field_info.name] = field_info.get_default()
             else:
-                constructor_args[field_info.name] = deserialize(field_info.type, field_deserializer)
-        elif field_info.has_default:
-            constructor_args[field_info.name] = field_info.get_default()
-        else:
+                # This will be caught by the outer try...except block.
+                raise KeyError(field_name_in_json)
+        except KeyError:
             raise DeserializationError(f"Missing required field '{field_name_in_json}' for class {cls.__name__}")
+        except DeserializationError as e:
+            raise DeserializationError(f"Error deserializing field '{field_info.name}' for class {cls.__name__}: {e}")
 
-    return cls(**constructor_args)
+    try:
+        return cls(**constructor_args)
+    except TypeError as e:
+        raise DeserializationError(f"Failed to instantiate {cls.__name__}. Check that the constructor signature matches the provided data. Original error: {e}")
 
 def _deserialize_datetime(cls: Type[T], d: Deserializer) -> T:
     return datetime.datetime.fromisoformat(d.as_str())
