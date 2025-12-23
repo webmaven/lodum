@@ -1,8 +1,22 @@
 # lodum
 
+<p align="center">
+  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg" alt="PyPI"></a>
+  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg" alt="Python versions"></a>
+  <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg" alt="License"></a>
+</p>
+
 A Python serialization library inspired by Rust's `serde`.
 
 `lodum` is an experimental Python library designed to provide a flexible and ergonomic way to serialize and deserialize Python objects to and from various data formats. The core design is heavily inspired by the robustness and efficiency of Rust's `serde` framework.
+
+## Installation
+
+You can install `lodum` from PyPI using `pip`:
+
+```bash
+pip install lodum
+```
 
 ## Core Concepts
 
@@ -11,7 +25,7 @@ The architecture of `lodum` is built on a clear separation of concerns, just lik
 1. **Serializable Data Structures**: You define the data you want to serialize by decorating your classes with `@serializable`. This decorator introspects your class to understand its structure.
 2. **Data Formats (Serializers/Deserializers)**: The logic for converting data into a specific format (like JSON) is handled by `Serializer` and `Deserializer` implementations. This makes the core library format-agnostic.
 
-This means you can define how your data is structured once, and then easily serialize it to multiple formats (JSON, YAML, etc.) by simply using a different serializer.
+This means you can define how your data is structured once, and then easily serialize it to multiple formats by simply using a different serializer.
 
 ## Getting Started
 
@@ -54,14 +68,6 @@ Use the `from_json` function to parse a JSON string and reconstruct your Python 
 
 ```python
 from lodum.json import from_json
-from lodum.yaml import to_yaml, from_yaml
-
-# You can also serialize to YAML
-yaml_string = to_yaml(user)
-print(yaml_string)
-# -> name: Alex
-# -> age: 30
-# -> is_active: true
 
 json_data = '{"name": "Barbara", "age": 25, "is_active": false}'
 
@@ -71,8 +77,6 @@ barbara = from_json(User, json_data)
 print(f"Name: {barbara.name}, Age: {barbara.age}, Active: {barbara.is_active}")
 # Output: Name: Barbara, Age: 25, Active: false
 ```
-
-This simple example demonstrates the core functionality for the initial JSON implementation.
 
 ## Round-Trip Example
 
@@ -172,7 +176,7 @@ user = from_json(User, user_data)
 
 ## Supported Types
 
-`lodum` currently supports the following types for JSON serialization:
+`lodum` currently supports the following types for serialization:
 
 * **Primitives:** `int`, `str`, `float`, `bool`, `None`
 * **Collections:** `list`, `dict`, `tuple`, `set`
@@ -182,3 +186,11 @@ user = from_json(User, user_data)
 * **Custom Objects:** Any class decorated with `@serializable`.
 
 The library is designed to be extended with support for more formats and more complex data types in the future.
+
+## Contributing
+
+Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING.md) for more information.
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
