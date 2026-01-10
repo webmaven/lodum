@@ -1,23 +1,21 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 import polars as pl
-from lodum.core import serializable
-from lodum.json import to_json, from_json
+from lodum import lodum, json
 
-@serializable
+@lodum
 class PolarsObject:
-    def __init__(self, df: pl.DataFrame, series: pl.Series):
+    def __init__(self, df: pl.DataFrame, s: pl.Series):
         self.df = df
-        self.series = series
-
+        self.s = s
     def __eq__(self, other):
-        return isinstance(other, PolarsObject) and self.df.equals(other.df) and self.series.equals(other.series)
+        return isinstance(other, PolarsObject) and self.df.equals(other.df) and self.s.equals(other.s)
 
-def test_polars_dataframe_and_series():
-    df = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    series = pl.Series("c", [1, 2, 3])
-    instance = PolarsObject(df=df, series=series)
-    json_str = to_json(instance)
-    result = from_json(PolarsObject, json_str)
+def test_polars_dataframe_series():
+    df = pl.DataFrame({"a": [1, 2], "b": [3, 4]})
+    s = pl.Series([1, 2, 3])
+    instance = PolarsObject(df=df, s=s)
+    json_str = json.dumps(instance)
+    result = json.loads(PolarsObject, json_str)
     assert instance == result

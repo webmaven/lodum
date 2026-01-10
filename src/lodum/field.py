@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 from typing import Any, Callable, Optional
 
 # A sentinel object to detect if a parameter is supplied or not.
@@ -9,7 +9,7 @@ _MISSING = _MISSING_TYPE()
 
 class Field:
     """
-    A class that stores metadata for a field in a serializable class.
+    A class that stores metadata for a field in a lodum-enabled class.
 
     This is not intended to be instantiated directly. Instead, use the `field()`
     function, which provides a more convenient API.
@@ -55,18 +55,18 @@ def field(
     deserializer: Optional[Callable[[Any], Any]] = None,
 ) -> Any:
     """
-    Provides metadata to the `@serializable` decorator for a single field.
+    Provides metadata to the `@lodum` decorator for a single field.
 
     Args:
-        rename: The name to use for the field in the serialized output.
+        rename: The name to use for the field in the output.
         skip_serializing: If `True`, the field will not be included in the
-            serialized output.
-        default: A default value to use for the field during deserialization
+            output.
+        default: A default value to use for the field during decoding
             if it is missing from the input data.
         default_factory: A zero-argument function that will be called to
             create a default value for a missing field.
-        serializer: A function to call to serialize the field's value.
-        deserializer: A function to call to deserialize the field's value.
+        serializer: A function to call to encode the field's value.
+        deserializer: A function to call to decode the field's value.
     """
     return Field(
         rename=rename,
