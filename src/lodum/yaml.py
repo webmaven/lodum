@@ -5,80 +5,82 @@ import io
 from typing import Any, Iterator, Type, TypeVar
 from ruamel.yaml import YAML
 
-from .core import Deserializer, Serializer
-from .json import serialize, deserialize
+from .core import Loader, Dumper
+from .json import dump, load
 
 T = TypeVar("T")
 yaml = YAML(typ='safe')
 
 # --- Public API ---
 
-def to_yaml(obj: Any) -> str:
+def dumps(obj: Any) -> str:
     """
-    Serializes a Python object to a YAML string.
+    Encodes a Python object to a YAML string.
     """
-    serializer = YamlSerializer()
-    # The core `serialize` logic is format-agnostic and can be reused.
-    serialized_data = serialize(obj, serializer)
+    dumper = YamlDumper()
+    # The core `dump` logic is format-agnostic and can be reused.
+    dumped_data = dump(obj, dumper)
 
     with io.StringIO() as string_stream:
-        yaml.dump(serialized_data, string_stream)
+        yaml.dump(dumped_data, string_stream)
         return string_stream.getvalue()
 
-def from_yaml(cls: Type[T], yaml_string: str) -> T:
+def loads(cls: Type[T], yaml_string: str) -> T:
     """
-    Deserializes a YAML string to a Python object.
+    Decodes a YAML string to a Python object.
     """
     data = yaml.load(yaml_string)
-    deserializer = YamlDeserializer(data)
-    # The core `deserialize` logic is format-agnostic and can be reused.
-    return deserialize(cls, deserializer)
+    loader = YamlLoader(data)
+    # The core `load` logic is format-agnostic and can be reused.
+    return load(cls, loader)
 
-# --- YAML Serializer Implementation ---
+# --- YAML Dumper Implementation ---
 
-class YamlSerializer(Serializer):
+class YamlDumper(Dumper):
     """
-    Serializes Python objects into a YAML-compatible intermediate representation.
+    Encodes Python objects into a YAML-compatible intermediate representation.
     """
-    def serialize_int(self, value: int) -> int: return value
-    def serialize_str(self, value: str) -> str: return value
-    def serialize_float(self, value: float) -> float: return value
-    def serialize_bool(self, value: bool) -> bool: return value
+    def dump_int(self, value: int) -> int: return value
+    def dump_str(self, value: str) -> str: return value
+    def dump_float(self, value: float) -> float: return value
+    def dump_bool(self, value: bool) -> bool: return value
+    def dump_list(self, value: list) -> list: return value
+    def dump_dict(self, value: dict) -> dict: return value
     def begin_struct(self, cls: Type) -> dict: return {}
     def end_struct(self) -> None: pass
 
-# --- YAML Deserializer Implementation ---
+# --- YAML Loader Implementation ---
 
-class YamlDeserializer(Deserializer):
+class YamlLoader(Loader):
     """
-    Deserializes a YAML-compatible intermediate representation into Python objects.
+    Decodes a YAML-compatible intermediate representation into Python objects.
     """
     def __init__(self, data: Any):
         self._data = data
 
-    def as_int(self) -> int:
+    def load_int(self) -> int:
         if not isinstance(self._data, int):
             raise TypeError(f"Expected int, got {type(self._data).__name__}")
         return self._data
-    def as_str(self) -> str:
+    def load_str(self) -> str:
         if not isinstance(self._data, str):
             raise TypeError(f"Expected str, got {type(self._data).__name__}")
         return self._data
-    def as_float(self) -> float:
+    def load_float(self) -> float:
         if not isinstance(self._data, (float, int)):
             raise TypeError(f"Expected float, got {type(self._data).__name__}")
         return float(self._data)
-    def as_bool(self) -> bool:
+    def load_bool(self) -> bool:
         if not isinstance(self._data, bool):
             raise TypeError(f"Expected bool, got {type(self._data).__name__}")
         return self._data
-    def as_list(self) -> Iterator['Deserializer']:
+    def load_list(self) -> Iterator['Loader']:
         if not isinstance(self._data, list):
             raise TypeError(f"Expected list, got {type(self._data).__name__}")
-        return (YamlDeserializer(item) for item in self._data)
-    def as_dict(self) -> Iterator[tuple[str, 'Deserializer']]:
+        return (YamlLoader(item) for item in self._data)
+    def load_dict(self) -> Iterator[tuple[str, 'Loader']]:
         if not isinstance(self._data, dict):
             raise TypeError(f"Expected dict, got {type(self._data).__name__}")
-        return ((k, YamlDeserializer(v)) for k, v in self._data.items())
-    def as_any(self) -> Any:
+        return ((k, YamlLoader(v)) for k, v in self._data.items())
+    def load_any(self) -> Any:
         return self._data

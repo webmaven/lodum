@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from .core import Deserializer, Serializer
+from .core import Loader, Dumper
 from .exception import DeserializationError, SerializationError
 from .field import Field
 
@@ -18,59 +18,59 @@ T = TypeVar("T")
 
 # --- Type-to-Handler Dispatch Tables ---
 
-SERIALIZE_DISPATCH: Dict[Type, Callable] = {}
-DESERIALIZE_DISPATCH: Dict[Type, Callable] = {}
+DUMP_DISPATCH: Dict[Type, Callable] = {}
+LOAD_DISPATCH: Dict[Type, Callable] = {}
 
 
 # --- Public API ---
 
-def to_json(obj: Any) -> str:
-    """Serializes a Python object to a JSON string."""
-    serializer = JsonSerializer()
-    serialized_data = serialize(obj, serializer)
-    return json.dumps(serialized_data)
+def dumps(obj: Any) -> str:
+    """Encodes a Python object to a JSON string (dumps)."""
+    dumper = JsonDumper()
+    dumped_data = dump(obj, dumper)
+    return json.dumps(dumped_data)
 
 
-def from_json(cls: Type[T], json_string: str) -> T:
-    """Deserializes a JSON string to a Python object."""
+def loads(cls: Type[T], json_string: str) -> T:
+    """Decodes a JSON string to a Python object (loads)."""
     data = json.loads(json_string)
-    deserializer = JsonDeserializer(data)
-    return deserialize(cls, deserializer)
+    loader = JsonLoader(data)
+    return load(cls, loader)
 
 
-# --- Serialization Implementation ---
+# --- Encoding (Dumping) Implementation ---
 
-def serialize(obj: Any, serializer: Serializer) -> Any:
-    """Recursively serializes a Python object using a given serializer."""
-    handler = _get_serialize_handler(type(obj))
-    return handler(obj, serializer)
+def dump(obj: Any, dumper: Dumper) -> Any:
+    """Recursively encodes a Python object using a given dumper."""
+    handler = _get_dump_handler(type(obj))
+    return handler(obj, dumper)
 
-def _get_serialize_handler(t: Type) -> Callable:
-    if t in SERIALIZE_DISPATCH:
-        return SERIALIZE_DISPATCH[t]
-    if inspect.isclass(t) and getattr(t, '_lodum_serializable', False):
-        return _serialize_struct
-    for super_t, handler in SERIALIZE_DISPATCH.items():
+def _get_dump_handler(t: Type) -> Callable:
+    if t in DUMP_DISPATCH:
+        return DUMP_DISPATCH[t]
+    if inspect.isclass(t) and getattr(t, '_lodum_enabled', False):
+        return _dump_struct
+    for super_t, handler in DUMP_DISPATCH.items():
         if issubclass(t, super_t):
             return handler
-    raise SerializationError(f"Object of type {t.__name__} is not serializable")
+    raise SerializationError(f"Object of type {t.__name__} is not lodum-enabled")
 
-def _serialize_primitive(obj: Any, serializer: Serializer) -> Any:
-    if isinstance(obj, bool): return serializer.serialize_bool(obj)
-    if isinstance(obj, int): return serializer.serialize_int(obj)
-    if isinstance(obj, str): return serializer.serialize_str(obj)
-    if isinstance(obj, float): return serializer.serialize_float(obj)
+def _dump_primitive(obj: Any, dumper: Dumper) -> Any:
+    if isinstance(obj, bool): return dumper.dump_bool(obj)
+    if isinstance(obj, int): return dumper.dump_int(obj)
+    if isinstance(obj, str): return dumper.dump_str(obj)
+    if isinstance(obj, float): return dumper.dump_float(obj)
     if obj is None: return None
     raise SerializationError(f"Unsupported primitive type: {type(obj).__name__}")
 
-def _serialize_sequence(obj: Any, serializer: Serializer) -> list:
-    return [serialize(item, serializer) for item in obj]
+def _dump_sequence(obj: Any, dumper: Dumper) -> list:
+    return [dump(item, dumper) for item in obj]
 
-def _serialize_dict(obj: dict, serializer: Serializer) -> dict:
-    return {str(k): serialize(v, serializer) for k, v in obj.items()}
+def _dump_dict(obj: dict, dumper: Dumper) -> dict:
+    return {str(k): dump(v, dumper) for k, v in obj.items()}
 
-def _serialize_struct(obj: Any, serializer: Serializer) -> Any:
-    data = serializer.begin_struct(obj.__class__)
+def _dump_struct(obj: Any, dumper: Dumper) -> Any:
+    data = dumper.begin_struct(obj.__class__)
     fields: Dict[str, Field] = getattr(obj.__class__, '_lodum_fields', {})
 
     for field_info in fields.values():
@@ -83,104 +83,104 @@ def _serialize_struct(obj: Any, serializer: Serializer) -> Any:
         if field_info.serializer:
             data[key] = field_info.serializer(value)
         else:
-            data[key] = serialize(value, serializer)
+            data[key] = dump(value, dumper)
 
-    serializer.end_struct()
+    dumper.end_struct()
     return data
 
-def _serialize_datetime(obj: datetime.datetime, s: Serializer) -> str:
-    return s.serialize_str(obj.isoformat())
+def _dump_datetime(obj: datetime.datetime, d: Dumper) -> str:
+    return d.dump_str(obj.isoformat())
 
-def _serialize_enum(obj: enum.Enum, s: Serializer) -> Any:
-    return serialize(obj.value, s)
+def _dump_enum(obj: enum.Enum, d: Dumper) -> Any:
+    return dump(obj.value, d)
 
-def _serialize_numpy_array(obj: np.ndarray, s: Serializer) -> Any:
-    return serialize(obj.tolist(), s)
+def _dump_numpy_array(obj: np.ndarray, d: Dumper) -> Any:
+    return dump(obj.tolist(), d)
 
-def _serialize_pandas_dataframe(obj: pd.DataFrame, s: Serializer) -> Any:
-    return serialize(obj.to_dict(orient="records"), s)
+def _dump_pandas_dataframe(obj: pd.DataFrame, d: Dumper) -> Any:
+    return dump(obj.to_dict(orient="records"), d)
 
-def _serialize_pandas_series(obj: pd.Series, s: Serializer) -> Any:
-    return serialize(obj.to_dict(), s)
+def _dump_pandas_series(obj: pd.Series, d: Dumper) -> Any:
+    return dump(obj.to_dict(), d)
 
-def _serialize_polars_dataframe(obj: pl.DataFrame, s: Serializer) -> Any:
-    return serialize(obj.to_dict(), s)
+def _dump_polars_dataframe(obj: pl.DataFrame, d: Dumper) -> Any:
+    return dump(obj.to_dict(), d)
 
-def _serialize_polars_series(obj: pl.Series, s: Serializer) -> Any:
-    return serialize(obj.to_list(), s)
+def _dump_polars_series(obj: pl.Series, d: Dumper) -> Any:
+    return dump(obj.to_list(), d)
 
-SERIALIZE_DISPATCH.update({
-    int: _serialize_primitive, str: _serialize_primitive, float: _serialize_primitive,
-    bool: _serialize_primitive, type(None): _serialize_primitive,
-    list: _serialize_sequence, dict: _serialize_dict,
-    tuple: _serialize_sequence, set: _serialize_sequence,
-    datetime.datetime: _serialize_datetime,
-    enum.Enum: _serialize_enum,
-    np.ndarray: _serialize_numpy_array,
-    pd.DataFrame: _serialize_pandas_dataframe,
-    pd.Series: _serialize_pandas_series,
-    pl.DataFrame: _serialize_polars_dataframe,
-    pl.Series: _serialize_polars_series,
+DUMP_DISPATCH.update({
+    int: _dump_primitive, str: _dump_primitive, float: _dump_primitive,
+    bool: _dump_primitive, type(None): _dump_primitive,
+    list: _dump_sequence, dict: _dump_dict,
+    tuple: _dump_sequence, set: _dump_sequence,
+    datetime.datetime: _dump_datetime,
+    enum.Enum: _dump_enum,
+    np.ndarray: _dump_numpy_array,
+    pd.DataFrame: _dump_pandas_dataframe,
+    pd.Series: _dump_pandas_series,
+    pl.DataFrame: _dump_polars_dataframe,
+    pl.Series: _dump_polars_series,
 })
 
 
-class JsonSerializer(Serializer):
-    def serialize_int(self, v: int) -> int: return v
-    def serialize_str(self, v: str) -> str: return v
-    def serialize_float(self, v: float) -> float: return v
-    def serialize_bool(self, v: bool) -> bool: return v
+class JsonDumper(Dumper):
+    def dump_int(self, v: int) -> int: return v
+    def dump_str(self, v: str) -> str: return v
+    def dump_float(self, v: float) -> float: return v
+    def dump_bool(self, v: bool) -> bool: return v
     def begin_struct(self, cls: Type) -> dict: return {}
     def end_struct(self) -> None: pass
 
 
-# --- Deserialization Implementation ---
+# --- Decoding (Loading) Implementation ---
 
-def deserialize(cls: Type[T], deserializer: Deserializer) -> T:
-    handler = _get_deserialize_handler(cls)
-    return handler(cls, deserializer)
+def load(cls: Type[T], loader: Loader) -> T:
+    handler = _get_load_handler(cls)
+    return handler(cls, loader)
 
-def _get_deserialize_handler(t: Type) -> Callable:
+def _get_load_handler(t: Type) -> Callable:
     if isinstance(t, TypeVar):
-        return _deserialize_any
+        return _load_any
     origin = get_origin(t) or t
     args = get_args(t)
 
     # Handle Optional[T] by checking for Union[T, None]
     if origin is Union and len(args) == 2 and args[1] is type(None):
-        return _deserialize_optional
+        return _load_optional
     if origin is Union:
-        return _deserialize_union
+        return _load_union
 
-    if origin in DESERIALIZE_DISPATCH:
-        return DESERIALIZE_DISPATCH[origin]
-    if inspect.isclass(origin) and getattr(origin, '_lodum_serializable', False):
-        return _deserialize_struct
-    for super_t, handler in DESERIALIZE_DISPATCH.items():
+    if origin in LOAD_DISPATCH:
+        return LOAD_DISPATCH[origin]
+    if inspect.isclass(origin) and getattr(origin, '_lodum_enabled', False):
+        return _load_struct
+    for super_t, handler in LOAD_DISPATCH.items():
         if issubclass(origin, super_t):
             return handler
     raise DeserializationError(f"Cannot deserialize to type {t}")
 
-def _deserialize_primitive(cls: Type[T], d: Deserializer) -> T:
-    if cls is int: return d.as_int()
-    if cls is str: return d.as_str()
-    if cls is float: return d.as_float()
-    if cls is bool: return d.as_bool()
+def _load_primitive(cls: Type[T], l: Loader) -> T:
+    if cls is int: return l.load_int()
+    if cls is str: return l.load_str()
+    if cls is float: return l.load_float()
+    if cls is bool: return l.load_bool()
     if cls is type(None): return None
     raise DeserializationError(f"Unsupported primitive type: {cls.__name__}")
 
 
-def _deserialize_any(cls: Type[T], d: Deserializer) -> T:
-    return d.as_any()
+def _load_any(cls: Type[T], l: Loader) -> T:
+    return l.load_any()
 
-def _deserialize_list(cls: Type[T], d: Deserializer) -> T:
+def _load_list(cls: Type[T], l: Loader) -> T:
     args = get_args(cls)
     if len(args) == 1:
         item_type, = args
     else:
         item_type = Any
-    return [deserialize(item_type, item_d) for item_d in d.as_list()]
+    return [load(item_type, item_l) for item_l in l.load_list()]
 
-def _deserialize_dict(cls: Type[T], d: Deserializer) -> T:
+def _load_dict(cls: Type[T], l: Loader) -> T:
     args = get_args(cls)
     if len(args) == 2:
         key_type, value_type = args
@@ -189,15 +189,15 @@ def _deserialize_dict(cls: Type[T], d: Deserializer) -> T:
 
     if key_type is not str and key_type is not Any:
         raise DeserializationError("JSON object keys must be strings")
-    return {k: deserialize(value_type, v_d) for k, v_d in d.as_dict()}
+    return {k: load(value_type, v_l) for k, v_l in l.load_dict()}
 
 
-def _deserialize_union(cls: Type[T], d: Deserializer) -> T:
+def _load_union(cls: Type[T], l: Loader) -> T:
     """
-    Deserializes a union type by trying each type in the union in order.
+    Decodes a union type by trying each type in the union in order.
     The first one that succeeds is returned.
     """
-    data = d.as_any()
+    data = l.load_any()
     # Prioritize types that are more specific.
     def sort_key(t):
         if isinstance(t, type):
@@ -215,39 +215,39 @@ def _deserialize_union(cls: Type[T], d: Deserializer) -> T:
 
     for inner_type in types:
         try:
-            return deserialize(inner_type, d)
+            return load(inner_type, l)
         except (DeserializationError, ValueError, TypeError, KeyError, AttributeError):
             continue
     raise DeserializationError(f"Could not deserialize data into any of the types in {cls}")
 
 
-def _deserialize_optional(cls: Type[T], d: Deserializer) -> T:
+def _load_optional(cls: Type[T], l: Loader) -> T:
     """
-    Deserializes an optional type. An optional is a Union[T, None].
-    If the data is None, return None. Otherwise, deserialize to T.
+    Decodes an optional type. An optional is a Union[T, None].
+    If the data is None, return None. Otherwise, decode to T.
     """
-    if d.as_any() is None:
+    if l.load_any() is None:
         return None
 
     # Get the inner type T from Optional[T]
     inner_type = get_args(cls)[0]
-    return deserialize(inner_type, d)
+    return load(inner_type, l)
 
 
-def _deserialize_struct(cls: Type[T], deserializer: Deserializer) -> T:
+def _load_struct(cls: Type[T], loader: Loader) -> T:
     fields: Dict[str, Field] = getattr(cls, '_lodum_fields', {})
-    data = {k: v for k, v in deserializer.as_dict()}
+    data = {k: v for k, v in loader.load_dict()}
     constructor_args = {}
 
     for field_info in fields.values():
         field_name_in_json = field_info.rename if field_info.rename else field_info.name
 
         if field_name_in_json in data:
-            field_deserializer = data[field_name_in_json]
+            field_loader = data[field_name_in_json]
             if field_info.deserializer:
-                constructor_args[field_info.name] = field_info.deserializer(field_deserializer.as_any())
+                constructor_args[field_info.name] = field_info.deserializer(field_loader.load_any())
             else:
-                constructor_args[field_info.name] = deserialize(field_info.type, field_deserializer)
+                constructor_args[field_info.name] = load(field_info.type, field_loader)
         elif field_info.has_default:
             constructor_args[field_info.name] = field_info.get_default()
         else:
@@ -255,79 +255,79 @@ def _deserialize_struct(cls: Type[T], deserializer: Deserializer) -> T:
 
     return cls(**constructor_args)
 
-def _deserialize_datetime(cls: Type[T], d: Deserializer) -> T:
-    return datetime.datetime.fromisoformat(d.as_str())
+def _load_datetime(cls: Type[T], l: Loader) -> T:
+    return datetime.datetime.fromisoformat(l.load_str())
 
-def _deserialize_enum(cls: Type[T], d: Deserializer) -> T:
+def _load_enum(cls: Type[T], l: Loader) -> T:
     first_member = next(iter(cls))
     value_type = type(first_member.value)
-    value = deserialize(value_type, d)
+    value = load(value_type, l)
     return cls(value)
 
-def _deserialize_tuple(cls: Type[T], d: Deserializer) -> T:
+def _load_tuple(cls: Type[T], l: Loader) -> T:
     item_types = get_args(cls)
-    items = [deserialize(item_types[i], item_d) for i, item_d in enumerate(d.as_list())]
+    items = [load(item_types[i], item_l) for i, item_l in enumerate(l.load_list())]
     return tuple(items)
 
-def _deserialize_set(cls: Type[T], d: Deserializer) -> T:
+def _load_set(cls: Type[T], l: Loader) -> T:
     item_type, = get_args(cls)
-    return {deserialize(item_type, item_d) for item_d in d.as_list()}
+    return {load(item_type, item_l) for item_l in l.load_list()}
 
-def _deserialize_numpy_array(cls: Type[T], d: Deserializer) -> T:
-    return np.array(deserialize(List, d))
+def _load_numpy_array(cls: Type[T], l: Loader) -> T:
+    return np.array(load(List, l))
 
-def _deserialize_pandas_dataframe(cls: Type[T], d: Deserializer) -> T:
-    data = deserialize(list, d)
+def _load_pandas_dataframe(cls: Type[T], l: Loader) -> T:
+    data = load(list, l)
     return pd.DataFrame.from_records(data)
 
-def _deserialize_pandas_series(cls: Type[T], d: Deserializer) -> T:
-    data = deserialize(dict, d)
+def _load_pandas_series(cls: Type[T], l: Loader) -> T:
+    data = load(dict, l)
     return pd.Series(data)
 
-def _deserialize_polars_dataframe(cls: Type[T], d: Deserializer) -> T:
-    data = deserialize(dict, d)
+def _load_polars_dataframe(cls: Type[T], l: Loader) -> T:
+    data = load(dict, l)
     return pl.DataFrame(data)
 
-def _deserialize_polars_series(cls: Type[T], d: Deserializer) -> T:
-    data = deserialize(list, d)
+def _load_polars_series(cls: Type[T], l: Loader) -> T:
+    data = load(list, l)
     return pl.Series(data)
 
-DESERIALIZE_DISPATCH.update({
-    int: _deserialize_primitive, str: _deserialize_primitive, float: _deserialize_primitive,
-    bool: _deserialize_primitive, type(None): _deserialize_primitive,
-    list: _deserialize_list, dict: _deserialize_dict,
-    tuple: _deserialize_tuple, set: _deserialize_set,
-    datetime.datetime: _deserialize_datetime,
-    enum.Enum: _deserialize_enum,
-    Any: _deserialize_any,
-    np.ndarray: _deserialize_numpy_array,
-    pd.DataFrame: _deserialize_pandas_dataframe,
-    pd.Series: _deserialize_pandas_series,
-    pl.DataFrame: _deserialize_polars_dataframe,
-    pl.Series: _deserialize_polars_series,
+LOAD_DISPATCH.update({
+    int: _load_primitive, str: _load_primitive, float: _load_primitive,
+    bool: _load_primitive, type(None): _load_primitive,
+    list: _load_list, dict: _load_dict,
+    tuple: _load_tuple, set: _load_set,
+    datetime.datetime: _load_datetime,
+    enum.Enum: _load_enum,
+    Any: _load_any,
+    np.ndarray: _load_numpy_array,
+    pd.DataFrame: _load_pandas_dataframe,
+    pd.Series: _load_pandas_series,
+    pl.DataFrame: _load_polars_dataframe,
+    pl.Series: _load_polars_series,
 })
 
 
-class JsonDeserializer(Deserializer):
+class JsonLoader(Loader):
     def __init__(self, data: Any): self._data = data
-    def as_int(self) -> int:
+    def load_int(self) -> int:
         if not isinstance(self._data, int): raise DeserializationError(f"Expected int, got {type(self._data).__name__}")
         return self._data
-    def as_str(self) -> str:
+    def load_str(self) -> str:
         if not isinstance(self._data, str): raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
         return self._data
-    def as_float(self) -> float:
+    def load_float(self) -> float:
         if not isinstance(self._data, (float, int)):
             raise DeserializationError(f"Expected float, got {type(self._data).__name__}")
         return float(self._data)
-    def as_bool(self) -> bool:
+    def load_bool(self) -> bool:
         if not isinstance(self._data, bool): raise DeserializationError(f"Expected bool, got {type(self._data).__name__}")
         return self._data
-    def as_list(self) -> Iterator['Deserializer']:
+    def load_list(self) -> Iterator['Loader']:
         if not isinstance(self._data, list): raise DeserializationError(f"Expected list, got {type(self._data).__name__}")
-        return (JsonDeserializer(item) for item in self._data)
-    def as_dict(self) -> Iterator[tuple[str, 'Deserializer']]:
+        return (JsonLoader(item) for item in self._data)
+    def load_dict(self) -> Iterator[tuple[str, 'Loader']]:
         if not isinstance(self._data, dict): raise DeserializationError(f"Expected dict, got {type(self._data).__name__}")
-        return ((k, JsonDeserializer(v)) for k, v in self._data.items())
-    def as_any(self) -> Any:
+        return ((k, JsonLoader(v)) for k, v in self._data.items())
+    def load_any(self) -> Any:
         return self._data
