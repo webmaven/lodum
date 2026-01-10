@@ -5,6 +5,6 @@ __version__ = "0.0.1"
 
 from .core import lodum
 from .field import field
-from . import json, yaml, pickle
+from . import json, yaml, pickle, toml
 
-__all__ = ["lodum", "field", "json", "yaml", "pickle"]
+__all__ = ["lodum", "field", "json", "yaml", "pickle", "toml"]
