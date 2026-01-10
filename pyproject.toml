@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lodum"
-version = "0.0.1"
+version = "0.1.0"
 description = "A Python serialization/deserialization library (AKA LOad/DUMp) inspired by Rust's serde."
 readme = "README.md"
 license = "Apache-2.0"
@@ -12,7 +12,7 @@ authors = [
     { name = "Michael R. Bernstein", email = "zopemaven@gmail.com" },
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
@@ -20,12 +20,29 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-dependencies = [
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["ruamel.yaml>=0.18.0"]
+msgpack = ["msgpack"]
+toml = ["tomli-w", "tomli; python_version < '3.11'"]
+cbor = ["cbor2"]
+bson = ["pymongo"]
+numpy = ["numpy"]
+pandas = ["pandas"]
+polars = ["polars"]
+all = [
     "ruamel.yaml>=0.18.0",
-    "numpy>=1.23.5",
-    "pandas>=1.5.3",
-    "polars>=0.16.0",
+    "msgpack",
+    "tomli-w",
+    "tomli; python_version < '3.11'",
+    "cbor2",
+    "pymongo",
+    "numpy",
+    "pandas",
+    "polars",
 ]
 
 [project.urls]

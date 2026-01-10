@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 import tomli_w
 from typing import Any, Iterator, Type, TypeVar
 
