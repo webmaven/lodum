@@ -336,6 +336,7 @@ def test_custom_serializer_and_deserializer():
     event = json.loads(Event, json_data)
     assert event.timestamp == dt
 
+def test_serialization_handler_cache():
     # This test is more about ensuring the caching doesn't break anything.
     # We decode the same type of object multiple times.
     users = [Simple(20 + i, f"User {i}") for i in range(5)]
@@ -343,12 +344,14 @@ def test_custom_serializer_and_deserializer():
     assert len(json_outputs) == 5
     assert json_outputs[0] == '{"a": 20, "b": "User 0"}'
 
+def test_incorrect_type_in_struct_deserialization():
     json_str = '{"a": "this should be an int", "b": "thirty"}'
     with pytest.raises(DeserializationError) as exc_info:
         json.loads(Simple, json_str)
     assert "Error decoding field 'a'" in str(exc_info.value)
     assert "Expected int, got str" in str(exc_info.value)
 
+def test_deserialize_wrong_main_type():
     json_list = '[{"a": "Alice", "b": 30}]'
     with pytest.raises(DeserializationError) as exc_info:
         json.loads(Simple, json_list)
