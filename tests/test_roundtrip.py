@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 from lodum import lodum, json, yaml
 
 @lodum

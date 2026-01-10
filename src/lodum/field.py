@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 from typing import Any, Callable, Optional
 
 # A sentinel object to detect if a parameter is supplied or not.
