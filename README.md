@@ -181,6 +181,14 @@ user = json.loads(User, user_data)
 * **YAML**: `lodum.yaml`
 * **Pickle**: `lodum.pickle`
 
+## Supported Formats
+
+`lodum` is designed to be format-agnostic, and new formats can be added by implementing the `Serializer` and `Deserializer` protocols. The following formats are currently supported:
+
+* **JSON**: `lodum.json`
+* **YAML**: `lodum.yaml`
+* **Pickle**: `lodum.pickle`
+
 ## Supported Types
 
 `lodum` currently supports the following types for serialization:
@@ -200,4 +208,4 @@ Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
