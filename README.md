@@ -202,6 +202,11 @@ The library is designed to be extended with support for more formats and more co
 
 Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING.md) for more information.
 
+## Internals & Roadmap
+
+* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](ARCHITECTURE.md).
+* Want to see where we are going? Read our [ROADMAP.md](ROADMAP.md).
+
 ## License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
