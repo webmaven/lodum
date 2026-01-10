@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Callable, Optional
+from typing import Any, Callable, List, Optional, Union
 
 # A sentinel object to detect if a parameter is supplied or not.
 _MISSING_TYPE = object
@@ -22,6 +22,7 @@ class Field:
         default_factory: Optional[Callable[[], Any]] = None,
         serializer: Optional[Callable[[Any], Any]] = None,
         deserializer: Optional[Callable[[Any], Any]] = None,
+        validate: Optional[Union[Callable[[Any], None], List[Callable[[Any], None]]]] = None,
     ):
         if default is not _MISSING and default_factory is not None:
             raise ValueError("cannot specify both default and default_factory")
@@ -32,6 +33,7 @@ class Field:
         self.default_factory = default_factory
         self.serializer = serializer
         self.deserializer = deserializer
+        self.validate = validate
         self.name: str = "" # Will be populated by the decorator
         self.type: Any = None # Will be populated by the decorator
 
@@ -53,6 +55,7 @@ def field(
     default_factory: Optional[Callable[[], Any]] = None,
     serializer: Optional[Callable[[Any], Any]] = None,
     deserializer: Optional[Callable[[Any], Any]] = None,
+    validate: Optional[Union[Callable[[Any], None], List[Callable[[Any], None]]]] = None,
 ) -> Any:
     """
     Provides metadata to the `@lodum` decorator for a single field.
@@ -67,6 +70,7 @@ def field(
             create a default value for a missing field.
         serializer: A function to call to encode the field's value.
         deserializer: A function to call to decode the field's value.
+        validate: A callable or list of callables to validate the field's value during decoding.
     """
     return Field(
         rename=rename,
@@ -75,4 +79,5 @@ def field(
         default_factory=default_factory,
         serializer=serializer,
         deserializer=deserializer,
+        validate=validate,
     )

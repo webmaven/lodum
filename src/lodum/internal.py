@@ -33,6 +33,59 @@ def load(cls: Type[T], loader: Loader) -> T:
     handler = _get_load_handler(cls)
     return handler(cls, loader)
 
+def generate_schema(t: Type) -> Dict[str, Any]:
+    """Generates a JSON Schema for a given type."""
+    if t is int: return {"type": "integer"}
+    if t is str: return {"type": "string"}
+    if t is float: return {"type": "number"}
+    if t is bool: return {"type": "boolean"}
+    if t is type(None): return {"type": "null"}
+    if t is Any: return {}
+
+    origin = get_origin(t) or t
+    args = get_args(t)
+
+    if origin is list:
+        item_schema = generate_schema(args[0]) if args else {}
+        return {"type": "array", "items": item_schema}
+    
+    if origin is dict:
+        val_schema = generate_schema(args[1]) if len(args) == 2 else {}
+        return {"type": "object", "additionalProperties": val_schema}
+
+    if origin is Union:
+        return {"anyOf": [generate_schema(arg) for arg in args]}
+
+    if origin is tuple:
+        return {"type": "array", "prefixItems": [generate_schema(arg) for arg in args]}
+
+    if origin is set:
+        item_schema = generate_schema(args[0]) if args else {}
+        return {"type": "array", "items": item_schema, "uniqueItems": True}
+
+    if t is datetime.datetime:
+        return {"type": "string", "format": "date-time"}
+
+    if inspect.isclass(t) and issubclass(t, enum.Enum):
+        return {"enum": [m.value for m in t]}
+
+    if inspect.isclass(t) and getattr(t, '_lodum_enabled', False):
+        fields: Dict[str, Field] = getattr(t, '_lodum_fields', {})
+        properties = {}
+        required = []
+        for field_name, field_info in fields.items():
+            key = field_info.rename if field_info.rename else field_info.name
+            properties[key] = generate_schema(field_info.type)
+            if not field_info.has_default:
+                required.append(key)
+        
+        schema = {"type": "object", "properties": properties}
+        if required:
+            schema["required"] = required
+        return schema
+
+    return {}
+
 def _compile_dump_handler(cls: Type) -> Callable:
     """
     Compiles an optimized dump handler for a lodum-enabled class.
@@ -183,6 +236,14 @@ def _compile_load_handler(cls: Type) -> Callable:
         else:
             lines.append("    else:")
             lines.append(f"        raise DeserializationError(\"Missing required field '\" + {safe_json_name} + \"' for class {cls.__name__}\")")
+
+        if field_info.validate:
+            validators = field_info.validate if isinstance(field_info.validate, list) else [field_info.validate]
+            for j, v in enumerate(validators):
+                v_name = f"v_{i}_{j}"
+                context[v_name] = v
+                lines.append(f"    try: {v_name}(args['{field_name}'])")
+                lines.append(f"    except DeserializationError as e: raise DeserializationError(f'Validation failed for field \\'{field_name}\\' in {cls.__name__}: {{e}}')")
 
     lines.append("    try: return cls(**args)")
     lines.append("    except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {{e}}')")

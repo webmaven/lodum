@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import json
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Type, TypeVar
 
 from .core import Loader, Dumper
 from .exception import DeserializationError
-from .internal import dump, load
+from .internal import dump, load, generate_schema
 
 T = TypeVar("T")
 
@@ -24,6 +24,11 @@ def loads(cls: Type[T], json_string: str) -> T:
     data = json.loads(json_string)
     loader = JsonLoader(data)
     return load(cls, loader)
+
+
+def schema(cls: Type) -> Dict[str, Any]:
+    """Generates a JSON Schema for a given lodum-enabled class."""
+    return generate_schema(cls)
 
 
 # --- JSON Dumper Implementation ---
