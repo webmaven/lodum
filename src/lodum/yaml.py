@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
+# SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: MIT
 import io
@@ -6,7 +6,7 @@ from typing import Any, Iterator, Type, TypeVar
 from ruamel.yaml import YAML
 
 from .core import Loader, Dumper
-from .json import dump, load
+from .internal import dump, load
 
 T = TypeVar("T")
 yaml = YAML(typ='safe')

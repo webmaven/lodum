@@ -76,7 +76,7 @@ def test_dumps_pickle_fails_on_non_lodum_object():
     with pytest.raises(SerializationError) as excinfo:
         lodum_pickle.dumps(instance)
 
-    assert "Object of type NotSerializable is not serializable" in str(excinfo.value)
+    assert "Object of type NotSerializable is not lodum-enabled" in str(excinfo.value)
 
 def test_loads_pickle_fails_on_non_lodum_object():
     """

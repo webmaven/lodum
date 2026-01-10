@@ -1,13 +1,74 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: MIT
-from typing import Any, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Generic, List, Optional, Set, Tuple, TypeVar, Union
 import pytest
 from datetime import datetime
 from enum import Enum
 
 from lodum import lodum, field, json
 from lodum.exception import DeserializationError
+
+# --- Test Data Structures ---
+
+@lodum
+class Simple:
+    def __init__(self, a: int, b: str):
+        self.a = a
+        self.b = b
+
+@lodum
+class Nested:
+    def __init__(self, simple: Simple, c: bool):
+        self.simple = simple
+        self.c = c
+
+class UserRole(Enum):
+    ADMIN = "admin"
+    USER = "user"
+    GUEST = "guest"
+
+@lodum
+class ComplexObject:
+    def __init__(self, created_at: datetime, role: UserRole, permissions: Set[str]):
+        self.created_at = created_at
+        self.role = role
+        self.permissions = permissions
+
+@lodum
+class TypingObject:
+    def __init__(
+        self,
+        optional_field: Optional[int],
+        union_field: Union[str, bool, UserRole],
+        any_field: Any,
+    ):
+        self.optional_field = optional_field
+        self.union_field = union_field
+        self.any_field = any_field
+
+T = TypeVar("T")
+
+@lodum
+class GenericObject(Generic[T]):
+    def __init__(self, value: T):
+        self.value = value
+
+@lodum
+class CustomizedUser:
+    def __init__(
+        self,
+        full_name: str,
+        user_id: int = field(rename="id", default=0),
+        password_hash: str = field(skip_serializing=True, default=""),
+        prefs: dict = field(default_factory=dict),
+        company: str = field(default="Pyserde Inc.")
+    ):
+        self.user_id = user_id
+        self.full_name = full_name
+        self.password_hash = password_hash
+        self.prefs = prefs
+        self.company = company
 
 # --- Test Cases ---
 
@@ -27,12 +88,6 @@ def test_deserialize_primitives():
     assert json.loads(bool, "true") is True
     assert json.loads(type(None), "null") is None
 
-@lodum
-class Simple:
-    def __init__(self, a: int, b: str):
-        self.a = a
-        self.b = b
-
 def test_serialize_simple_class():
     """Tests encoding of a simple user-defined class."""
     instance = Simple(a=10, b="world")
@@ -46,12 +101,6 @@ def test_deserialize_simple_class():
     assert isinstance(instance, Simple)
     assert instance.a == 10
     assert instance.b == "world"
-
-@lodum
-class Nested:
-    def __init__(self, simple: Simple, c: bool):
-        self.simple = simple
-        self.c = c
 
 def test_serialize_nested_class():
     """Tests encoding of a nested user-defined class."""
@@ -89,12 +138,11 @@ def test_deserialize_list_of_objects():
     assert obj_list[1].b == "two"
 
 def test_deserialization_missing_field_raises_error():
-    """Tests that decoding an object with a missing field raises KeyError."""
+    """Tests that decoding an object with a missing field raises an error."""
     json_string = '{"a": 10}' # Missing field 'b' for Simple class
-    with pytest.raises(DeserializationError):
+    with pytest.raises(DeserializationError) as exc_info:
         json.loads(Simple, json_string)
-
-# --- Tests for Newly Supported Types ---
+    assert "Missing required field 'b' for class Simple" in str(exc_info.value)
 
 def test_datetime_serialization():
     """Tests encoding of datetime objects."""
@@ -106,11 +154,6 @@ def test_datetime_deserialization():
     dt_str = '"2025-11-21T10:30:00"'
     dt = json.loads(datetime, dt_str)
     assert dt == datetime(2025, 11, 21, 10, 30, 0)
-
-class UserRole(Enum):
-    ADMIN = "admin"
-    USER = "user"
-    GUEST = "guest"
 
 def test_enum_serialization():
     """Tests encoding of Enum members."""
@@ -147,13 +190,6 @@ def test_set_deserialization():
     assert isinstance(result, set)
     assert result == {"a", "b", "c"}
 
-@lodum
-class ComplexObject:
-    def __init__(self, created_at: datetime, role: UserRole, permissions: Set[str]):
-        self.created_at = created_at
-        self.role = role
-        self.permissions = permissions
-
 def test_nested_new_types_serialization():
     """Tests encoding of an object containing the new types."""
     dt = datetime(2025, 1, 1)
@@ -179,20 +215,6 @@ def test_nested_new_types_deserialization():
     assert instance.permissions == {"read", "write"}
 
 # --- Tests for Typing Module ---
-
-@lodum
-class TypingObject:
-    def __init__(
-        self,
-        optional_field: Optional[int],
-        union_field: Union[str, bool, UserRole],
-        any_field: Any,
-    ):
-        self.optional_field = optional_field
-        self.union_field = union_field
-        self.any_field = any_field
-
-
 def test_optional_field():
     """Tests that Optional fields are correctly decoded."""
     # Test with the value present
@@ -202,7 +224,6 @@ def test_optional_field():
     # Test with the value missing (should be None)
     instance = json.loads(TypingObject, '{"optional_field": null, "union_field": "a", "any_field": null}')
     assert instance.optional_field is None
-
 
 def test_union_field():
     """Tests that Union fields are correctly decoded."""
@@ -218,7 +239,6 @@ def test_union_field():
     instance = json.loads(TypingObject, '{"optional_field": null, "union_field": "admin", "any_field": null}')
     assert instance.union_field == UserRole.ADMIN
 
-
 def test_any_field():
     """Tests that Any fields are correctly decoded."""
     # Test with a string
@@ -229,16 +249,6 @@ def test_any_field():
     instance = json.loads(TypingObject, '{"optional_field": null, "union_field": "a", "any_field": [1, 2, 3]}')
     assert instance.any_field == [1, 2, 3]
 
-
-from typing import Generic
-
-T = TypeVar("T")
-
-@lodum
-class GenericObject(Generic[T]):
-    def __init__(self, value: T):
-        self.value = value
-
 def test_typevar_field():
     """Tests that TypeVar fields are correctly decoded."""
     instance = json.loads(GenericObject[int], '{"value": 10}')
@@ -247,25 +257,7 @@ def test_typevar_field():
     instance = json.loads(GenericObject[str], '{"value": "hello"}')
     assert instance.value == "hello"
 
-
 # --- Tests for Field Customizations ---
-
-@lodum
-class CustomizedUser:
-    def __init__(
-        self,
-        full_name: str,
-        user_id: int = field(rename="id", default=0),
-        password_hash: str = field(skip_serializing=True, default=""),
-        prefs: dict = field(default_factory=dict),
-        company: str = field(default="Pyserde Inc.")
-    ):
-        self.user_id = user_id
-        self.full_name = full_name
-        self.password_hash = password_hash
-        self.prefs = prefs
-        self.company = company
-
 def test_field_rename():
     """Tests that the `rename` option works for both encoding and decoding."""
     instance = CustomizedUser(user_id=123, full_name="Jules", password_hash="secret")
@@ -308,7 +300,6 @@ def test_field_default_factory():
     instance2 = json.loads(CustomizedUser, json_data)
     assert instance.prefs is not instance2.prefs
 
-
 def test_custom_serializer_and_deserializer():
     """
     Tests that custom dumper and loader functions are correctly used.
@@ -344,3 +335,33 @@ def test_custom_serializer_and_deserializer():
     json_data = f'{{"name": "Another Event", "timestamp": {dt.timestamp()}}}'
     event = json.loads(Event, json_data)
     assert event.timestamp == dt
+
+    # This test is more about ensuring the caching doesn't break anything.
+    # We decode the same type of object multiple times.
+    users = [Simple(20 + i, f"User {i}") for i in range(5)]
+    json_outputs = [json.dumps(u) for u in users]
+    assert len(json_outputs) == 5
+    assert json_outputs[0] == '{"a": 20, "b": "User 0"}'
+
+    json_str = '{"a": "this should be an int", "b": "thirty"}'
+    with pytest.raises(DeserializationError) as exc_info:
+        json.loads(Simple, json_str)
+    assert "Error decoding field 'a'" in str(exc_info.value)
+    assert "Expected int, got str" in str(exc_info.value)
+
+    json_list = '[{"a": "Alice", "b": 30}]'
+    with pytest.raises(DeserializationError) as exc_info:
+        json.loads(Simple, json_list)
+    assert "Expected a dictionary to decode into class Simple" in str(exc_info.value)
+
+@lodum
+class UserWithList:
+    def __init__(self, name: str, posts: List[str]):
+        self.name = name
+        self.posts = posts
+
+def test_nested_list_deserialization():
+    json_str = '{"name": "Blog Pwner", "posts": ["First post", "Second post"]}'
+    user = json.loads(UserWithList, json_str)
+    assert user.name == "Blog Pwner"
+    assert user.posts == ["First post", "Second post"]

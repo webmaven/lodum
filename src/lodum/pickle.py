@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
+# SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: MIT
 import pickle
@@ -7,7 +7,7 @@ import io
 from typing import Any, Type, TypeVar
 
 from .core import Dumper
-from .json import dump as validate_lodum_structure
+from .internal import dump as validate_lodum_structure
 
 T = TypeVar("T")
 
