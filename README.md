@@ -182,6 +182,8 @@ user = json.loads(User, user_data)
 * **Pickle**: `lodum.pickle`
 * **TOML**: `lodum.toml`
 * **MessagePack**: `lodum.msgpack`
+* **CBOR**: `lodum.cbor`
+* **BSON**: `lodum.bson`
 
 ## Supported Types
 
