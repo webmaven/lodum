@@ -70,6 +70,19 @@ class Dumper(Protocol):
     def begin_struct(self, cls: Type) -> Any: ...
     def end_struct(self) -> Any: ...
 
+class BaseDumper:
+    """
+    Base implementation of the Dumper protocol to reduce duplication.
+    """
+    def dump_int(self, value: int) -> Any: return value
+    def dump_str(self, value: str) -> Any: return value
+    def dump_float(self, value: float) -> Any: return value
+    def dump_bool(self, value: bool) -> Any: return value
+    def dump_list(self, value: List[Any]) -> Any: return value
+    def dump_dict(self, value: Dict[str, Any]) -> Any: return value
+    def begin_struct(self, cls: Type) -> Any: return {}
+    def end_struct(self) -> Any: pass
+
 
 class Loader(Protocol):
     """
@@ -82,3 +95,13 @@ class Loader(Protocol):
     def load_list(self) -> Iterator['Loader']: ...
     def load_dict(self) -> Iterator[tuple[str, 'Loader']]: ...
     def load_any(self) -> Any: ...
+
+class BaseLoader:
+    """
+    Base implementation of the Loader protocol to reduce duplication.
+    """
+    def __init__(self, data: Any):
+        self._data = data
+
+    def load_any(self) -> Any:
+        return self._data

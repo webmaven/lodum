@@ -81,6 +81,10 @@ class Loader(Protocol):
 
 **Extensibility**: Because `internal.py` only talks to these protocols, adding a new format (like we did with CBOR) is as simple as implementing these methods. The optimization engine automatically works for the new format without any changes.
 
+### Base Classes
+
+To reduce boilerplate when implementing new formats, `core.py` also provides `BaseDumper` and `BaseLoader`. These classes provide default implementations for many protocol methods (such as handling primitive types), allowing format authors to focus on the unique aspects of their format.
+
 ## 3. Validation & Schemas
 
 ### Validation Pipeline
