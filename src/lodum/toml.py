@@ -4,7 +4,7 @@
 try:
     import tomllib
 except ImportError:
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore[no-redef, import-not-found]
 import tomli_w
 from typing import Any, Iterator, Type, TypeVar
 

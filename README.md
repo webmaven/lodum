@@ -124,6 +124,31 @@ assert std_json.loads(original_json) == std_json.loads(final_json)
 print("Round-trip conversion successful!")
 ```
 
+## Error Reporting
+
+`lodum` provides detailed path information when deserialization fails, making it easy to identify the exact field that caused the error.
+
+```python
+from lodum import lodum, json
+from lodum.exception import DeserializationError
+
+@lodum
+class User:
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+json_data = '{"name": "Alex", "age": "not_an_int"}'
+
+try:
+    json.loads(User, json_data)
+except DeserializationError as e:
+    print(e)
+    # Output: Error at age: Expected int, got str
+```
+
+The path tracking works through nested objects, lists, and dictionaries (e.g., `root.users[2].id`).
+
 ## Field Customization
 
 You can customize the behavior of individual fields by using the `field()` function as a default value in your `__init__` method.
@@ -192,7 +217,7 @@ user = json.loads(User, user_data)
 * **Primitives:** `int`, `str`, `float`, `bool`, `None`
 * **Collections:** `list`, `dict`, `tuple`, `set`
 * **Typing:** `Optional`, `Union`, `Any`, `TypeVar`
-* **Standard Library:** `datetime.datetime` (encoded as ISO 8601 strings), `enum.Enum` (encoded by value)
+* **Standard Library:** `datetime.datetime` (encoded as ISO 8601 strings), `enum.Enum` (encoded by value), `uuid.UUID`, `decimal.Decimal`, `pathlib.Path`
 * **Third-Party Libraries:** `numpy.ndarray`, `pandas.DataFrame`, `pandas.Series`, `polars.DataFrame`, `polars.Series`
 * **Custom Objects:** Any class decorated with `@lodum`.
 
