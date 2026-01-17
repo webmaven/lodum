@@ -1,11 +1,10 @@
 import inspect
 import datetime
 import enum
-import functools
 import uuid
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union, get_origin, get_args, Iterator, cast
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union, get_origin, get_args, cast
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -38,15 +37,24 @@ def load(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
 
 def generate_schema(t: Type) -> Dict[str, Any]:
     """Generates a JSON Schema for a given type."""
-    if t is int: return {"type": "integer"}
-    if t is str: return {"type": "string"}
-    if t is float: return {"type": "number"}
-    if t is bool: return {"type": "boolean"}
-    if t is type(None): return {"type": "null"}
-    if t is Any: return {}
-    if t is uuid.UUID: return {"type": "string", "format": "uuid"}
-    if t is Decimal: return {"type": "string"}
-    if t is Path: return {"type": "string"}
+    if t is int:
+        return {"type": "integer"}
+    if t is str:
+        return {"type": "string"}
+    if t is float:
+        return {"type": "number"}
+    if t is bool:
+        return {"type": "boolean"}
+    if t is type(None):
+        return {"type": "null"}
+    if t is Any:
+        return {}
+    if t is uuid.UUID:
+        return {"type": "string", "format": "uuid"}
+    if t is Decimal:
+        return {"type": "string"}
+    if t is Path:
+        return {"type": "string"}
 
     origin = get_origin(t) or t
     args = get_args(t)
@@ -224,18 +232,18 @@ def _compile_load_handler(cls: Type) -> Callable:
             deser_name = f"deser_{i}"
             context[deser_name] = field_info.deserializer
             lines.append(f"        try: args['{field_name}'] = {deser_name}(val_loader.load_any())")
-            lines.append(f"        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
+            lines.append("        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
         else:
             ftype = field_info.type
             if ftype in PRIMITIVE_LOADERS:
                 load_meth = PRIMITIVE_LOADERS[ftype]
                 lines.append(f"        try: args['{field_name}'] = val_loader.{load_meth}()")
-                lines.append(f"        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
+                lines.append("        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
             else:
                 type_name = f"type_{i}"
                 context[type_name] = ftype
                 lines.append(f"        try: args['{field_name}'] = load_fn({type_name}, val_loader, field_path)")
-                lines.append(f"        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
+                lines.append("        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
             
         if field_info.has_default:
             lines.append("    else:")
@@ -252,7 +260,7 @@ def _compile_load_handler(cls: Type) -> Callable:
                 v_name = f"v_{i}_{j}"
                 context[v_name] = v
                 lines.append(f"    try: {v_name}(args['{field_name}'])")
-                lines.append(f"    except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
+                lines.append("    except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
 
     lines.append("    try: return cls(**args)")
     lines.append("    except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {{e}}', path)")
@@ -267,12 +275,15 @@ def _get_load_handler(t: Type) -> Callable:
     if t in _LOAD_HANDLER_CACHE:
         return _LOAD_HANDLER_CACHE[t]
 
-    if isinstance(t, TypeVar): return _load_any
+    if isinstance(t, TypeVar):
+        return _load_any
     origin = get_origin(t) or t
     args = get_args(t)
 
-    if origin is Union and len(args) == 2 and args[1] is type(None): return _load_optional
-    if origin is Union: return _load_union
+    if origin is Union and len(args) == 2 and args[1] is type(None):
+        return _load_optional
+    if origin is Union:
+        return _load_union
 
     if origin is list:
         args = get_args(t)
@@ -305,17 +316,23 @@ def _get_load_handler(t: Type) -> Callable:
         return handler
 
     for super_t, handler in LOAD_DISPATCH.items():
-        if issubclass(origin, super_t): return handler
+        if issubclass(origin, super_t):
+            return handler
     raise DeserializationError(f"Cannot deserialize to type {t}")
 
 # --- Generic Handlers ---
 
 def _dump_primitive(obj: Any, dumper: Dumper) -> Any:
-    if isinstance(obj, bool): return dumper.dump_bool(obj)
-    if isinstance(obj, int): return dumper.dump_int(obj)
-    if isinstance(obj, str): return dumper.dump_str(obj)
-    if isinstance(obj, float): return dumper.dump_float(obj)
-    if obj is None: return None
+    if isinstance(obj, bool):
+        return dumper.dump_bool(obj)
+    if isinstance(obj, int):
+        return dumper.dump_int(obj)
+    if isinstance(obj, str):
+        return dumper.dump_str(obj)
+    if isinstance(obj, float):
+        return dumper.dump_float(obj)
+    if obj is None:
+        return None
     raise SerializationError(f"Unsupported primitive type: {type(obj).__name__}")
 
 def _dump_sequence(obj: Any, dumper: Dumper) -> list:
@@ -373,11 +390,16 @@ DUMP_DISPATCH.update({
 
 def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     try:
-        if cls is int: return cast(T, loader.load_int())
-        if cls is str: return cast(T, loader.load_str())
-        if cls is float: return cast(T, loader.load_float())
-        if cls is bool: return cast(T, loader.load_bool())
-        if cls is type(None): return cast(T, None)
+        if cls is int:
+            return cast(T, loader.load_int())
+        if cls is str:
+            return cast(T, loader.load_str())
+        if cls is float:
+            return cast(T, loader.load_float())
+        if cls is bool:
+            return cast(T, loader.load_bool())
+        if cls is type(None):
+            return cast(T, None)
     except DeserializationError as e:
         raise DeserializationError(e.raw_message, e.path or path)
     raise DeserializationError(f"Unsupported primitive type: {cls.__name__}", path)
@@ -398,7 +420,8 @@ def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     return cast(T, {k: load(value_type, v_l, f"{path}.{k}" if path else k) for k, v_l in loader.load_dict()})
 
 def _load_optional(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
-    if loader.load_any() is None: return cast(T, None)
+    if loader.load_any() is None:
+        return cast(T, None)
     inner_type = get_args(cls)[0]
     return load(inner_type, loader, path)
 
@@ -406,42 +429,61 @@ def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     data = loader.load_any()
     def get_priority(t: Type) -> int:
         origin = get_origin(t) or t
-        if origin is Any: return 0
-        if data is None: return 100 if origin is type(None) else -1
-        if isinstance(data, bool): return 90 if origin is bool else -1
+        if origin is Any:
+            return 0
+        if data is None:
+            return 100 if origin is type(None) else -1
+        if isinstance(data, bool):
+            return 90 if origin is bool else -1
         if isinstance(data, int):
-            if origin is int: return 90
-            if origin is float: return 85
+            if origin is int:
+                return 90
+            if origin is float:
+                return 85
             if inspect.isclass(origin) and issubclass(origin, enum.Enum):
-                try: _ = origin(data); return 70
-                except (ValueError, TypeError): return -1
+                try:
+                    _ = origin(data)
+                    return 70
+                except (ValueError, TypeError):
+                    return -1
             return -1
-        if isinstance(data, float): return 90 if origin is float else -1
+        if isinstance(data, float):
+            return 90 if origin is float else -1
         if isinstance(data, str):
             if origin is datetime.datetime:
                 if 'T' in data and ':' in data:
-                    try: datetime.datetime.fromisoformat(data); return 90
-                    except ValueError: return -1
+                    try:
+                        datetime.datetime.fromisoformat(data)
+                        return 90
+                    except ValueError:
+                        return -1
                 return -1
             if inspect.isclass(origin) and issubclass(origin, enum.Enum):
                 try:
                     first_member = next(iter(origin))
                     if type(first_member.value) is str:
-                        _ = origin(data); return 85
-                except (ValueError, KeyError, StopIteration): pass
+                        _ = origin(data)
+                        return 85
+                except (ValueError, KeyError, StopIteration):
+                    pass
                 return -1
-            if origin is str: return 80
+            if origin is str:
+                return 80
             return -1
-        if isinstance(data, list): return 90 if origin in (list, tuple, set) else -1
+        if isinstance(data, list):
+            return 90 if origin in (list, tuple, set) else -1
         if isinstance(data, dict):
-            if origin is dict: return 90
-            if inspect.isclass(origin) and getattr(origin, '_lodum_enabled', False): return 80
+            if origin is dict:
+                return 90
+            if inspect.isclass(origin) and getattr(origin, '_lodum_enabled', False):
+                return 80
             return -1
         return 10
     types = sorted(get_args(cls), key=get_priority, reverse=True)
     errors = []
     for inner_type in types:
-        if get_priority(inner_type) < 0: continue
+        if get_priority(inner_type) < 0:
+            continue
         try:
             # We need a new loader for the same data because the previous one might have been consumed
             # or it might be a specialized loader that we can re-instantiate.
