@@ -95,6 +95,15 @@ Validation is injected directly into the generated `loads` handler.
 2. **Validate**: The value is passed to any validators defined in `field(validate=...)`.
 3. **Instantiate**: Only if validation passes is the actual object created.
 
+### Error Path Tracking
+
+One of the key features of `lodum` is precise error reporting. During deserialization, the generated loaders maintain a `path` string that tracks the current position in the data structure.
+
+* When entering a dictionary/struct, the path is appended with `.field_name`.
+* When entering a list, the path is appended with `[index]`.
+
+This path is passed down through recursive calls to `load()`. If a `DeserializationError` occurs (e.g., a type mismatch or a validation failure), the error captures the current `path`. This allows `lodum` to provide helpful error messages like `Error at users[2].address.city: Expected str, got int`.
+
 ### Schema Generation
 
 `json.schema()` uses a recursive visitor pattern to walk the type hints of a `@lodum` class and construct a standard JSON Schema dictionary. This is separate from the serialization engine but shares the same type analysis logic.

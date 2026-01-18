@@ -170,12 +170,16 @@ class User:
         password_hash: str = field(skip_serializing=True, default=""),
 
         # If 'prefs' is missing on decoding, it will default to an empty dict
-        prefs: dict = field(default_factory=dict)
+        prefs: dict = field(default_factory=dict),
+
+        # Add validation to a field
+        age: int = field(validate=lambda x: x >= 0, default=0)
     ):
         self.user_id = user_id
         self.email = email
         self.password_hash = password_hash
         self.prefs = prefs
+        self.age = age
 
 # Encode a user
 user = User(email="name@example.com", user_id=123, password_hash="secret")
@@ -197,6 +201,47 @@ user = json.loads(User, user_data)
 * `default_factory=callable`: Provide a zero-argument function to call for a default value.
 * `serializer=callable`: A function to call to encode the field's value.
 * `deserializer=callable`: A function to call to decode the field's value.
+* `validate=callable`: A function or list of functions to validate the field's value during decoding.
+
+## Validation
+
+`lodum` includes a set of built-in validators in the `lodum.validators` module. You can use them to ensure your data meets specific criteria.
+
+```python
+from lodum import lodum, field, json
+from lodum.validators import Range, Length, Match, OneOf
+
+@lodum
+class Product:
+    def __init__(
+        self,
+        name: str = field(validate=Length(min=3, max=50)),
+        price: float = field(validate=Range(min=0)),
+        category: str = field(validate=OneOf(["electronics", "books", "clothing"])),
+        code: str = field(validate=Match(r"^[A-Z]{2}-\d{4}$"))
+    ):
+        self.name = name
+        self.price = price
+        self.category = category
+        self.code = code
+
+# This will raise a DeserializationError
+try:
+    json.loads(Product, '{"name": "A", "price": -10, "category": "food", "code": "abc"}')
+except Exception as e:
+    print(e)
+```
+
+## Performance
+
+`lodum` is designed for high performance. When you first use a `@lodum`-enabled class, the library analyzes its structure and generates specialized Python bytecode for serialization and deserialization. This generated code is then compiled and cached, avoiding the overhead of generic introspection and `getattr` calls during runtime. This approach allows `lodum` to achieve speeds comparable to hand-written code while maintaining the flexibility of a declarative API.
+
+## Binary Data
+
+`lodum` handles binary data (`bytes` and `bytearray`) differently depending on the format:
+
+* **Text-based formats** (JSON, TOML) encode binary data as Base64-encoded strings.
+* **Binary formats** (MsgPack, CBOR, BSON, Pickle) and **YAML** use their native binary representation where possible, ensuring efficient storage and transmission.
 
 ## Supported Formats
 
@@ -220,8 +265,8 @@ user = json.loads(User, user_data)
 `lodum` currently supports the following types for serialization:
 
 * **Primitives:** `int`, `str`, `float`, `bool`, `None`
-* **Collections:** `list`, `dict`, `tuple`, `set`
-* **Typing:** `Optional`, `Union`, `Any`, `TypeVar`
+* **Collections:** `list`, `dict`, `tuple`, `set`, `bytes`, `bytearray`, `array.array`, `collections.defaultdict`, `collections.OrderedDict`, `collections.Counter`
+* **Typing:** `Optional`, `Union`, `Any`, `TypeVar` (The `@lodum` decorator preserves the type identity of the decorated class using `TypeVar`, ensuring excellent IDE support and static type checking.)
 * **Standard Library:** `datetime.datetime` (encoded as ISO 8601 strings), `enum.Enum` (encoded by value), `uuid.UUID`, `decimal.Decimal`, `pathlib.Path`
 * **Third-Party Libraries:** `numpy.ndarray`, `pandas.DataFrame`, `pandas.Series`, `polars.DataFrame`, `polars.Series`
 * **Custom Objects:** Any class decorated with `@lodum`.
