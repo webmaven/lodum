@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from lodum import lodum, json, yaml
 
+
 @lodum
 class RoundTripObject:
     def __init__(self, a: int, b: str):
@@ -10,7 +11,12 @@ class RoundTripObject:
         self.b = b
 
     def __eq__(self, other):
-        return isinstance(other, RoundTripObject) and self.a == other.a and self.b == other.b
+        return (
+            isinstance(other, RoundTripObject)
+            and self.a == other.a
+            and self.b == other.b
+        )
+
 
 def test_json_to_yaml_roundtrip():
     """
@@ -26,6 +32,7 @@ def test_json_to_yaml_roundtrip():
     final_instance = yaml.loads(RoundTripObject, yaml_str)
 
     assert instance == final_instance
+
 
 def test_yaml_to_json_roundtrip():
     """

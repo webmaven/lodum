@@ -94,7 +94,12 @@ def generate_schema(t: Type) -> Dict[str, Any]:
         item_schema = generate_schema(args[0]) if args else {}
         return {"type": "array", "items": item_schema}
 
-    if origin in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter):
+    if origin in (
+        dict,
+        collections.defaultdict,
+        collections.OrderedDict,
+        collections.Counter,
+    ):
         if origin is collections.Counter:
             val_schema = {"type": "integer"}
         else:
@@ -219,7 +224,12 @@ def _get_dump_handler(t: Type) -> Callable:
         _DUMP_HANDLER_CACHE[t] = dump_seq
         return dump_seq
 
-    if origin in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter):
+    if origin in (
+        dict,
+        collections.defaultdict,
+        collections.OrderedDict,
+        collections.Counter,
+    ):
         args = get_args(t)
         v_type: Type[Any]
         if origin is collections.Counter:
@@ -375,16 +385,21 @@ def _get_load_handler(t: Type) -> Callable:
             ]
             if origin is array.array:
                 # Guess typecode: 'd' for floats, 'i' for ints
-                typecode = 'i'
+                typecode = "i"
                 if data and isinstance(data[0], float):
-                    typecode = 'd'
+                    typecode = "d"
                 return array.array(typecode, data)
             return data
 
         _LOAD_HANDLER_CACHE[t] = load_list
         return load_list
 
-    if origin in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter):
+    if origin in (
+        dict,
+        collections.defaultdict,
+        collections.OrderedDict,
+        collections.Counter,
+    ):
         args = get_args(t)
         k_type: Type[Any]
         v_type: Type[Any]

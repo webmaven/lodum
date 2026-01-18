@@ -4,12 +4,15 @@
 import numpy as np
 from lodum import lodum, json
 
+
 @lodum
 class NumpyObject:
     def __init__(self, data: np.ndarray):
         self.data = data
+
     def __eq__(self, other):
         return isinstance(other, NumpyObject) and np.array_equal(self.data, other.data)
+
 
 def test_numpy_array():
     data = np.array([1, 2, 3])

@@ -10,6 +10,7 @@ from lodum.exception import SerializationError
 
 # --- Test Data ---
 
+
 @lodum
 class Simple:
     def __init__(self, a: int, b: str):
@@ -19,9 +20,11 @@ class Simple:
     def __eq__(self, other):
         return isinstance(other, Simple) and self.a == other.a and self.b == other.b
 
+
 class NotSerializable:
     def __init__(self, message: str):
         self.message = message
+
 
 # A classic malicious pickle payload that tries to run `os.system('echo malicious')`
 MALICIOUS_PAYLOAD = b"c" + b"os\nsystem\n(S'echo malicious'\ntR."
@@ -38,8 +41,14 @@ class TypingObject:
         self.optional_field = optional_field
         self.union_field = union_field
         self.any_field = any_field
+
     def __eq__(self, o):
-        return isinstance(o, TypingObject) and self.optional_field == o.optional_field and self.union_field == o.union_field and self.any_field == o.any_field
+        return (
+            isinstance(o, TypingObject)
+            and self.optional_field == o.optional_field
+            and self.union_field == o.union_field
+            and self.any_field == o.any_field
+        )
 
 
 def test_pickle_typing_support():
@@ -54,7 +63,9 @@ def test_pickle_typing_support():
     result = lodum_pickle.loads(TypingObject, pickled_data)
     assert result == instance
 
+
 # --- Test Cases ---
+
 
 def test_pickle_roundtrip_simple_object():
     """Tests that a simple lodum-enabled object can be encoded and decoded with pickle."""
@@ -64,6 +75,7 @@ def test_pickle_roundtrip_simple_object():
     unpickled_instance = lodum_pickle.loads(Simple, pickled_data)
 
     assert instance == unpickled_instance
+
 
 def test_dumps_pickle_fails_on_non_lodum_object():
     """
@@ -76,6 +88,7 @@ def test_dumps_pickle_fails_on_non_lodum_object():
         lodum_pickle.dumps(instance)
 
     assert "Object of type NotSerializable is not lodum-enabled" in str(excinfo.value)
+
 
 def test_loads_pickle_fails_on_non_lodum_object():
     """
@@ -92,15 +105,17 @@ def test_loads_pickle_fails_on_non_lodum_object():
 
     assert "Attempted to unpickle a non-lodum type" in str(excinfo.value)
 
+
 def test_loads_pickle_blocks_malicious_payload():
     """
     Tests that the SafeUnpickler correctly blocks a known-malicious pickle
     payload that attempts to execute arbitrary code.
     """
     with pytest.raises(pickle.UnpicklingError) as excinfo:
-        lodum_pickle.loads(dict, MALICIOUS_PAYLOAD) # The class doesn't matter here
+        lodum_pickle.loads(dict, MALICIOUS_PAYLOAD)  # The class doesn't matter here
 
     assert "Unsafe module 'os' is forbidden" in str(excinfo.value)
+
 
 @lodum
 class Nested:
@@ -109,7 +124,12 @@ class Nested:
         self.c = c
 
     def __eq__(self, other):
-        return isinstance(other, Nested) and self.simple == other.simple and self.c == other.c
+        return (
+            isinstance(other, Nested)
+            and self.simple == other.simple
+            and self.c == other.c
+        )
+
 
 def test_pickle_roundtrip_nested_object():
     """Tests that a nested lodum-enabled object can be encoded and decoded with pickle."""
@@ -120,14 +140,17 @@ def test_pickle_roundtrip_nested_object():
 
     assert instance == unpickled_instance
 
+
 def test_dumps_pickle_fails_on_nested_non_lodum_object():
     """
     Tests that `lodum_pickle.dumps` fails if a nested object is not lodum-enabled.
     """
+
     @lodum
     class Container:
         def __init__(self, data: NotSerializable):
             self.data = data
+
         def __eq__(self, o):
             return isinstance(o, Container) and self.data == o.data
 

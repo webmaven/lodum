@@ -4,13 +4,20 @@
 import polars as pl
 from lodum import lodum, json
 
+
 @lodum
 class PolarsObject:
     def __init__(self, df: pl.DataFrame, s: pl.Series):
         self.df = df
         self.s = s
+
     def __eq__(self, other):
-        return isinstance(other, PolarsObject) and self.df.equals(other.df) and self.s.equals(other.s)
+        return (
+            isinstance(other, PolarsObject)
+            and self.df.equals(other.df)
+            and self.s.equals(other.s)
+        )
+
 
 def test_polars_dataframe_series():
     df = pl.DataFrame({"a": [1, 2], "b": [3, 4]})

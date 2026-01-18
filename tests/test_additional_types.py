@@ -2,6 +2,7 @@ import collections
 import array
 from lodum import lodum, json, yaml, msgpack, cbor, bson, pickle
 
+
 @lodum
 class AdditionalTypes:
     def __init__(
@@ -11,7 +12,7 @@ class AdditionalTypes:
         counter: collections.Counter[str],
         arr: array.array,
         b: bytes,
-        ba: bytearray
+        ba: bytearray,
     ):
         self.dd = dd
         self.od = od
@@ -20,11 +21,12 @@ class AdditionalTypes:
         self.b = b
         self.ba = ba
 
+
 def test_additional_types_json():
     dd = collections.defaultdict(int, {"a": 1})
     od = collections.OrderedDict([("z", 26), ("a", 1)])
     counter = collections.Counter(["a", "b", "a"])
-    arr = array.array('i', [1, 2, 3])
+    arr = array.array("i", [1, 2, 3])
     b = b"hello"
     ba = bytearray(b"world")
 
@@ -40,11 +42,12 @@ def test_additional_types_json():
     assert decoded.b == b
     assert decoded.ba == ba
 
+
 def test_additional_types_yaml():
     dd = collections.defaultdict(int, {"a": 1})
     od = collections.OrderedDict([("z", 26), ("a", 1)])
     counter = collections.Counter(["a", "b", "a"])
-    arr = array.array('i', [1, 2, 3])
+    arr = array.array("i", [1, 2, 3])
     b = b"hello"
     ba = bytearray(b"world")
 
@@ -61,11 +64,12 @@ def test_additional_types_yaml():
     assert decoded.b == b
     assert decoded.ba == ba
 
+
 def test_additional_types_msgpack():
     dd = collections.defaultdict(int, {"a": 1})
     od = collections.OrderedDict([("z", 26), ("a", 1)])
     counter = collections.Counter(["a", "b", "a"])
-    arr = array.array('i', [1, 2, 3])
+    arr = array.array("i", [1, 2, 3])
     b = b"hello"
     ba = bytearray(b"world")
 
@@ -81,11 +85,12 @@ def test_additional_types_msgpack():
     assert decoded.b == b
     assert decoded.ba == ba
 
+
 def test_additional_types_cbor():
     dd = collections.defaultdict(int, {"a": 1})
     od = collections.OrderedDict([("z", 26), ("a", 1)])
     counter = collections.Counter(["a", "b", "a"])
-    arr = array.array('i', [1, 2, 3])
+    arr = array.array("i", [1, 2, 3])
     b = b"hello"
     ba = bytearray(b"world")
 
@@ -101,11 +106,12 @@ def test_additional_types_cbor():
     assert decoded.b == b
     assert decoded.ba == ba
 
+
 def test_additional_types_bson():
     dd = collections.defaultdict(int, {"a": 1})
     od = collections.OrderedDict([("z", 26), ("a", 1)])
     counter = collections.Counter(["a", "b", "a"])
-    arr = array.array('i', [1, 2, 3])
+    arr = array.array("i", [1, 2, 3])
     b = b"hello"
     ba = bytearray(b"world")
 
@@ -121,11 +127,12 @@ def test_additional_types_bson():
     assert decoded.b == b
     assert decoded.ba == ba
 
+
 def test_additional_types_pickle():
     dd = collections.defaultdict(int, {"a": 1})
     od = collections.OrderedDict([("z", 26), ("a", 1)])
     counter = collections.Counter(["a", "b", "a"])
-    arr = array.array('i', [1, 2, 3])
+    arr = array.array("i", [1, 2, 3])
     b = b"hello"
     ba = bytearray(b"world")
 
@@ -140,6 +147,7 @@ def test_additional_types_pickle():
     assert list(decoded.arr) == list(arr)
     assert decoded.b == b
     assert decoded.ba == ba
+
 
 def test_defaultdict_inference():
     @lodum
