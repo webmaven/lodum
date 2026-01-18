@@ -1,10 +1,9 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, List, Optional, Set, Union
 
 from lodum import lodum, field, yaml
 

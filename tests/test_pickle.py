@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import pickle
 import pytest
-import os
 
-from typing import Any, Optional, Union, TypeVar
+from typing import Any, Optional, Union
 from lodum import lodum, pickle as lodum_pickle
 from lodum.exception import SerializationError
 

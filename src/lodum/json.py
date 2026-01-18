@@ -36,7 +36,9 @@ def schema(cls: Type) -> Dict[str, Any]:
 
 
 class JsonDumper(BaseDumper):
-    pass
+    def dump_bytes(self, value: bytes) -> Any:
+        import base64
+        return base64.b64encode(value).decode("ascii")
 
 
 # --- JSON Loader Implementation ---
@@ -80,3 +82,12 @@ class JsonLoader(BaseLoader):
                 f"Expected dict, got {type(self._data).__name__}"
             )
         return ((k, JsonLoader(v)) for k, v in self._data.items())
+
+    def load_bytes(self) -> bytes:
+        if not isinstance(self._data, str):
+            raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
+        import base64
+        try:
+            return base64.b64decode(self._data)
+        except Exception as e:
+            raise DeserializationError(f"Failed to decode base64: {e}")

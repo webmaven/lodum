@@ -54,15 +54,15 @@ def test_msgpack_decode_error():
 def test_msgpack_roundtrip_complex():
     @lodum
     class Complex:
-        def __init__(self, l: list[int], d: dict[str, float], s: set[str]):
-            self.l = l
+        def __init__(self, items: list[int], d: dict[str, float], s: set[str]):
+            self.items = items
             self.d = d
             self.s = s
             
-    instance = Complex(l=[1, 2, 3], d={"pi": 3.14}, s={"a", "b"})
+    instance = Complex(items=[1, 2, 3], d={"pi": 3.14}, s={"a", "b"})
     packed = msgpack.dumps(instance)
     unpacked = msgpack.loads(Complex, packed)
     
-    assert unpacked.l == [1, 2, 3]
+    assert unpacked.items == [1, 2, 3]
     assert unpacked.d == {"pi": 3.14}
     assert unpacked.s == {"a", "b"}

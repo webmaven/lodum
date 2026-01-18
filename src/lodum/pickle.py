@@ -29,6 +29,9 @@ class ValidationDumper(Dumper):
     def dump_bool(self, value: bool) -> None:
         pass
 
+    def dump_bytes(self, value: bytes) -> None:
+        pass
+
     def dump_list(self, value: list) -> None:
         pass
 
@@ -65,6 +68,20 @@ class SafeUnpickler(pickle.Unpickler):
 
         if module_name == "builtins" and hasattr(builtins, class_name):
             return getattr(builtins, class_name)
+
+        if module_name == "collections" and class_name in (
+            "defaultdict",
+            "OrderedDict",
+            "Counter",
+        ):
+            import collections
+
+            return getattr(collections, class_name)
+
+        if module_name == "array" and class_name in ("array", "_array_reconstructor"):
+            import array
+
+            return getattr(array, class_name)
 
         cls = super().find_class(module_name, class_name)
 

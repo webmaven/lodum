@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import List, Dict, Any
+from typing import Any
 from lodum import lodum, json
 
 @lodum

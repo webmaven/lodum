@@ -2,6 +2,8 @@ import inspect
 import datetime
 import enum
 import uuid
+import collections
+import array
 from decimal import Decimal
 from pathlib import Path
 from typing import (
@@ -82,16 +84,21 @@ def generate_schema(t: Type) -> Dict[str, Any]:
         return {"type": "string"}
     if t is Path:
         return {"type": "string"}
+    if t in (bytes, bytearray):
+        return {"type": "string", "contentEncoding": "base64"}
 
     origin = get_origin(t) or t
     args = get_args(t)
 
-    if origin is list:
+    if origin in (list, array.array):
         item_schema = generate_schema(args[0]) if args else {}
         return {"type": "array", "items": item_schema}
 
-    if origin is dict:
-        val_schema = generate_schema(args[1]) if len(args) == 2 else {}
+    if origin in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter):
+        if origin is collections.Counter:
+            val_schema = {"type": "integer"}
+        else:
+            val_schema = generate_schema(args[1]) if len(args) == 2 else {}
         return {"type": "object", "additionalProperties": val_schema}
 
     if origin is Union:
@@ -201,7 +208,7 @@ def _get_dump_handler(t: Type) -> Callable:
         return handler
 
     origin = get_origin(t) or t
-    if origin is list or origin is set or origin is tuple:
+    if origin in (list, set, tuple, array.array):
         args = get_args(t)
         item_type = args[0] if args else Any
         item_handler = _get_dump_handler(item_type)
@@ -212,9 +219,13 @@ def _get_dump_handler(t: Type) -> Callable:
         _DUMP_HANDLER_CACHE[t] = dump_seq
         return dump_seq
 
-    if origin is dict:
+    if origin in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter):
         args = get_args(t)
-        v_type = args[1] if len(args) == 2 else Any
+        v_type: Type[Any]
+        if origin is collections.Counter:
+            v_type = int
+        else:
+            v_type = args[1] if len(args) == 2 else Any
         v_handler = _get_dump_handler(v_type)
 
         def dump_mapping(obj, dumper):
@@ -352,32 +363,53 @@ def _get_load_handler(t: Type) -> Callable:
     if origin is Union:
         return _load_union
 
-    if origin is list:
+    if origin in (list, array.array):
         args = get_args(t)
         item_type = args[0] if args else Any
         item_loader_fn = _get_load_handler(item_type)
 
         def load_list(cls_ignore, loader, path):
-            return [
+            data = [
                 item_loader_fn(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]")
                 for i, item_l in enumerate(loader.load_list())
             ]
+            if origin is array.array:
+                # Guess typecode: 'd' for floats, 'i' for ints
+                typecode = 'i'
+                if data and isinstance(data[0], float):
+                    typecode = 'd'
+                return array.array(typecode, data)
+            return data
 
         _LOAD_HANDLER_CACHE[t] = load_list
         return load_list
 
-    if origin is dict:
+    if origin in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter):
         args = get_args(t)
-        k_type, v_type = (args[0], args[1]) if len(args) == 2 else (Any, Any)
+        k_type: Type[Any]
+        v_type: Type[Any]
+        if origin is collections.Counter:
+            k_type, v_type = (args[0] if args else Any), int
+        else:
+            k_type, v_type = (args[0], args[1]) if len(args) == 2 else (Any, Any)
+
         if k_type is not str and k_type is not Any:
             raise DeserializationError("JSON/YAML object keys must be strings")
         v_loader_fn = _get_load_handler(v_type)
 
         def load_dict(cls_ignore, loader, path):
-            return {
+            data = {
                 k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k)
                 for k, v_l in loader.load_dict()
             }
+            if origin is collections.defaultdict:
+                factory = v_type if v_type is not Any and callable(v_type) else None
+                return collections.defaultdict(factory, data)
+            if origin is collections.OrderedDict:
+                return collections.OrderedDict(data)
+            if origin is collections.Counter:
+                return collections.Counter(data)
+            return data
 
         _LOAD_HANDLER_CACHE[t] = load_dict
         return load_dict
@@ -421,6 +453,18 @@ def _dump_sequence(obj: Any, dumper: Dumper) -> list:
 
 def _dump_dict(obj: dict, dumper: Dumper) -> dict:
     return {str(k): dump(v, dumper) for k, v in obj.items()}
+
+
+def _dump_bytes(obj: bytes, d: Dumper) -> Any:
+    return d.dump_bytes(obj)
+
+
+def _dump_bytearray(obj: bytearray, d: Dumper) -> Any:
+    return d.dump_bytes(bytes(obj))
+
+
+def _dump_array(obj: array.array, d: Dumper) -> Any:
+    return [dump(item, d) for item in obj]
 
 
 def _dump_datetime(obj: datetime.datetime, d: Dumper) -> str:
@@ -479,6 +523,12 @@ DUMP_DISPATCH.update(
         uuid.UUID: _dump_uuid,
         Decimal: _dump_decimal,
         Path: _dump_path,
+        bytes: _dump_bytes,
+        bytearray: _dump_bytearray,
+        array.array: _dump_array,
+        collections.defaultdict: _dump_dict,
+        collections.OrderedDict: _dump_dict,
+        collections.Counter: _dump_dict,
     }
 )
 
@@ -688,6 +738,78 @@ def _load_path(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
+def _load_bytes(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    try:
+        return cast(T, loader.load_bytes())
+    except (TypeError, DeserializationError) as e:
+        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
+        raise DeserializationError(
+            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        )
+
+
+def _load_bytearray(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    try:
+        return cast(T, bytearray(loader.load_bytes()))
+    except (TypeError, DeserializationError, ValueError) as e:
+        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
+        raise DeserializationError(
+            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        )
+
+
+def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    try:
+        data = _load_list(list, loader, path)
+        typecode = "i"
+        if data and isinstance(data[0], float):
+            typecode = "d"
+        return cast(T, array.array(typecode, data))
+    except (TypeError, DeserializationError, ValueError) as e:
+        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
+        raise DeserializationError(
+            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        )
+
+
+def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    try:
+        args = get_args(cls)
+        val_type = args[1] if len(args) == 2 else Any
+        data = _load_dict(dict, loader, path)
+        factory = val_type if val_type is not Any and callable(val_type) else None
+        return cast(T, collections.defaultdict(factory, data))
+    except (TypeError, DeserializationError) as e:
+        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
+        raise DeserializationError(
+            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        )
+
+
+def _load_ordered_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    try:
+        data = _load_dict(dict, loader, path)
+        return cast(T, collections.OrderedDict(data))
+    except (TypeError, DeserializationError) as e:
+        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
+        raise DeserializationError(
+            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        )
+
+
+def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    try:
+        # Counter is basically Dict[Any, int]
+        # But we need to make sure we load it correctly
+        data = _load_dict(Dict[Any, int], loader, path)
+        return cast(T, collections.Counter(data))
+    except (TypeError, DeserializationError) as e:
+        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
+        raise DeserializationError(
+            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        )
+
+
 def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     try:
         item_types = get_args(cls)
@@ -772,6 +894,12 @@ LOAD_DISPATCH.update(
         uuid.UUID: _load_uuid,
         Decimal: _load_decimal,
         Path: _load_path,
+        bytes: _load_bytes,
+        bytearray: _load_bytearray,
+        array.array: _load_array,
+        collections.defaultdict: _load_defaultdict,
+        collections.OrderedDict: _load_ordered_dict,
+        collections.Counter: _load_counter,
         Any: _load_any,
     }
 )
