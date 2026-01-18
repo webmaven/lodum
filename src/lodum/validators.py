@@ -13,7 +13,9 @@ class Validator:
 
 
 class Range(Validator):
-    def __init__(self, min: Optional[Any] = None, max: Optional[Any] = None):
+    def __init__(
+        self, min: Optional[Any] = None, max: Optional[Any] = None
+    ) -> None:
         self.min = min
         self.max = max
 
@@ -27,7 +29,9 @@ class Range(Validator):
 
 
 class Length(Validator):
-    def __init__(self, min: Optional[int] = None, max: Optional[int] = None):
+    def __init__(
+        self, min: Optional[int] = None, max: Optional[int] = None
+    ) -> None:
         self.min = min
         self.max = max
 
@@ -50,7 +54,7 @@ class Length(Validator):
 
 
 class Match(Validator):
-    def __init__(self, pattern: str):
+    def __init__(self, pattern: str) -> None:
         self.pattern = re.compile(pattern)
 
     def __call__(self, value: Any) -> None:
@@ -65,7 +69,7 @@ class Match(Validator):
 
 
 class OneOf(Validator):
-    def __init__(self, options: Container[Any]):
+    def __init__(self, options: Container[Any]) -> None:
         self.options = options
 
     def __call__(self, value: Any) -> None:

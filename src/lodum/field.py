@@ -4,7 +4,10 @@
 from typing import Any, Callable, List, Optional, Union
 
 # A sentinel object to detect if a parameter is supplied or not.
-_MISSING_TYPE = object
+class _MISSING_TYPE:
+    pass
+
+
 _MISSING = _MISSING_TYPE()
 
 
@@ -27,7 +30,7 @@ class Field:
         validate: Optional[
             Union[Callable[[Any], None], List[Callable[[Any], None]]]
         ] = None,
-    ):
+    ) -> None:
         if default is not _MISSING and default_factory is not None:
             raise ValueError("cannot specify both default and default_factory")
 

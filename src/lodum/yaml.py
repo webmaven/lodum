@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import io
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Type, TypeVar
 
 try:
     from ruamel.yaml import YAML
@@ -65,7 +65,7 @@ class YamlDumper(BaseDumper):
     Encodes Python objects into a YAML-compatible intermediate representation.
     """
 
-    def begin_struct(self, cls: Type) -> dict:
+    def begin_struct(self, cls: Type[Any]) -> Dict[str, Any]:
         return {}
 
     def end_struct(self) -> None:

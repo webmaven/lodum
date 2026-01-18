@@ -3,12 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import functools
-from typing import Any, Dict, List, Protocol, Type, Iterator
+from typing import Any, Dict, List, Protocol, Type, Iterator, TypeVar
 
 from .field import Field, _MISSING
 
+T = TypeVar("T", bound=Type[Any])
 
-def lodum(cls: Type) -> Type:
+
+def lodum(cls: T) -> T:
     """
     A class decorator that marks a class as lodum-enabled and processes field metadata.
     """
@@ -38,7 +40,7 @@ def lodum(cls: Type) -> Type:
     setattr(cls, "_lodum_fields", fields)
 
     @functools.wraps(original_init)
-    def new_init(self, *args, **kwargs):
+    def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
         bound_args = init_sig.bind(self, *args, **kwargs)
         bound_args.apply_defaults()
 
@@ -55,7 +57,7 @@ def lodum(cls: Type) -> Type:
 
         original_init(self, **resolved_args)
 
-    cls.__init__ = new_init
+    cls.__init__ = new_init  # type: ignore[method-assign]
     return cls
 
 
@@ -128,11 +130,29 @@ class BaseLoader:
     Base implementation of the Loader protocol to reduce duplication.
     """
 
-    def __init__(self, data: Any):
+    def __init__(self, data: Any) -> None:
         self._data = data
 
     def load_any(self) -> Any:
         return self._data
+
+    def load_int(self) -> int:
+        raise NotImplementedError
+
+    def load_str(self) -> str:
+        raise NotImplementedError
+
+    def load_float(self) -> float:
+        raise NotImplementedError
+
+    def load_bool(self) -> bool:
+        raise NotImplementedError
+
+    def load_list(self) -> Iterator["Loader"]:
+        raise NotImplementedError
+
+    def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
+        raise NotImplementedError
 
     def load_bytes(self) -> bytes:
         if not isinstance(self._data, bytes):

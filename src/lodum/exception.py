@@ -15,7 +15,7 @@ class SerializationError(LodumError):
 class DeserializationError(LodumError):
     """Raised when an error occurs during deserialization."""
 
-    def __init__(self, message: str, path: Optional[str] = None):
+    def __init__(self, message: str, path: Optional[str] = None) -> None:
         self.raw_message = message
         self.path = path
         full_message = f"Error at {path}: {message}" if path else message
