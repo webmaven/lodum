@@ -7,7 +7,8 @@ import io
 from typing import Any, Type, TypeVar
 
 from .core import Dumper
-from .internal import dump as validate_lodum_structure
+from .internal import dump as validate_lodum_structure, DEFAULT_MAX_SIZE
+from .exception import DeserializationError
 
 T = TypeVar("T")
 
@@ -93,10 +94,15 @@ class SafeUnpickler(pickle.Unpickler):
         )
 
 
-def loads(cls: Type[T], data: bytes) -> T:
+def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """
     Decodes a pickle byte string to a Python object, ensuring it is safe.
     """
+    if len(data) > max_size:
+        raise DeserializationError(
+            f"Input size ({len(data)}) exceeds maximum allowed ({max_size})"
+        )
+
     with io.BytesIO(data) as f:
         unpickler = SafeUnpickler(f)
         obj = unpickler.load()

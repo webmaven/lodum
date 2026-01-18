@@ -4,6 +4,7 @@ import enum
 import uuid
 import collections
 import array
+import threading
 from decimal import Decimal
 from pathlib import Path
 from typing import (
@@ -18,6 +19,7 @@ from typing import (
     get_origin,
     get_args,
     cast,
+    ForwardRef,
 )
 
 try:
@@ -43,32 +45,84 @@ T = TypeVar("T")
 
 # --- Type-to-Handler Dispatch Tables ---
 
-DumpHandler = Callable[[Any, Dumper], Any]
-LoadHandler = Callable[[Type[Any], Loader, Optional[str]], Any]
+DumpHandler = Callable[[Any, Dumper, int, Optional[set]], Any]
+LoadHandler = Callable[[Type[Any], Loader, Optional[str], int], Any]
 
 DUMP_DISPATCH: Dict[Type[Any], DumpHandler] = {}
 LOAD_DISPATCH: Dict[Type[Any], LoadHandler] = {}
 
+# --- Security Limits ---
+
+DEFAULT_MAX_DEPTH = 100
+DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+
 # --- Caching and Compilation ---
+
+def _sanitize_name(name: str) -> str:
+    """Sanitizes a string to be a valid Python identifier part."""
+    if not name:
+        return "unknown"
+    return "".join(c if c.isalnum() else "_" for c in name)
+
 
 _DUMP_HANDLER_CACHE: Dict[Type[Any], DumpHandler] = {}
 _LOAD_HANDLER_CACHE: Dict[Type[Any], LoadHandler] = {}
+_CACHE_LOCK = threading.Lock()
 
 
-def dump(obj: Any, dumper: Dumper) -> Any:
+def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -> Any:
     """Recursively encodes a Python object using a given dumper."""
-    handler = _get_dump_handler(type(obj))
-    return handler(obj, dumper)
+    if depth > DEFAULT_MAX_DEPTH:
+        raise SerializationError(f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded")
+
+    if seen is None:
+        seen = set()
+
+    obj_id = id(obj)
+    if obj_id in seen:
+        raise SerializationError("Circular reference detected")
+
+    # Only track containers and lodum objects to detect cycles
+    is_container = (
+        isinstance(obj, (list, dict, set, tuple, collections.deque, array.array))
+        or getattr(obj, "_lodum_enabled", False)
+        or (np is not None and isinstance(obj, np.ndarray))
+        or (pd is not None and isinstance(obj, (pd.DataFrame, pd.Series)))
+        or (pl is not None and isinstance(obj, (pl.DataFrame, pl.Series)))
+    )
+
+    if is_container:
+        seen.add(obj_id)
+
+    try:
+        handler = _get_dump_handler(type(obj))
+        return handler(obj, dumper, depth, seen)
+    finally:
+        if is_container:
+            seen.remove(obj_id)
 
 
-def load(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def load(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     """Recursively decodes a Python object using a given loader."""
+    if depth > DEFAULT_MAX_DEPTH:
+        raise DeserializationError(
+            f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+        )
     handler = _get_load_handler(cls)
-    return cast(T, handler(cls, loader, path))
+    return cast(T, handler(cls, loader, path, depth))
 
 
-def generate_schema(t: Type[Any]) -> Dict[str, Any]:
+def generate_schema(
+    t: Type[Any], depth: int = 0, visited: Optional[set] = None
+) -> Dict[str, Any]:
     """Generates a JSON Schema for a given type."""
+    if depth > DEFAULT_MAX_DEPTH:
+        raise SerializationError(
+            f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded during schema generation"
+        )
+
+    if visited is None:
+        visited = set()
     if t is int:
         return {"type": "integer"}
     if t is str:
@@ -94,7 +148,7 @@ def generate_schema(t: Type[Any]) -> Dict[str, Any]:
     args = get_args(t)
 
     if origin in (list, array.array):
-        item_schema = generate_schema(args[0]) if args else {}
+        item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
         return {"type": "array", "items": item_schema}
 
     if origin in (
@@ -106,17 +160,22 @@ def generate_schema(t: Type[Any]) -> Dict[str, Any]:
         if origin is collections.Counter:
             val_schema = {"type": "integer"}
         else:
-            val_schema = generate_schema(args[1]) if len(args) == 2 else {}
+            val_schema = (
+                generate_schema(args[1], depth + 1, visited) if len(args) == 2 else {}
+            )
         return {"type": "object", "additionalProperties": val_schema}
 
     if origin is Union:
-        return {"anyOf": [generate_schema(arg) for arg in args]}
+        return {"anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]}
 
     if origin is tuple:
-        return {"type": "array", "prefixItems": [generate_schema(arg) for arg in args]}
+        return {
+            "type": "array",
+            "prefixItems": [generate_schema(arg, depth + 1, visited) for arg in args],
+        }
 
     if origin is set:
-        item_schema = generate_schema(args[0]) if args else {}
+        item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
         return {"type": "array", "items": item_schema, "uniqueItems": True}
 
     if t is datetime.datetime:
@@ -126,18 +185,25 @@ def generate_schema(t: Type[Any]) -> Dict[str, Any]:
         return {"enum": [m.value for m in t]}
 
     if inspect.isclass(t) and getattr(t, "_lodum_enabled", False):
+        if t in visited:
+            # Recursive reference
+            return {"$ref": f"#/definitions/{_sanitize_name(t.__name__)}"}
+
+        visited.add(t)
         fields: Dict[str, Field] = getattr(t, "_lodum_fields", {})
         properties = {}
         required = []
         for field_name, field_info in fields.items():
             key = field_info.rename if field_info.rename else field_info.name
-            properties[key] = generate_schema(field_info.type)
+            properties[key] = generate_schema(field_info.type, depth + 1, visited)
             if not field_info.has_default:
                 required.append(key)
 
         schema = {"type": "object", "properties": properties}
         if required:
             schema["required"] = required
+
+        visited.remove(t)
         return schema
 
     return {}
@@ -149,7 +215,8 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     """
     fields: Dict[str, Field] = getattr(cls, "_lodum_fields", {})
     lines = []
-    lines.append(f"def dump_{cls.__name__}(obj, dumper, dump_fn):")
+    safe_name = _sanitize_name(cls.__name__)
+    lines.append(f"def dump_{safe_name}(obj, dumper, dump_fn, depth, seen):")
     lines.append("    data = dumper.begin_struct(cls)")
 
     context: Dict[str, Any] = {
@@ -184,15 +251,15 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
                 lines.append(f"    val = obj.{field_name}")
                 if ftype is float:
                     lines.append(
-                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, (float, int)) else dump_fn(val, dumper)"
+                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, (float, int)) else dump_fn(val, dumper, depth + 1, seen)"
                     )
                 else:
                     lines.append(
-                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, {ftype.__name__}) else dump_fn(val, dumper)"
+                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, {ftype.__name__}) else dump_fn(val, dumper, depth + 1, seen)"
                     )
             else:
                 lines.append(
-                    f"    data[{safe_key}] = dump_fn(obj.{field_name}, dumper)"
+                    f"    data[{safe_key}] = dump_fn(obj.{field_name}, dumper, depth + 1, seen)"
                 )
 
     lines.append("    dumper.end_struct()")
@@ -202,17 +269,22 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     local_vars: Dict[str, Any] = {}
     exec(source, context, local_vars)
 
-    compiled_fn = local_vars[f"dump_{cls.__name__}"]
-    return lambda obj, dumper: compiled_fn(obj, dumper, dump)
+    compiled_fn = local_vars[f"dump_{safe_name}"]
+    return lambda obj, dumper, depth, seen: compiled_fn(obj, dumper, dump, depth, seen)
 
 
 def _get_dump_handler(t: Type[Any]) -> DumpHandler:
-    if t in _DUMP_HANDLER_CACHE:
-        return _DUMP_HANDLER_CACHE[t]
+    if isinstance(t, str):
+        t = ForwardRef(t)
+
+    with _CACHE_LOCK:
+        if t in _DUMP_HANDLER_CACHE:
+            return _DUMP_HANDLER_CACHE[t]
 
     if t in DUMP_DISPATCH:
         handler = DUMP_DISPATCH[t]
-        _DUMP_HANDLER_CACHE[t] = handler
+        with _CACHE_LOCK:
+            _DUMP_HANDLER_CACHE[t] = handler
         return handler
 
     origin = get_origin(t) or t
@@ -221,10 +293,11 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
         item_type = args[0] if args else Any
         item_handler = _get_dump_handler(item_type)
 
-        def dump_seq(obj: Any, dumper: Dumper) -> List[Any]:
-            return [item_handler(item, dumper) for item in obj]
+        def dump_seq(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> List[Any]:
+            return [item_handler(item, dumper, depth + 1, seen) for item in obj]
 
-        _DUMP_HANDLER_CACHE[t] = dump_seq
+        with _CACHE_LOCK:
+            _DUMP_HANDLER_CACHE[t] = dump_seq
         return dump_seq
 
     if origin in (
@@ -241,20 +314,23 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
             v_type = args[1] if len(args) == 2 else Any
         v_handler = _get_dump_handler(v_type)
 
-        def dump_mapping(obj: Any, dumper: Dumper) -> Dict[str, Any]:
-            return {str(k): v_handler(v, dumper) for k, v in obj.items()}
+        def dump_mapping(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Dict[str, Any]:
+            return {str(k): v_handler(v, dumper, depth + 1, seen) for k, v in obj.items()}
 
-        _DUMP_HANDLER_CACHE[t] = dump_mapping
+        with _CACHE_LOCK:
+            _DUMP_HANDLER_CACHE[t] = dump_mapping
         return dump_mapping
 
     if inspect.isclass(t) and getattr(t, "_lodum_enabled", False):
         handler = _compile_dump_handler(t)
-        _DUMP_HANDLER_CACHE[t] = handler
+        with _CACHE_LOCK:
+            _DUMP_HANDLER_CACHE[t] = handler
         return handler
 
     for super_t, handler in DUMP_DISPATCH.items():
         if inspect.isclass(t) and issubclass(t, super_t):
-            _DUMP_HANDLER_CACHE[t] = handler
+            with _CACHE_LOCK:
+                _DUMP_HANDLER_CACHE[t] = handler
             return handler
 
     raise SerializationError(f"Object of type {t.__name__} is not lodum-enabled")
@@ -263,7 +339,8 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
 def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     fields: Dict[str, Field] = getattr(cls, "_lodum_fields", {})
     lines = []
-    lines.append(f"def load_{cls.__name__}(loader, load_fn, path):")
+    safe_name = _sanitize_name(cls.__name__)
+    lines.append(f"def load_{safe_name}(loader, load_fn, path, depth):")
     lines.append("    try:")
     lines.append("        data = {k: v for k, v in loader.load_dict()}")
     lines.append("    except DeserializationError as e:")
@@ -319,7 +396,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                 type_name = f"type_{i}"
                 context[type_name] = ftype
                 lines.append(
-                    f"        try: args['{field_name}'] = load_fn({type_name}, val_loader, field_path)"
+                    f"        try: args['{field_name}'] = load_fn({type_name}, val_loader, field_path, depth + 1)"
                 )
                 lines.append(
                     "        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
@@ -358,16 +435,31 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     source = "\n".join(lines)
     local_vars: Dict[str, Any] = {}
     exec(source, context, local_vars)
-    compiled_fn = local_vars[f"load_{cls.__name__}"]
-    return lambda cls_ignore, loader, path: compiled_fn(loader, load, path)
+    compiled_fn = local_vars[f"load_{safe_name}"]
+    return lambda cls_ignore, loader, path, depth: compiled_fn(loader, load, path, depth)
 
 
 def _get_load_handler(t: Type[Any]) -> LoadHandler:
-    if t in _LOAD_HANDLER_CACHE:
-        return _LOAD_HANDLER_CACHE[t]
+    if isinstance(t, str):
+        t = ForwardRef(t)
+
+    with _CACHE_LOCK:
+        if t in _LOAD_HANDLER_CACHE:
+            return _LOAD_HANDLER_CACHE[t]
 
     if isinstance(t, TypeVar):
         return _load_any
+    if isinstance(t, ForwardRef):
+        ref_name = t.__forward_arg__
+        for cls in LOAD_DISPATCH:
+            if inspect.isclass(cls) and cls.__name__ == ref_name:
+                return _get_load_handler(cls)
+        with _CACHE_LOCK:
+            for cls in _LOAD_HANDLER_CACHE:
+                if inspect.isclass(cls) and cls.__name__ == ref_name:
+                    return _LOAD_HANDLER_CACHE[cls]
+        raise DeserializationError(f"Cannot resolve ForwardRef {ref_name!r}")
+
     origin = get_origin(t) or t
     args = get_args(t)
 
@@ -382,10 +474,10 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         item_loader_fn = _get_load_handler(item_type)
 
         def load_list(
-            cls_ignore: Type[Any], loader: Loader, path: Optional[str]
+            cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
         ) -> Any:
             data = [
-                item_loader_fn(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]")
+                item_loader_fn(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1)
                 for i, item_l in enumerate(loader.load_list())
             ]
             if origin is array.array:
@@ -396,7 +488,8 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
                 return array.array(typecode, data)
             return data
 
-        _LOAD_HANDLER_CACHE[t] = load_list
+        with _CACHE_LOCK:
+            _LOAD_HANDLER_CACHE[t] = load_list
         return load_list
 
     if origin in (
@@ -418,10 +511,10 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         v_loader_fn = _get_load_handler(v_type)
 
         def load_dict(
-            cls_ignore: Type[Any], loader: Loader, path: Optional[str]
+            cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
         ) -> Any:
             data = {
-                k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k)
+                k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k, depth + 1)
                 for k, v_l in loader.load_dict()
             }
             if origin is collections.defaultdict:
@@ -433,21 +526,24 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
                 return collections.Counter(data)
             return data
 
-        _LOAD_HANDLER_CACHE[t] = load_dict
+        with _CACHE_LOCK:
+            _LOAD_HANDLER_CACHE[t] = load_dict
         return load_dict
 
     if origin in LOAD_DISPATCH:
         handler = LOAD_DISPATCH[origin]
-        _LOAD_HANDLER_CACHE[origin] = handler
+        with _CACHE_LOCK:
+            _LOAD_HANDLER_CACHE[origin] = handler
         return handler
 
     if inspect.isclass(origin) and getattr(origin, "_lodum_enabled", False):
         handler = _compile_load_handler(origin)
-        _LOAD_HANDLER_CACHE[origin] = handler
+        with _CACHE_LOCK:
+            _LOAD_HANDLER_CACHE[origin] = handler
         return handler
 
     for super_t, handler in LOAD_DISPATCH.items():
-        if issubclass(origin, super_t):
+        if inspect.isclass(origin) and issubclass(origin, super_t):
             return handler
     raise DeserializationError(f"Cannot deserialize to type {t}")
 
@@ -455,7 +551,7 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
 # --- Generic Handlers ---
 
 
-def _dump_primitive(obj: Any, dumper: Dumper) -> Any:
+def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
     if isinstance(obj, bool):
         return dumper.dump_bool(obj)
     if isinstance(obj, int):
@@ -469,64 +565,64 @@ def _dump_primitive(obj: Any, dumper: Dumper) -> Any:
     raise SerializationError(f"Unsupported primitive type: {type(obj).__name__}")
 
 
-def _dump_sequence(obj: Any, dumper: Dumper) -> List[Any]:
-    return [dump(item, dumper) for item in obj]
+def _dump_sequence(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> List[Any]:
+    return [dump(item, dumper, depth + 1, seen) for item in obj]
 
 
-def _dump_dict(obj: Dict[Any, Any], dumper: Dumper) -> Dict[str, Any]:
-    return {str(k): dump(v, dumper) for k, v in obj.items()}
+def _dump_dict(obj: Dict[Any, Any], dumper: Dumper, depth: int, seen: Optional[set]) -> Dict[str, Any]:
+    return {str(k): dump(v, dumper, depth + 1, seen) for k, v in obj.items()}
 
 
-def _dump_bytes(obj: bytes, d: Dumper) -> Any:
+def _dump_bytes(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
     return d.dump_bytes(obj)
 
 
-def _dump_bytearray(obj: bytearray, d: Dumper) -> Any:
+def _dump_bytearray(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
     return d.dump_bytes(bytes(obj))
 
 
-def _dump_array(obj: array.array, d: Dumper) -> Any:
-    return [dump(item, d) for item in obj]
+def _dump_array(obj: array.array, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return [dump(item, d, depth + 1, seen) for item in obj]
 
 
-def _dump_datetime(obj: datetime.datetime, d: Dumper) -> str:
+def _dump_datetime(obj: datetime.datetime, d: Dumper, depth: int, seen: Optional[set]) -> str:
     return d.dump_str(obj.isoformat())
 
 
-def _dump_enum(obj: enum.Enum, d: Dumper) -> Any:
-    return dump(obj.value, d)
+def _dump_enum(obj: enum.Enum, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return dump(obj.value, d, depth + 1, seen)
 
 
-def _dump_uuid(obj: uuid.UUID, d: Dumper) -> str:
+def _dump_uuid(obj: uuid.UUID, d: Dumper, depth: int, seen: Optional[set]) -> str:
     return d.dump_str(str(obj))
 
 
-def _dump_decimal(obj: Decimal, d: Dumper) -> str:
+def _dump_decimal(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
     return d.dump_str(str(obj))
 
 
-def _dump_path(obj: Path, d: Dumper) -> str:
+def _dump_path(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
     return d.dump_str(str(obj))
 
 
-def _dump_numpy_array(obj: Any, d: Dumper) -> Any:
-    return dump(obj.tolist(), d)
+def _dump_numpy_array(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return dump(obj.tolist(), d, depth + 1, seen)
 
 
-def _dump_pandas_dataframe(obj: Any, d: Dumper) -> Any:
-    return dump(obj.to_dict(orient="records"), d)
+def _dump_pandas_dataframe(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return dump(obj.to_dict(orient="records"), d, depth + 1, seen)
 
 
-def _dump_pandas_series(obj: Any, d: Dumper) -> Any:
-    return dump(obj.to_dict(), d)
+def _dump_pandas_series(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return dump(obj.to_dict(), d, depth + 1, seen)
 
 
-def _dump_polars_dataframe(obj: Any, d: Dumper) -> Any:
-    return dump(obj.to_dict(), d)
+def _dump_polars_dataframe(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return dump(obj.to_dict(), d, depth + 1, seen)
 
 
-def _dump_polars_series(obj: Any, d: Dumper) -> Any:
-    return dump(obj.to_list(), d)
+def _dump_polars_series(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    return dump(obj.to_list(), d, depth + 1, seen)
 
 
 DUMP_DISPATCH.update(
@@ -564,7 +660,7 @@ if pl is not None:
     DUMP_DISPATCH[pl.Series] = _dump_polars_series
 
 
-def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         if cls is int:
             return cast(T, loader.load_int())
@@ -581,23 +677,23 @@ def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None) ->
     raise DeserializationError(f"Unsupported primitive type: {cls.__name__}", path)
 
 
-def _load_any(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_any(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     return cast(T, loader.load_any())
 
 
-def _load_list(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_list(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     args = get_args(cls)
     item_type: Type[Any] = args[0] if args else Any
     return cast(
         T,
         [
-            load(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]")
+            load(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1)
             for i, item_l in enumerate(loader.load_list())
         ],
     )
 
 
-def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     args = get_args(cls)
     key_type: Type[Any]
     value_type: Type[Any]
@@ -607,20 +703,20 @@ def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     return cast(
         T,
         {
-            k: load(value_type, v_l, f"{path}.{k}" if path else k)
+            k: load(value_type, v_l, f"{path}.{k}" if path else k, depth + 1)
             for k, v_l in loader.load_dict()
         },
     )
 
 
-def _load_optional(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_optional(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     if loader.load_any() is None:
         return cast(T, None)
     inner_type: Type[Any] = get_args(cls)[0]
-    return load(inner_type, loader, path)
+    return load(inner_type, loader, path, depth + 1)
 
 
-def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     data = loader.load_any()
 
     def get_priority(t: Type[Any]) -> int:
@@ -686,7 +782,7 @@ def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
             # or it might be a specialized loader that we can re-instantiate.
             # Using type(loader)(data) is a bit of a hack but it works for current loaders.
             new_loader = type(loader)(data)  # type: ignore[operator, call-arg]
-            return load(inner_type, new_loader, path)
+            return load(inner_type, new_loader, path, depth + 1)
         except (
             DeserializationError,
             ValueError,
@@ -704,7 +800,7 @@ def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     )
 
 
-def _load_datetime(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_datetime(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         return cast(T, datetime.datetime.fromisoformat(loader.load_str()))
     except (ValueError, DeserializationError) as e:
@@ -714,10 +810,10 @@ def _load_datetime(cls: Type[T], loader: Loader, path: Optional[str] = None) -> 
         )
 
 
-def _load_enum(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_enum(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         first_member = next(iter(cls))  # type: ignore[call-overload]
-        value = load(type(first_member.value), loader, path)
+        value = load(type(first_member.value), loader, path, depth + 1)
         return cast(T, cls(value))  # type: ignore[call-arg]
     except (ValueError, StopIteration, DeserializationError) as e:
         msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
@@ -726,7 +822,7 @@ def _load_enum(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_uuid(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_uuid(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         return cast(T, uuid.UUID(loader.load_str()))
     except (ValueError, DeserializationError) as e:
@@ -736,7 +832,7 @@ def _load_uuid(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_decimal(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_decimal(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         # Load as string or float/int
         val = loader.load_any()
@@ -752,7 +848,7 @@ def _load_decimal(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T
         )
 
 
-def _load_path(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_path(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         return cast(T, Path(loader.load_str()))
     except (TypeError, DeserializationError) as e:
@@ -762,7 +858,7 @@ def _load_path(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_bytes(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_bytes(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         return cast(T, loader.load_bytes())
     except (TypeError, DeserializationError) as e:
@@ -772,7 +868,7 @@ def _load_bytes(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_bytearray(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_bytearray(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         return cast(T, bytearray(loader.load_bytes()))
     except (TypeError, DeserializationError, ValueError) as e:
@@ -782,9 +878,9 @@ def _load_bytearray(cls: Type[T], loader: Loader, path: Optional[str] = None) ->
         )
 
 
-def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
-        data = _load_list(list, loader, path)
+        data = _load_list(list, loader, path, depth)
         typecode = "i"
         if data and isinstance(data[0], float):
             typecode = "d"
@@ -796,11 +892,11 @@ def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         args = get_args(cls)
         val_type: Type[Any] = args[1] if len(args) == 2 else Any
-        data = _load_dict(dict, loader, path)
+        data = _load_dict(dict, loader, path, depth)
         factory = val_type if val_type is not Any and callable(val_type) else None
         return cast(T, collections.defaultdict(factory, data))
     except (TypeError, DeserializationError) as e:
@@ -810,9 +906,9 @@ def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None) 
         )
 
 
-def _load_ordered_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_ordered_dict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
-        data = _load_dict(dict, loader, path)
+        data = _load_dict(dict, loader, path, depth)
         return cast(T, collections.OrderedDict(data))
     except (TypeError, DeserializationError) as e:
         msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
@@ -821,11 +917,11 @@ def _load_ordered_dict(cls: Type[T], loader: Loader, path: Optional[str] = None)
         )
 
 
-def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         # Counter is basically Dict[Any, int]
         # But we need to make sure we load it correctly
-        data = _load_dict(Dict[Any, int], loader, path)
+        data = _load_dict(Dict[Any, int], loader, path, depth)
         return cast(T, collections.Counter(data))
     except (TypeError, DeserializationError) as e:
         msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
@@ -834,13 +930,13 @@ def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T
         )
 
 
-def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         item_types: tuple[Type[Any], ...] = get_args(cls)
         return cast(
             T,
             tuple(
-                load(item_types[i], item_l, f"{path}[{i}]" if path else f"[{i}]")
+                load(item_types[i], item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1)
                 for i, item_l in enumerate(loader.load_list())
             ),
         )
@@ -851,13 +947,13 @@ def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     try:
         item_type: Type[Any] = get_args(cls)[0]
         return cast(
             T,
             {
-                load(item_type, item_l, f"{path}[?]" if path else "[?]")
+                load(item_type, item_l, f"{path}[?]" if path else "[?]", depth + 1)
                 for item_l in loader.load_list()
             },
         )
@@ -868,38 +964,38 @@ def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         )
 
 
-def _load_numpy_array(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_numpy_array(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     if np is None:
         raise ImportError("numpy is required for numpy array deserialization")
-    return cast(T, np.array(load(List, loader, path)))
+    return cast(T, np.array(load(List, loader, path, depth + 1)))
 
 
 def _load_pandas_dataframe(
-    cls: Type[T], loader: Loader, path: Optional[str] = None
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
 ) -> T:
     if pd is None:
         raise ImportError("pandas is required for pandas DataFrame deserialization")
-    return cast(T, pd.DataFrame.from_records(load(list, loader, path)))
+    return cast(T, pd.DataFrame.from_records(load(list, loader, path, depth + 1)))
 
 
-def _load_pandas_series(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_pandas_series(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     if pd is None:
         raise ImportError("pandas is required for pandas Series deserialization")
-    return cast(T, pd.Series(load(dict, loader, path)))
+    return cast(T, pd.Series(load(dict, loader, path, depth + 1)))
 
 
 def _load_polars_dataframe(
-    cls: Type[T], loader: Loader, path: Optional[str] = None
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
 ) -> T:
     if pl is None:
         raise ImportError("polars is required for polars DataFrame deserialization")
-    return cast(T, pl.DataFrame(load(dict, loader, path)))
+    return cast(T, pl.DataFrame(load(dict, loader, path, depth + 1)))
 
 
-def _load_polars_series(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+def _load_polars_series(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
     if pl is None:
         raise ImportError("polars is required for polars Series deserialization")
-    return cast(T, pl.Series(load(list, loader, path)))
+    return cast(T, pl.Series(load(list, loader, path, depth + 1)))
 
 
 LOAD_DISPATCH.update(

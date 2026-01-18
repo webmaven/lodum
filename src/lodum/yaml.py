@@ -13,7 +13,8 @@ except ImportError:
     yaml_available = False
 
 from .core import Loader, BaseDumper
-from .internal import dump, load
+from .internal import dump, load, DEFAULT_MAX_SIZE
+from .exception import DeserializationError
 
 T = TypeVar("T")
 yaml: Any = None
@@ -42,10 +43,17 @@ def dumps(obj: Any) -> str:
         return string_stream.getvalue()
 
 
-def loads(cls: Type[T], yaml_string: str) -> T:
+def loads(
+    cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE
+) -> T:
     """
     Decodes a YAML string to a Python object.
     """
+    if len(yaml_string) > max_size:
+        raise DeserializationError(
+            f"Input size ({len(yaml_string)}) exceeds maximum allowed ({max_size})"
+        )
+
     if not yaml_available:
         raise ImportError(
             "ruamel.yaml is required for YAML deserialization. Install it with 'pip install lodum[yaml]'."
