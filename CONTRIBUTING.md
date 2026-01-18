@@ -2,6 +2,26 @@
 
 First off, thank you for considering contributing to `lodum`! It's people like you that make open source such a great community.
 
+## Development Setup
+
+To set up a local development environment:
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/webmaven/lodum.git
+    cd lodum
+    ```
+
+2.  **Install the package in editable mode with all optional dependencies:**
+    ```bash
+    pip install -e ".[all]"
+    ```
+
+3.  **Install development tools:**
+    ```bash
+    pip install pytest ruff mypy pandas-stubs
+    ```
+
 ## How Can I Contribute?
 
 There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into `lodum` itself.
@@ -21,9 +41,36 @@ There are many ways to contribute, from writing tutorials or blog posts, improvi
 - Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
 - Before submitting, please ensure that your code follows the existing style of the project, and that all tests pass.
 
+## Running Tests
+
+We use `pytest` for testing. You can run the full test suite locally:
+
+```bash
+PYTHONPATH=src pytest
+```
+
+## Pre-commit Checks
+
+Before submitting a pull request, please run the following checks to ensure code quality:
+
+1.  **Linting:**
+    ```bash
+    ruff check src/lodum
+    ```
+
+2.  **Formatting:**
+    ```bash
+    ruff format --check src/lodum
+    ```
+
+3.  **Type Checking:**
+    ```bash
+    mypy src/lodum
+    ```
+
 ## Styleguides
 
-- We use [Black](https://github.com/psf/black) for code formatting. Please run it on your code before submitting a pull request.
+- We use [Ruff](https://github.com/astral-sh/ruff) for code formatting and linting. Please run it on your code before submitting a pull request.
 - We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for all Python code.
 
 ## License

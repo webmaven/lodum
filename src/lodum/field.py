@@ -7,6 +7,7 @@ from typing import Any, Callable, List, Optional, Union
 _MISSING_TYPE = object
 _MISSING = _MISSING_TYPE()
 
+
 class Field:
     """
     A class that stores metadata for a field in a lodum-enabled class.
@@ -14,6 +15,7 @@ class Field:
     This is not intended to be instantiated directly. Instead, use the `field()`
     function, which provides a more convenient API.
     """
+
     def __init__(
         self,
         rename: Optional[str] = None,
@@ -22,7 +24,9 @@ class Field:
         default_factory: Optional[Callable[[], Any]] = None,
         serializer: Optional[Callable[[Any], Any]] = None,
         deserializer: Optional[Callable[[Any], Any]] = None,
-        validate: Optional[Union[Callable[[Any], None], List[Callable[[Any], None]]]] = None,
+        validate: Optional[
+            Union[Callable[[Any], None], List[Callable[[Any], None]]]
+        ] = None,
     ):
         if default is not _MISSING and default_factory is not None:
             raise ValueError("cannot specify both default and default_factory")
@@ -34,8 +38,8 @@ class Field:
         self.serializer = serializer
         self.deserializer = deserializer
         self.validate = validate
-        self.name: str = "" # Will be populated by the decorator
-        self.type: Any = None # Will be populated by the decorator
+        self.name: str = ""  # Will be populated by the decorator
+        self.type: Any = None  # Will be populated by the decorator
 
     @property
     def has_default(self) -> bool:
@@ -55,7 +59,9 @@ def field(
     default_factory: Optional[Callable[[], Any]] = None,
     serializer: Optional[Callable[[Any], Any]] = None,
     deserializer: Optional[Callable[[Any], Any]] = None,
-    validate: Optional[Union[Callable[[Any], None], List[Callable[[Any], None]]]] = None,
+    validate: Optional[
+        Union[Callable[[Any], None], List[Callable[[Any], None]]]
+    ] = None,
 ) -> Any:
     """
     Provides metadata to the `@lodum` decorator for a single field.

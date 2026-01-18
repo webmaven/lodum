@@ -15,10 +15,13 @@ T = TypeVar("T")
 
 # --- Public API ---
 
+
 def dumps(obj: Any) -> bytes:
     """Encodes a Python object to CBOR bytes (dumps)."""
     if cbor2 is None:
-        raise ImportError("cbor2 is required for CBOR serialization. Install it with 'pip install lodum[cbor]'.")
+        raise ImportError(
+            "cbor2 is required for CBOR serialization. Install it with 'pip install lodum[cbor]'."
+        )
     dumper = CborDumper()
     dumped_data = dump(obj, dumper)
     return cbor2.dumps(dumped_data)
@@ -27,7 +30,9 @@ def dumps(obj: Any) -> bytes:
 def loads(cls: Type[T], cbor_bytes: bytes) -> T:
     """Decodes CBOR bytes to a Python object (loads)."""
     if cbor2 is None:
-        raise ImportError("cbor2 is required for CBOR deserialization. Install it with 'pip install lodum[cbor]'.")
+        raise ImportError(
+            "cbor2 is required for CBOR deserialization. Install it with 'pip install lodum[cbor]'."
+        )
     try:
         data = cbor2.loads(cbor_bytes)
     except Exception as e:
@@ -38,11 +43,13 @@ def loads(cls: Type[T], cbor_bytes: bytes) -> T:
 
 # --- CBOR Dumper Implementation ---
 
+
 class CborDumper(BaseDumper):
     pass
 
 
 # --- CBOR Loader Implementation ---
+
 
 class CborLoader(BaseLoader):
     def load_int(self) -> int:
@@ -57,20 +64,28 @@ class CborLoader(BaseLoader):
 
     def load_float(self) -> float:
         if not isinstance(self._data, (float, int)):
-            raise DeserializationError(f"Expected float, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected float, got {type(self._data).__name__}"
+            )
         return float(self._data)
 
     def load_bool(self) -> bool:
         if not isinstance(self._data, bool):
-            raise DeserializationError(f"Expected bool, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected bool, got {type(self._data).__name__}"
+            )
         return self._data
 
-    def load_list(self) -> Iterator['Loader']:
+    def load_list(self) -> Iterator["Loader"]:
         if not isinstance(self._data, list):
-            raise DeserializationError(f"Expected list, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected list, got {type(self._data).__name__}"
+            )
         return (CborLoader(item) for item in self._data)
 
-    def load_dict(self) -> Iterator[tuple[str, 'Loader']]:
+    def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
         if not isinstance(self._data, dict):
-            raise DeserializationError(f"Expected dict, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected dict, got {type(self._data).__name__}"
+            )
         return ((k, CborLoader(v)) for k, v in self._data.items())
