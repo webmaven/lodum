@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 try:
-    import tomllib
+    import tomllib  # type: ignore[import-not-found]
 except ImportError:
     try:
         import tomli as tomllib  # type: ignore[no-redef, import-not-found]
