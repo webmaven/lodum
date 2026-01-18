@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 try:
-    import msgpack
+    import msgpack  # type: ignore[import-untyped]
 except ImportError:
     msgpack = None  # type: ignore
 from typing import Any, Iterator, Type, TypeVar
