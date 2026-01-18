@@ -43,13 +43,16 @@ T = TypeVar("T")
 
 # --- Type-to-Handler Dispatch Tables ---
 
-DUMP_DISPATCH: Dict[Type, Callable] = {}
-LOAD_DISPATCH: Dict[Type, Callable] = {}
+DumpHandler = Callable[[Any, Dumper], Any]
+LoadHandler = Callable[[Type[Any], Loader, Optional[str]], Any]
+
+DUMP_DISPATCH: Dict[Type[Any], DumpHandler] = {}
+LOAD_DISPATCH: Dict[Type[Any], LoadHandler] = {}
 
 # --- Caching and Compilation ---
 
-_DUMP_HANDLER_CACHE: Dict[Type, Callable] = {}
-_LOAD_HANDLER_CACHE: Dict[Type, Callable] = {}
+_DUMP_HANDLER_CACHE: Dict[Type[Any], DumpHandler] = {}
+_LOAD_HANDLER_CACHE: Dict[Type[Any], LoadHandler] = {}
 
 
 def dump(obj: Any, dumper: Dumper) -> Any:
@@ -64,7 +67,7 @@ def load(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     return cast(T, handler(cls, loader, path))
 
 
-def generate_schema(t: Type) -> Dict[str, Any]:
+def generate_schema(t: Type[Any]) -> Dict[str, Any]:
     """Generates a JSON Schema for a given type."""
     if t is int:
         return {"type": "integer"}
@@ -140,7 +143,7 @@ def generate_schema(t: Type) -> Dict[str, Any]:
     return {}
 
 
-def _compile_dump_handler(cls: Type) -> Callable:
+def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     """
     Compiles an optimized dump handler for a lodum-enabled class.
     """
@@ -203,7 +206,7 @@ def _compile_dump_handler(cls: Type) -> Callable:
     return lambda obj, dumper: compiled_fn(obj, dumper, dump)
 
 
-def _get_dump_handler(t: Type) -> Callable:
+def _get_dump_handler(t: Type[Any]) -> DumpHandler:
     if t in _DUMP_HANDLER_CACHE:
         return _DUMP_HANDLER_CACHE[t]
 
@@ -218,7 +221,7 @@ def _get_dump_handler(t: Type) -> Callable:
         item_type = args[0] if args else Any
         item_handler = _get_dump_handler(item_type)
 
-        def dump_seq(obj, dumper):
+        def dump_seq(obj: Any, dumper: Dumper) -> List[Any]:
             return [item_handler(item, dumper) for item in obj]
 
         _DUMP_HANDLER_CACHE[t] = dump_seq
@@ -238,7 +241,7 @@ def _get_dump_handler(t: Type) -> Callable:
             v_type = args[1] if len(args) == 2 else Any
         v_handler = _get_dump_handler(v_type)
 
-        def dump_mapping(obj, dumper):
+        def dump_mapping(obj: Any, dumper: Dumper) -> Dict[str, Any]:
             return {str(k): v_handler(v, dumper) for k, v in obj.items()}
 
         _DUMP_HANDLER_CACHE[t] = dump_mapping
@@ -257,7 +260,7 @@ def _get_dump_handler(t: Type) -> Callable:
     raise SerializationError(f"Object of type {t.__name__} is not lodum-enabled")
 
 
-def _compile_load_handler(cls: Type) -> Callable:
+def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     fields: Dict[str, Field] = getattr(cls, "_lodum_fields", {})
     lines = []
     lines.append(f"def load_{cls.__name__}(loader, load_fn, path):")
@@ -359,7 +362,7 @@ def _compile_load_handler(cls: Type) -> Callable:
     return lambda cls_ignore, loader, path: compiled_fn(loader, load, path)
 
 
-def _get_load_handler(t: Type) -> Callable:
+def _get_load_handler(t: Type[Any]) -> LoadHandler:
     if t in _LOAD_HANDLER_CACHE:
         return _LOAD_HANDLER_CACHE[t]
 
@@ -378,7 +381,9 @@ def _get_load_handler(t: Type) -> Callable:
         item_type = args[0] if args else Any
         item_loader_fn = _get_load_handler(item_type)
 
-        def load_list(cls_ignore, loader, path):
+        def load_list(
+            cls_ignore: Type[Any], loader: Loader, path: Optional[str]
+        ) -> Any:
             data = [
                 item_loader_fn(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]")
                 for i, item_l in enumerate(loader.load_list())
@@ -412,7 +417,9 @@ def _get_load_handler(t: Type) -> Callable:
             raise DeserializationError("JSON/YAML object keys must be strings")
         v_loader_fn = _get_load_handler(v_type)
 
-        def load_dict(cls_ignore, loader, path):
+        def load_dict(
+            cls_ignore: Type[Any], loader: Loader, path: Optional[str]
+        ) -> Any:
             data = {
                 k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k)
                 for k, v_l in loader.load_dict()
@@ -462,11 +469,11 @@ def _dump_primitive(obj: Any, dumper: Dumper) -> Any:
     raise SerializationError(f"Unsupported primitive type: {type(obj).__name__}")
 
 
-def _dump_sequence(obj: Any, dumper: Dumper) -> list:
+def _dump_sequence(obj: Any, dumper: Dumper) -> List[Any]:
     return [dump(item, dumper) for item in obj]
 
 
-def _dump_dict(obj: dict, dumper: Dumper) -> dict:
+def _dump_dict(obj: Dict[Any, Any], dumper: Dumper) -> Dict[str, Any]:
     return {str(k): dump(v, dumper) for k, v in obj.items()}
 
 
@@ -580,7 +587,7 @@ def _load_any(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
 
 def _load_list(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     args = get_args(cls)
-    item_type = args[0] if args else Any
+    item_type: Type[Any] = args[0] if args else Any
     return cast(
         T,
         [
@@ -592,6 +599,8 @@ def _load_list(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
 
 def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     args = get_args(cls)
+    key_type: Type[Any]
+    value_type: Type[Any]
     key_type, value_type = (args[0], args[1]) if len(args) == 2 else (Any, Any)
     if key_type is not str and key_type is not Any:
         raise DeserializationError("JSON/YAML object keys must be strings", path)
@@ -607,14 +616,14 @@ def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
 def _load_optional(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     if loader.load_any() is None:
         return cast(T, None)
-    inner_type = get_args(cls)[0]
+    inner_type: Type[Any] = get_args(cls)[0]
     return load(inner_type, loader, path)
 
 
 def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     data = loader.load_any()
 
-    def get_priority(t: Type) -> int:
+    def get_priority(t: Type[Any]) -> int:
         origin = get_origin(t) or t
         if origin is Any:
             return 0
@@ -667,7 +676,7 @@ def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
             return -1
         return 10
 
-    types = sorted(get_args(cls), key=get_priority, reverse=True)
+    types: List[Type[Any]] = sorted(get_args(cls), key=get_priority, reverse=True)
     errors = []
     for inner_type in types:
         if get_priority(inner_type) < 0:
@@ -790,7 +799,7 @@ def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
 def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     try:
         args = get_args(cls)
-        val_type = args[1] if len(args) == 2 else Any
+        val_type: Type[Any] = args[1] if len(args) == 2 else Any
         data = _load_dict(dict, loader, path)
         factory = val_type if val_type is not Any and callable(val_type) else None
         return cast(T, collections.defaultdict(factory, data))
@@ -827,7 +836,7 @@ def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T
 
 def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     try:
-        item_types = get_args(cls)
+        item_types: tuple[Type[Any], ...] = get_args(cls)
         return cast(
             T,
             tuple(
@@ -844,7 +853,7 @@ def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
 
 def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     try:
-        (item_type,) = get_args(cls)
+        item_type: Type[Any] = get_args(cls)[0]
         return cast(
             T,
             {

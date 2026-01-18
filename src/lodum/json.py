@@ -27,7 +27,7 @@ def loads(cls: Type[T], json_string: str) -> T:
     return load(cls, loader)
 
 
-def schema(cls: Type) -> Dict[str, Any]:
+def schema(cls: Type[Any]) -> Dict[str, Any]:
     """Generates a JSON Schema for a given lodum-enabled class."""
     return generate_schema(cls)
 

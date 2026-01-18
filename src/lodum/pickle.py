@@ -32,13 +32,13 @@ class ValidationDumper(Dumper):
     def dump_bytes(self, value: bytes) -> None:
         pass
 
-    def dump_list(self, value: list) -> None:
+    def dump_list(self, value: list[Any]) -> None:
         pass
 
-    def dump_dict(self, value: dict) -> None:
+    def dump_dict(self, value: dict[str, Any]) -> None:
         pass
 
-    def begin_struct(self, cls: Type) -> dict:
+    def begin_struct(self, cls: Type[Any]) -> dict[str, Any]:
         return {}  # Return a dummy dict
 
     def end_struct(self) -> None:
