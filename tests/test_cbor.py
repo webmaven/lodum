@@ -52,3 +52,65 @@ def test_cbor_decode_error():
     with pytest.raises(DeserializationError) as excinfo:
         cbor.loads(Simple, b"\x81")  # Incomplete CBOR list
     assert "Failed to parse CBOR" in str(excinfo.value)
+
+
+def test_cbor_bytes():
+    data = b"hello world"
+    packed = cbor.dumps(data)
+    assert cbor.loads(bytes, packed) == data
+
+
+def test_cbor_collections():
+    lst = [1, 2, 3]
+    packed_lst = cbor.dumps(lst)
+    assert cbor.loads(list[int], packed_lst) == lst
+
+    dct = {"a": 1, "b": 2}
+    packed_dct = cbor.dumps(dct)
+    assert cbor.loads(dict[str, int], packed_dct) == dct
+
+
+def test_cbor_load_errors():
+    from lodum.cbor import CborLoader
+
+    # load_int error
+    loader = CborLoader("not an int")
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_int()
+    assert "Expected int" in str(exc.value)
+
+    # load_str error
+    loader = CborLoader(123)
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_str()
+    assert "Expected str" in str(exc.value)
+
+    # load_float error
+    loader = CborLoader("not a float")
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_float()
+    assert "Expected float" in str(exc.value)
+
+    # load_bool error
+    loader = CborLoader(1)
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_bool()
+    assert "Expected bool" in str(exc.value)
+
+    # load_list error
+    loader = CborLoader({})
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_list()
+    assert "Expected list" in str(exc.value)
+
+    # load_dict error
+    loader = CborLoader([])
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_dict()
+    assert "Expected dict" in str(exc.value)
+
+    # load_bytes error
+    loader = CborLoader("not bytes")
+    with pytest.raises(DeserializationError) as exc:
+        loader.load_bytes()
+    assert "Expected bytes" in str(exc.value)
