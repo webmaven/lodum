@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import msgpack
+try:
+    import msgpack
+except ImportError:
+    msgpack = None  # type: ignore
 from typing import Any, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
@@ -14,6 +17,8 @@ T = TypeVar("T")
 
 def dumps(obj: Any) -> bytes:
     """Encodes a Python object to MsgPack bytes (dumps)."""
+    if msgpack is None:
+        raise ImportError("msgpack is required for MsgPack serialization. Install it with 'pip install lodum[msgpack]'.")
     dumper = MsgPackDumper()
     dumped_data = dump(obj, dumper)
     return msgpack.packb(dumped_data, use_bin_type=True)
@@ -21,6 +26,8 @@ def dumps(obj: Any) -> bytes:
 
 def loads(cls: Type[T], packed_bytes: bytes) -> T:
     """Decodes MsgPack bytes to a Python object (loads)."""
+    if msgpack is None:
+        raise ImportError("msgpack is required for MsgPack deserialization. Install it with 'pip install lodum[msgpack]'.")
     try:
         data = msgpack.unpackb(packed_bytes, raw=False)
     except Exception as e:

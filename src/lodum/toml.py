@@ -4,8 +4,15 @@
 try:
     import tomllib
 except ImportError:
-    import tomli as tomllib  # type: ignore[no-redef, import-not-found]
-import tomli_w
+    try:
+        import tomli as tomllib  # type: ignore[no-redef, import-not-found]
+    except ImportError:
+        tomllib = None  # type: ignore
+
+try:
+    import tomli_w
+except ImportError:
+    tomli_w = None  # type: ignore
 from typing import Any, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
@@ -18,6 +25,8 @@ T = TypeVar("T")
 
 def dumps(obj: Any) -> str:
     """Encodes a Python object to a TOML string (dumps)."""
+    if tomli_w is None:
+        raise ImportError("tomli-w is required for TOML serialization. Install it with 'pip install lodum[toml]'.")
     dumper = TomlDumper()
     dumped_data = dump(obj, dumper)
     return tomli_w.dumps(dumped_data)
@@ -25,6 +34,8 @@ def dumps(obj: Any) -> str:
 
 def loads(cls: Type[T], toml_string: str) -> T:
     """Decodes a TOML string to a Python object (loads)."""
+    if tomllib is None:
+        raise ImportError("tomllib (or tomli) is required for TOML deserialization. Install it with 'pip install lodum[toml]'.")
     try:
         data = tomllib.loads(toml_string)
     except tomllib.TOMLDecodeError as e:

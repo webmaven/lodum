@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import cbor2
+try:
+    import cbor2
+except ImportError:
+    cbor2 = None  # type: ignore
 from typing import Any, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
@@ -14,6 +17,8 @@ T = TypeVar("T")
 
 def dumps(obj: Any) -> bytes:
     """Encodes a Python object to CBOR bytes (dumps)."""
+    if cbor2 is None:
+        raise ImportError("cbor2 is required for CBOR serialization. Install it with 'pip install lodum[cbor]'.")
     dumper = CborDumper()
     dumped_data = dump(obj, dumper)
     return cbor2.dumps(dumped_data)
@@ -21,6 +26,8 @@ def dumps(obj: Any) -> bytes:
 
 def loads(cls: Type[T], cbor_bytes: bytes) -> T:
     """Decodes CBOR bytes to a Python object (loads)."""
+    if cbor2 is None:
+        raise ImportError("cbor2 is required for CBOR deserialization. Install it with 'pip install lodum[cbor]'.")
     try:
         data = cbor2.loads(cbor_bytes)
     except Exception as e:
