@@ -3,13 +3,21 @@
 # SPDX-License-Identifier: Apache-2.0
 import io
 from typing import Any, Iterator, Type, TypeVar
-from ruamel.yaml import YAML
+try:
+    from ruamel.yaml import YAML
+    yaml_available = True
+except ImportError:
+    YAML = None  # type: ignore
+    yaml_available = False
 
 from .core import Loader, Dumper
 from .internal import dump, load
 
 T = TypeVar("T")
-yaml = YAML(typ='safe')
+if yaml_available:
+    yaml = YAML(typ='safe')
+else:
+    yaml = None
 
 # --- Public API ---
 
@@ -17,6 +25,9 @@ def dumps(obj: Any) -> str:
     """
     Encodes a Python object to a YAML string.
     """
+    if not yaml_available:
+        raise ImportError("ruamel.yaml is required for YAML serialization. Install it with 'pip install lodum[yaml]'.")
+
     dumper = YamlDumper()
     # The core `dump` logic is format-agnostic and can be reused.
     dumped_data = dump(obj, dumper)
@@ -29,6 +40,9 @@ def loads(cls: Type[T], yaml_string: str) -> T:
     """
     Decodes a YAML string to a Python object.
     """
+    if not yaml_available:
+        raise ImportError("ruamel.yaml is required for YAML deserialization. Install it with 'pip install lodum[yaml]'.")
+
     data = yaml.load(yaml_string)
     loader = YamlLoader(data)
     # The core `load` logic is format-agnostic and can be reused.

@@ -5,9 +5,20 @@ import uuid
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union, get_origin, get_args, cast
-import numpy as np
-import pandas as pd
-import polars as pl
+try:
+    import numpy as np
+except ImportError:
+    np = None  # type: ignore
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None  # type: ignore
+
+try:
+    import polars as pl
+except ImportError:
+    pl = None  # type: ignore
 
 from .core import Loader, Dumper
 from .exception import DeserializationError, SerializationError
@@ -356,19 +367,19 @@ def _dump_decimal(obj: Decimal, d: Dumper) -> str:
 def _dump_path(obj: Path, d: Dumper) -> str:
     return d.dump_str(str(obj))
 
-def _dump_numpy_array(obj: np.ndarray, d: Dumper) -> Any:
+def _dump_numpy_array(obj: Any, d: Dumper) -> Any:
     return dump(obj.tolist(), d)
 
-def _dump_pandas_dataframe(obj: pd.DataFrame, d: Dumper) -> Any:
+def _dump_pandas_dataframe(obj: Any, d: Dumper) -> Any:
     return dump(obj.to_dict(orient="records"), d)
 
-def _dump_pandas_series(obj: pd.Series, d: Dumper) -> Any:
+def _dump_pandas_series(obj: Any, d: Dumper) -> Any:
     return dump(obj.to_dict(), d)
 
-def _dump_polars_dataframe(obj: pl.DataFrame, d: Dumper) -> Any:
+def _dump_polars_dataframe(obj: Any, d: Dumper) -> Any:
     return dump(obj.to_dict(), d)
 
-def _dump_polars_series(obj: pl.Series, d: Dumper) -> Any:
+def _dump_polars_series(obj: Any, d: Dumper) -> Any:
     return dump(obj.to_list(), d)
 
 DUMP_DISPATCH.update({
@@ -381,12 +392,16 @@ DUMP_DISPATCH.update({
     uuid.UUID: _dump_uuid,
     Decimal: _dump_decimal,
     Path: _dump_path,
-    np.ndarray: _dump_numpy_array,
-    pd.DataFrame: _dump_pandas_dataframe,
-    pd.Series: _dump_pandas_series,
-    pl.DataFrame: _dump_polars_dataframe,
-    pl.Series: _dump_polars_series,
 })
+
+if np is not None:
+    DUMP_DISPATCH[np.ndarray] = _dump_numpy_array
+if pd is not None:
+    DUMP_DISPATCH[pd.DataFrame] = _dump_pandas_dataframe
+    DUMP_DISPATCH[pd.Series] = _dump_pandas_series
+if pl is not None:
+    DUMP_DISPATCH[pl.DataFrame] = _dump_polars_dataframe
+    DUMP_DISPATCH[pl.Series] = _dump_polars_series
 
 def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
     try:
@@ -555,18 +570,28 @@ def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
         raise DeserializationError(msg, e.path if isinstance(e, DeserializationError) and e.path else path)
 
 def _load_numpy_array(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    if np is None:
+        raise ImportError("numpy is required for numpy array deserialization")
     return cast(T, np.array(load(List, loader, path)))
 
 def _load_pandas_dataframe(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    if pd is None:
+        raise ImportError("pandas is required for pandas DataFrame deserialization")
     return cast(T, pd.DataFrame.from_records(load(list, loader, path)))
 
 def _load_pandas_series(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    if pd is None:
+        raise ImportError("pandas is required for pandas Series deserialization")
     return cast(T, pd.Series(load(dict, loader, path)))
 
 def _load_polars_dataframe(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    if pl is None:
+        raise ImportError("polars is required for polars DataFrame deserialization")
     return cast(T, pl.DataFrame(load(dict, loader, path)))
 
 def _load_polars_series(cls: Type[T], loader: Loader, path: Optional[str] = None) -> T:
+    if pl is None:
+        raise ImportError("polars is required for polars Series deserialization")
     return cast(T, pl.Series(load(list, loader, path)))
 
 LOAD_DISPATCH.update({
@@ -580,9 +605,13 @@ LOAD_DISPATCH.update({
     Decimal: _load_decimal,
     Path: _load_path,
     Any: _load_any,
-    np.ndarray: _load_numpy_array,
-    pd.DataFrame: _load_pandas_dataframe,
-    pd.Series: _load_pandas_series,
-    pl.DataFrame: _load_polars_dataframe,
-    pl.Series: _load_polars_series,
 })
+
+if np is not None:
+    LOAD_DISPATCH[np.ndarray] = _load_numpy_array
+if pd is not None:
+    LOAD_DISPATCH[pd.DataFrame] = _load_pandas_dataframe
+    LOAD_DISPATCH[pd.Series] = _load_pandas_series
+if pl is not None:
+    LOAD_DISPATCH[pl.DataFrame] = _load_polars_dataframe
+    LOAD_DISPATCH[pl.Series] = _load_polars_series

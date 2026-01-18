@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import bson
+try:
+    import bson
+except ImportError:
+    bson = None  # type: ignore
 from typing import Any, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
@@ -14,6 +17,8 @@ T = TypeVar("T")
 
 def dumps(obj: Any) -> bytes:
     """Encodes a Python object to BSON bytes (dumps)."""
+    if bson is None:
+        raise ImportError("bson (pymongo) is required for BSON serialization. Install it with 'pip install lodum[bson]'.")
     dumper = BsonDumper()
     dumped_data = dump(obj, dumper)
     # BSON requires a dictionary at the root
@@ -24,6 +29,8 @@ def dumps(obj: Any) -> bytes:
 
 def loads(cls: Type[T], bson_bytes: bytes) -> T:
     """Decodes BSON bytes to a Python object (loads)."""
+    if bson is None:
+        raise ImportError("bson (pymongo) is required for BSON deserialization. Install it with 'pip install lodum[bson]'.")
     try:
         data = bson.decode(bson_bytes)
     except Exception as e:
