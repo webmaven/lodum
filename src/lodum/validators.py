@@ -13,9 +13,7 @@ class Validator:
 
 
 class Range(Validator):
-    def __init__(
-        self, min: Optional[Any] = None, max: Optional[Any] = None
-    ) -> None:
+    def __init__(self, min: Optional[Any] = None, max: Optional[Any] = None) -> None:
         self.min = min
         self.max = max
 
@@ -29,9 +27,7 @@ class Range(Validator):
 
 
 class Length(Validator):
-    def __init__(
-        self, min: Optional[int] = None, max: Optional[int] = None
-    ) -> None:
+    def __init__(self, min: Optional[int] = None, max: Optional[int] = None) -> None:
         self.min = min
         self.max = max
 

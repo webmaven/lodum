@@ -381,7 +381,9 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         item_type = args[0] if args else Any
         item_loader_fn = _get_load_handler(item_type)
 
-        def load_list(cls_ignore: Type[Any], loader: Loader, path: Optional[str]) -> Any:
+        def load_list(
+            cls_ignore: Type[Any], loader: Loader, path: Optional[str]
+        ) -> Any:
             data = [
                 item_loader_fn(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]")
                 for i, item_l in enumerate(loader.load_list())
@@ -415,7 +417,9 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
             raise DeserializationError("JSON/YAML object keys must be strings")
         v_loader_fn = _get_load_handler(v_type)
 
-        def load_dict(cls_ignore: Type[Any], loader: Loader, path: Optional[str]) -> Any:
+        def load_dict(
+            cls_ignore: Type[Any], loader: Loader, path: Optional[str]
+        ) -> Any:
             data = {
                 k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k)
                 for k, v_l in loader.load_dict()

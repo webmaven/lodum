@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any, Callable, List, Optional, Union
 
+
 # A sentinel object to detect if a parameter is supplied or not.
 class _MISSING_TYPE:
     pass
