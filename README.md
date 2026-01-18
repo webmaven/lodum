@@ -62,9 +62,9 @@ print(json_string)
 # Output: {"name": "Alex", "age": 30, "is_active": true}
 ```
 
-### 3. Decode from JSON
+### 3. Decode and Encode with Multiple Formats
 
-Use the `json.loads` function to parse a JSON string and reconstruct your Python object.
+You can easily switch between formats. For example, you can decode from JSON and then encode to YAML using the `json.loads` and `yaml.dumps` functions.
 
 ```python
 from lodum import json, yaml
@@ -82,7 +82,7 @@ json_data = '{"name": "Barbara", "age": 25, "is_active": false}'
 barbara = json.loads(User, json_data)
 
 print(f"Name: {barbara.name}, Age: {barbara.age}, Active: {barbara.is_active}")
-# Output: Name: Barbara, Age: 25, Active: false
+# Output: Name: Barbara, Age: 25, Active: False
 ```
 
 This simple example demonstrates the core functionality.
@@ -204,11 +204,16 @@ user = json.loads(User, user_data)
 
 * **JSON**: `lodum.json`
 * **YAML**: `lodum.yaml`
-* **Pickle**: `lodum.pickle`
+* **Pickle**: `lodum.pickle` (**Warning**: `pickle` is insecure. Only deserialize data from trusted sources.)
+  `lodum` implements a `SafeUnpickler` that restricts deserialization to a small set of safe types:
+  *   Standard Python `builtins` (like `int`, `str`, `list`, etc.)
+  *   Custom classes decorated with `@lodum`
+  *   Explicitly forbids modules known to be dangerous (like `os`, `sys`, `subprocess`)
+  Additionally, `lodum.pickle.dumps` performs structural validation to ensure only `lodum`-enabled data is serialized.
 * **TOML**: `lodum.toml`
 * **MessagePack**: `lodum.msgpack`
-* **CBOR**: `lodum.cbor`
-* **BSON**: `lodum.bson`
+* **CBOR**: `lodum.cbor` (e.g., `cbor.dumps(obj)`)
+* **BSON**: `lodum.bson` (e.g., `bson.dumps(obj)`)
 
 ## Supported Types
 
