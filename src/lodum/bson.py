@@ -15,10 +15,13 @@ T = TypeVar("T")
 
 # --- Public API ---
 
+
 def dumps(obj: Any) -> bytes:
     """Encodes a Python object to BSON bytes (dumps)."""
     if bson is None:
-        raise ImportError("bson (pymongo) is required for BSON serialization. Install it with 'pip install lodum[bson]'.")
+        raise ImportError(
+            "bson (pymongo) is required for BSON serialization. Install it with 'pip install lodum[bson]'."
+        )
     dumper = BsonDumper()
     dumped_data = dump(obj, dumper)
     # BSON requires a dictionary at the root
@@ -30,27 +33,31 @@ def dumps(obj: Any) -> bytes:
 def loads(cls: Type[T], bson_bytes: bytes) -> T:
     """Decodes BSON bytes to a Python object (loads)."""
     if bson is None:
-        raise ImportError("bson (pymongo) is required for BSON deserialization. Install it with 'pip install lodum[bson]'.")
+        raise ImportError(
+            "bson (pymongo) is required for BSON deserialization. Install it with 'pip install lodum[bson]'."
+        )
     try:
         data = bson.decode(bson_bytes)
     except Exception as e:
         raise DeserializationError(f"Failed to parse BSON: {e}")
-    
+
     # Check if we wrapped a primitive
     if "_v" in data and len(data) == 1:
         data = data["_v"]
-        
+
     loader = BsonLoader(data)
     return load(cls, loader)
 
 
 # --- BSON Dumper Implementation ---
 
+
 class BsonDumper(BaseDumper):
     pass
 
 
 # --- BSON Loader Implementation ---
+
 
 class BsonLoader(BaseLoader):
     def load_int(self) -> int:
@@ -65,20 +72,28 @@ class BsonLoader(BaseLoader):
 
     def load_float(self) -> float:
         if not isinstance(self._data, (float, int)):
-            raise DeserializationError(f"Expected float, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected float, got {type(self._data).__name__}"
+            )
         return float(self._data)
 
     def load_bool(self) -> bool:
         if not isinstance(self._data, bool):
-            raise DeserializationError(f"Expected bool, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected bool, got {type(self._data).__name__}"
+            )
         return self._data
 
-    def load_list(self) -> Iterator['Loader']:
+    def load_list(self) -> Iterator["Loader"]:
         if not isinstance(self._data, list):
-            raise DeserializationError(f"Expected list, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected list, got {type(self._data).__name__}"
+            )
         return (BsonLoader(item) for item in self._data)
 
-    def load_dict(self) -> Iterator[tuple[str, 'Loader']]:
+    def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
         if not isinstance(self._data, dict):
-            raise DeserializationError(f"Expected dict, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected dict, got {type(self._data).__name__}"
+            )
         return ((k, BsonLoader(v)) for k, v in self._data.items())

@@ -12,6 +12,7 @@ T = TypeVar("T")
 
 # --- Public API ---
 
+
 def dumps(obj: Any) -> str:
     """Encodes a Python object to a JSON string (dumps)."""
     dumper = JsonDumper()
@@ -33,11 +34,13 @@ def schema(cls: Type) -> Dict[str, Any]:
 
 # --- JSON Dumper Implementation ---
 
+
 class JsonDumper(BaseDumper):
     pass
 
 
 # --- JSON Loader Implementation ---
+
 
 class JsonLoader(BaseLoader):
     def load_int(self) -> int:
@@ -52,20 +55,28 @@ class JsonLoader(BaseLoader):
 
     def load_float(self) -> float:
         if not isinstance(self._data, (float, int)):
-            raise DeserializationError(f"Expected float, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected float, got {type(self._data).__name__}"
+            )
         return float(self._data)
 
     def load_bool(self) -> bool:
         if not isinstance(self._data, bool):
-            raise DeserializationError(f"Expected bool, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected bool, got {type(self._data).__name__}"
+            )
         return self._data
 
-    def load_list(self) -> Iterator['Loader']:
+    def load_list(self) -> Iterator["Loader"]:
         if not isinstance(self._data, list):
-            raise DeserializationError(f"Expected list, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected list, got {type(self._data).__name__}"
+            )
         return (JsonLoader(item) for item in self._data)
 
-    def load_dict(self) -> Iterator[tuple[str, 'Loader']]:
+    def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
         if not isinstance(self._data, dict):
-            raise DeserializationError(f"Expected dict, got {type(self._data).__name__}")
+            raise DeserializationError(
+                f"Expected dict, got {type(self._data).__name__}"
+            )
         return ((k, JsonLoader(v)) for k, v in self._data.items())
