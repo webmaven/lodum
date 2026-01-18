@@ -54,6 +54,43 @@ class Field:
             return self.default_factory()
         return self.default
 
+    def __repr__(self) -> str:
+        parts = []
+        if self.name:
+            parts.append(f"name={self.name!r}")
+        if self.type:
+            parts.append(f"type={self.type!r}")
+        if self.rename:
+            parts.append(f"rename={self.rename!r}")
+        if self.skip_serializing:
+            parts.append(f"skip_serializing={self.skip_serializing!r}")
+        if self.default is not _MISSING:
+            parts.append(f"default={self.default!r}")
+        if self.default_factory:
+            parts.append(f"default_factory={self.default_factory!r}")
+        if self.serializer:
+            parts.append(f"serializer={self.serializer!r}")
+        if self.deserializer:
+            parts.append(f"deserializer={self.deserializer!r}")
+        if self.validate:
+            parts.append(f"validate={self.validate!r}")
+        return f"Field({', '.join(parts)})"
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Field):
+            return NotImplemented
+        return (
+            self.name == other.name
+            and self.type == other.type
+            and self.rename == other.rename
+            and self.skip_serializing == other.skip_serializing
+            and self.default == other.default
+            and self.default_factory == other.default_factory
+            and self.serializer == other.serializer
+            and self.deserializer == other.deserializer
+            and self.validate == other.validate
+        )
+
 
 def field(
     *,
