@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import inspect
 import functools
-from typing import Any, Dict, List, Protocol, Type, Iterator, TypeVar, Optional, Union as TypingUnion
+from typing import Any, Dict, Iterator, List, Optional, Protocol, Type, TypeVar, Union as TypingUnion
 
-from .field import Field, _MISSING
+from .field import _MISSING, Field
 
 T = TypeVar("T", bound=Type[Any])
 

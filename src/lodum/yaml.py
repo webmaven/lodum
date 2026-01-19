@@ -12,9 +12,9 @@ except ImportError:
     YAML = None  # type: ignore
     yaml_available = False
 
-from .core import Loader, BaseDumper
-from .internal import dump, load, DEFAULT_MAX_SIZE
+from .core import BaseDumper, Loader
 from .exception import DeserializationError
+from .internal import DEFAULT_MAX_SIZE, dump, load
 
 T = TypeVar("T")
 yaml: Any = None
