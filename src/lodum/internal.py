@@ -1,25 +1,25 @@
-import array
-import collections
+import inspect
 import datetime
 import enum
-import inspect
-import threading
 import uuid
+import collections
+import array
+import threading
 from decimal import Decimal
 from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
-    ForwardRef,
     List,
     Optional,
     Type,
     TypeVar,
     Union,
-    cast,
-    get_args,
     get_origin,
+    get_args,
+    cast,
+    ForwardRef,
 )
 
 try:
@@ -37,7 +37,7 @@ try:
 except ImportError:
     pl = None  # type: ignore
 
-from .core import Dumper, Loader
+from .core import Loader, Dumper
 from .exception import DeserializationError, SerializationError
 from .field import Field
 
@@ -167,7 +167,22 @@ def generate_schema(
         return {"type": "object", "additionalProperties": val_schema}
 
     if origin is Union:
-        return {"anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]}
+        any_of = [generate_schema(arg, depth + 1, visited) for arg in args]
+        schema: Dict[str, Any] = {"anyOf": any_of}
+
+        # Check if all members are lodum-enabled and have the same tag name
+        tag_names = set()
+        for arg in args:
+            if inspect.isclass(arg) and getattr(arg, "_lodum_enabled", False):
+                tag_names.add(getattr(arg, "_lodum_tag", None))
+            else:
+                tag_names.add(None)
+
+        if len(tag_names) == 1 and None not in tag_names:
+            tag_name = tag_names.pop()
+            schema["discriminator"] = {"propertyName": tag_name}
+
+        return schema
 
     if origin is tuple:
         return {
@@ -201,6 +216,14 @@ def generate_schema(
                 required.append(key)
 
         schema = {"type": "object", "properties": properties}
+
+        tag_name = getattr(t, "_lodum_tag", None)
+        if tag_name:
+            tag_value = getattr(t, "_lodum_tag_value", t.__name__)
+            properties[tag_name] = {"const": tag_value}
+            if tag_name not in required:
+                required.append(tag_name)
+
         if required:
             schema["required"] = required
 
@@ -220,11 +243,19 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     lines.append(f"def dump_{safe_name}(obj, dumper, dump_fn, depth, seen):")
     lines.append("    data = dumper.begin_struct(cls)")
 
+    tag = getattr(cls, "_lodum_tag", None)
+    tag_value = getattr(cls, "_lodum_tag_value", None)
+
     context: Dict[str, Any] = {
         "cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
     }
+
+    if tag:
+        context["tag_name"] = tag
+        context["tag_value"] = tag_value
+        lines.append("    data[tag_name] = dumper.dump_str(tag_value)")
 
     PRIMITIVE_TYPES = {
         int: "dump_int",
@@ -354,13 +385,27 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     lines.append(
         f"        raise DeserializationError(f'Expected a dictionary to decode into class {cls.__name__}, but received a different type.', path)"
     )
-    lines.append("    args = {}")
 
     context: Dict[str, Any] = {
         "cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
     }
+
+    tag = getattr(cls, "_lodum_tag", None)
+    tag_value = getattr(cls, "_lodum_tag_value", None)
+
+    if tag:
+        context["tag_name"] = tag
+        context["tag_value"] = tag_value
+        lines.append("    if tag_name in data:")
+        lines.append("        actual_tag = data[tag_name].load_any()")
+        lines.append("        if actual_tag != tag_value:")
+        lines.append(
+            "            raise DeserializationError(f'Invalid tag value: expected {tag_value}, got {actual_tag}', path)"
+        )
+
+    lines.append("    args = {}")
 
     PRIMITIVE_LOADERS = {
         int: "load_int",
@@ -747,6 +792,18 @@ def _load_union(
     cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
 ) -> T:
     data = loader.load_any()
+
+    if isinstance(data, dict):
+        for inner_type in get_args(cls):
+            tag_name = getattr(inner_type, "_lodum_tag", None)
+            if tag_name and tag_name in data:
+                tag_value = data[tag_name]
+                expected_value = getattr(
+                    inner_type, "_lodum_tag_value", inner_type.__name__
+                )
+                if tag_value == expected_value:
+                    new_loader = type(loader)(data)  # type: ignore[operator, call-arg]
+                    return load(inner_type, new_loader, path, depth + 1)
 
     def get_priority(t: Type[Any]) -> int:
         origin = get_origin(t) or t
