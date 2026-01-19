@@ -1,14 +1,15 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pickle
 import builtins
 import io
+import pickle
 from typing import Any, Type, TypeVar
 
 from .core import Dumper
-from .internal import dump as validate_lodum_structure, DEFAULT_MAX_SIZE
 from .exception import DeserializationError
+from .internal import DEFAULT_MAX_SIZE
+from .internal import dump as validate_lodum_structure
 
 T = TypeVar("T")
 
