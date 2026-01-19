@@ -307,14 +307,21 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
 
 
 def _get_dump_handler(t: Type[Any]) -> DumpHandler:
+    # Hot path
+    handler = _DUMP_HANDLER_CACHE.get(t)
+    if handler is not None:
+        return handler
+
     if isinstance(t, str):
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
-        if inspect.isclass(t) and not isinstance(t, ForwardRef):
-            _NAME_TO_TYPE_CACHE[t.__name__] = t
+        # Check again under lock
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
+
+        if inspect.isclass(t) and not isinstance(t, ForwardRef):
+            _NAME_TO_TYPE_CACHE[t.__name__] = t
 
     if t in DUMP_DISPATCH:
         handler = DUMP_DISPATCH[t]
@@ -497,14 +504,21 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
 
 
 def _get_load_handler(t: Type[Any]) -> LoadHandler:
+    # Hot path
+    handler = _LOAD_HANDLER_CACHE.get(t)
+    if handler is not None:
+        return handler
+
     if isinstance(t, str):
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
-        if inspect.isclass(t) and not isinstance(t, ForwardRef):
-            _NAME_TO_TYPE_CACHE[t.__name__] = t
+        # Check again under lock
         if t in _LOAD_HANDLER_CACHE:
             return _LOAD_HANDLER_CACHE[t]
+
+        if inspect.isclass(t) and not isinstance(t, ForwardRef):
+            _NAME_TO_TYPE_CACHE[t.__name__] = t
 
     if isinstance(t, TypeVar):
         return _load_any
