@@ -15,9 +15,9 @@ except ImportError:
     tomli_w = None  # type: ignore
 from typing import Any, Iterator, Type, TypeVar
 
-from .core import Loader, BaseDumper, BaseLoader
+from .core import BaseDumper, BaseLoader, Loader
 from .exception import DeserializationError
-from .internal import dump, load, DEFAULT_MAX_SIZE
+from .internal import DEFAULT_MAX_SIZE, dump, load
 
 T = TypeVar("T")
 

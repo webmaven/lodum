@@ -57,3 +57,40 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "F", # pyflakes
+    "W", # pycodestyle warnings
+    "I", # isort
+]
+ignore = [
+    "E501", # line too long (handled by formatter)
+]
+
+[tool.mypy]
+python_version = "3.9"
+check_untyped_defs = true
+disallow_untyped_defs = true
+warn_unused_configs = true
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = [
+    "numpy.*",
+    "pandas.*",
+    "polars.*",
+    "ruamel.*",
+    "tomli.*",
+    "tomli_w.*",
+    "msgpack.*",
+    "cbor2.*",
+    "bson.*",
+]
+ignore_missing_imports = true
