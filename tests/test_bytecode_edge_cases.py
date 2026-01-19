@@ -4,11 +4,13 @@
 import pytest
 from lodum import lodum, json
 
+
 def test_odd_class_name():
     # Class names with characters that are invalid in Python identifiers
     OddName = type("Odd-Name Class", (), {"_lodum_enabled": True})
 
     from lodum.field import Field
+
     f = Field()
     f.name = "a"
     f.type = int
@@ -24,10 +26,19 @@ def test_odd_class_name():
     except Exception as e:
         pytest.fail(f"Dumping with odd class name failed: {e}")
 
+
 def test_field_shadowing_internals():
     @lodum
     class ShadowInternals:
-        def __init__(self, loader: int, load_fn: int, path: int, data: int, args: int, val_loader: int):
+        def __init__(
+            self,
+            loader: int,
+            load_fn: int,
+            path: int,
+            data: int,
+            args: int,
+            val_loader: int,
+        ):
             self.loader = loader
             self.load_fn = load_fn
             self.path = path
@@ -41,6 +52,7 @@ def test_field_shadowing_internals():
     assert res.loader == 1
     assert res.val_loader == 6
 
+
 def test_many_fields():
     # Dynamically create a class with many fields
     field_names = [f"field_{i}" for i in range(200)]
@@ -52,6 +64,7 @@ def test_many_fields():
     ManyFields = type("ManyFields", (), {"__init__": __init__, "_lodum_enabled": True})
 
     from lodum.field import Field
+
     lodum_fields = {}
     for name in field_names:
         f = Field()

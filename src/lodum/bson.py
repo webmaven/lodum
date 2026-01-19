@@ -30,9 +30,7 @@ def dumps(obj: Any) -> bytes:
     return bson.encode(dumped_data)
 
 
-def loads(
-    cls: Type[T], bson_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE
-) -> T:
+def loads(cls: Type[T], bson_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes BSON bytes to a Python object (loads)."""
     if len(bson_bytes) > max_size:
         raise DeserializationError(

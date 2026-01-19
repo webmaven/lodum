@@ -27,9 +27,7 @@ def dumps(obj: Any) -> bytes:
     return msgpack.packb(dumped_data, use_bin_type=True)
 
 
-def loads(
-    cls: Type[T], packed_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE
-) -> T:
+def loads(cls: Type[T], packed_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes MsgPack bytes to a Python object (loads)."""
     if len(packed_bytes) > max_size:
         raise DeserializationError(

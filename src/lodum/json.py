@@ -20,9 +20,7 @@ def dumps(obj: Any) -> str:
     return json.dumps(dumped_data)
 
 
-def loads(
-    cls: Type[T], json_string: str, max_size: int = DEFAULT_MAX_SIZE
-) -> T:
+def loads(cls: Type[T], json_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes a JSON string to a Python object (loads)."""
     if len(json_string) > max_size:
         raise DeserializationError(

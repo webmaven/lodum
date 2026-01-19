@@ -58,6 +58,7 @@ DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
 
 # --- Caching and Compilation ---
 
+
 def _sanitize_name(name: str) -> str:
     """Sanitizes a string to be a valid Python identifier part."""
     if not name:
@@ -293,7 +294,9 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
         item_type = args[0] if args else Any
         item_handler = _get_dump_handler(item_type)
 
-        def dump_seq(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> List[Any]:
+        def dump_seq(
+            obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+        ) -> List[Any]:
             return [item_handler(item, dumper, depth + 1, seen) for item in obj]
 
         with _CACHE_LOCK:
@@ -314,8 +317,12 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
             v_type = args[1] if len(args) == 2 else Any
         v_handler = _get_dump_handler(v_type)
 
-        def dump_mapping(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Dict[str, Any]:
-            return {str(k): v_handler(v, dumper, depth + 1, seen) for k, v in obj.items()}
+        def dump_mapping(
+            obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+        ) -> Dict[str, Any]:
+            return {
+                str(k): v_handler(v, dumper, depth + 1, seen) for k, v in obj.items()
+            }
 
         with _CACHE_LOCK:
             _DUMP_HANDLER_CACHE[t] = dump_mapping
@@ -436,7 +443,9 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     local_vars: Dict[str, Any] = {}
     exec(source, context, local_vars)
     compiled_fn = local_vars[f"load_{safe_name}"]
-    return lambda cls_ignore, loader, path, depth: compiled_fn(loader, load, path, depth)
+    return lambda cls_ignore, loader, path, depth: compiled_fn(
+        loader, load, path, depth
+    )
 
 
 def _get_load_handler(t: Type[Any]) -> LoadHandler:
@@ -477,7 +486,9 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
             cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
         ) -> Any:
             data = [
-                item_loader_fn(item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1)
+                item_loader_fn(
+                    item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1
+                )
                 for i, item_l in enumerate(loader.load_list())
             ]
             if origin is array.array:
@@ -565,11 +576,15 @@ def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -
     raise SerializationError(f"Unsupported primitive type: {type(obj).__name__}")
 
 
-def _dump_sequence(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> List[Any]:
+def _dump_sequence(
+    obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+) -> List[Any]:
     return [dump(item, dumper, depth + 1, seen) for item in obj]
 
 
-def _dump_dict(obj: Dict[Any, Any], dumper: Dumper, depth: int, seen: Optional[set]) -> Dict[str, Any]:
+def _dump_dict(
+    obj: Dict[Any, Any], dumper: Dumper, depth: int, seen: Optional[set]
+) -> Dict[str, Any]:
     return {str(k): dump(v, dumper, depth + 1, seen) for k, v in obj.items()}
 
 
@@ -585,7 +600,9 @@ def _dump_array(obj: array.array, d: Dumper, depth: int, seen: Optional[set]) ->
     return [dump(item, d, depth + 1, seen) for item in obj]
 
 
-def _dump_datetime(obj: datetime.datetime, d: Dumper, depth: int, seen: Optional[set]) -> str:
+def _dump_datetime(
+    obj: datetime.datetime, d: Dumper, depth: int, seen: Optional[set]
+) -> str:
     return d.dump_str(obj.isoformat())
 
 
@@ -660,7 +677,9 @@ if pl is not None:
     DUMP_DISPATCH[pl.Series] = _dump_polars_series
 
 
-def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_primitive(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         if cls is int:
             return cast(T, loader.load_int())
@@ -677,11 +696,15 @@ def _load_primitive(cls: Type[T], loader: Loader, path: Optional[str] = None, de
     raise DeserializationError(f"Unsupported primitive type: {cls.__name__}", path)
 
 
-def _load_any(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_any(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     return cast(T, loader.load_any())
 
 
-def _load_list(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_list(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     args = get_args(cls)
     item_type: Type[Any] = args[0] if args else Any
     return cast(
@@ -693,7 +716,9 @@ def _load_list(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: 
     )
 
 
-def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_dict(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     args = get_args(cls)
     key_type: Type[Any]
     value_type: Type[Any]
@@ -709,14 +734,18 @@ def _load_dict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: 
     )
 
 
-def _load_optional(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_optional(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     if loader.load_any() is None:
         return cast(T, None)
     inner_type: Type[Any] = get_args(cls)[0]
     return load(inner_type, loader, path, depth + 1)
 
 
-def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_union(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     data = loader.load_any()
 
     def get_priority(t: Type[Any]) -> int:
@@ -800,7 +829,9 @@ def _load_union(cls: Type[T], loader: Loader, path: Optional[str] = None, depth:
     )
 
 
-def _load_datetime(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_datetime(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         return cast(T, datetime.datetime.fromisoformat(loader.load_str()))
     except (ValueError, DeserializationError) as e:
@@ -810,7 +841,9 @@ def _load_datetime(cls: Type[T], loader: Loader, path: Optional[str] = None, dep
         )
 
 
-def _load_enum(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_enum(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         first_member = next(iter(cls))  # type: ignore[call-overload]
         value = load(type(first_member.value), loader, path, depth + 1)
@@ -822,7 +855,9 @@ def _load_enum(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: 
         )
 
 
-def _load_uuid(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_uuid(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         return cast(T, uuid.UUID(loader.load_str()))
     except (ValueError, DeserializationError) as e:
@@ -832,7 +867,9 @@ def _load_uuid(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: 
         )
 
 
-def _load_decimal(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_decimal(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         # Load as string or float/int
         val = loader.load_any()
@@ -848,7 +885,9 @@ def _load_decimal(cls: Type[T], loader: Loader, path: Optional[str] = None, dept
         )
 
 
-def _load_path(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_path(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         return cast(T, Path(loader.load_str()))
     except (TypeError, DeserializationError) as e:
@@ -858,7 +897,9 @@ def _load_path(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: 
         )
 
 
-def _load_bytes(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_bytes(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         return cast(T, loader.load_bytes())
     except (TypeError, DeserializationError) as e:
@@ -868,7 +909,9 @@ def _load_bytes(cls: Type[T], loader: Loader, path: Optional[str] = None, depth:
         )
 
 
-def _load_bytearray(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_bytearray(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         return cast(T, bytearray(loader.load_bytes()))
     except (TypeError, DeserializationError, ValueError) as e:
@@ -878,7 +921,9 @@ def _load_bytearray(cls: Type[T], loader: Loader, path: Optional[str] = None, de
         )
 
 
-def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_array(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         data = _load_list(list, loader, path, depth)
         typecode = "i"
@@ -892,7 +937,9 @@ def _load_array(cls: Type[T], loader: Loader, path: Optional[str] = None, depth:
         )
 
 
-def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_defaultdict(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         args = get_args(cls)
         val_type: Type[Any] = args[1] if len(args) == 2 else Any
@@ -906,7 +953,9 @@ def _load_defaultdict(cls: Type[T], loader: Loader, path: Optional[str] = None, 
         )
 
 
-def _load_ordered_dict(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_ordered_dict(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         data = _load_dict(dict, loader, path, depth)
         return cast(T, collections.OrderedDict(data))
@@ -917,7 +966,9 @@ def _load_ordered_dict(cls: Type[T], loader: Loader, path: Optional[str] = None,
         )
 
 
-def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_counter(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         # Counter is basically Dict[Any, int]
         # But we need to make sure we load it correctly
@@ -930,13 +981,20 @@ def _load_counter(cls: Type[T], loader: Loader, path: Optional[str] = None, dept
         )
 
 
-def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_tuple(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         item_types: tuple[Type[Any], ...] = get_args(cls)
         return cast(
             T,
             tuple(
-                load(item_types[i], item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1)
+                load(
+                    item_types[i],
+                    item_l,
+                    f"{path}[{i}]" if path else f"[{i}]",
+                    depth + 1,
+                )
                 for i, item_l in enumerate(loader.load_list())
             ),
         )
@@ -947,7 +1005,9 @@ def _load_tuple(cls: Type[T], loader: Loader, path: Optional[str] = None, depth:
         )
 
 
-def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_set(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     try:
         item_type: Type[Any] = get_args(cls)[0]
         return cast(
@@ -964,7 +1024,9 @@ def _load_set(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: i
         )
 
 
-def _load_numpy_array(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_numpy_array(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     if np is None:
         raise ImportError("numpy is required for numpy array deserialization")
     return cast(T, np.array(load(List, loader, path, depth + 1)))
@@ -978,7 +1040,9 @@ def _load_pandas_dataframe(
     return cast(T, pd.DataFrame.from_records(load(list, loader, path, depth + 1)))
 
 
-def _load_pandas_series(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_pandas_series(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     if pd is None:
         raise ImportError("pandas is required for pandas Series deserialization")
     return cast(T, pd.Series(load(dict, loader, path, depth + 1)))
@@ -992,7 +1056,9 @@ def _load_polars_dataframe(
     return cast(T, pl.DataFrame(load(dict, loader, path, depth + 1)))
 
 
-def _load_polars_series(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
+def _load_polars_series(
+    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+) -> T:
     if pl is None:
         raise ImportError("polars is required for polars Series deserialization")
     return cast(T, pl.Series(load(list, loader, path, depth + 1)))

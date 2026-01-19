@@ -27,9 +27,7 @@ def dumps(obj: Any) -> bytes:
     return cbor2.dumps(dumped_data)
 
 
-def loads(
-    cls: Type[T], cbor_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE
-) -> T:
+def loads(cls: Type[T], cbor_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes CBOR bytes to a Python object (loads)."""
     if len(cbor_bytes) > max_size:
         raise DeserializationError(

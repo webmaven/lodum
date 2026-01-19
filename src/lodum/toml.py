@@ -35,9 +35,7 @@ def dumps(obj: Any) -> str:
     return tomli_w.dumps(dumped_data)
 
 
-def loads(
-    cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE
-) -> T:
+def loads(cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes a TOML string to a Python object (loads)."""
     if len(toml_string) > max_size:
         raise DeserializationError(

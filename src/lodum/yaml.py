@@ -43,9 +43,7 @@ def dumps(obj: Any) -> str:
         return string_stream.getvalue()
 
 
-def loads(
-    cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE
-) -> T:
+def loads(cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """
     Decodes a YAML string to a Python object.
     """

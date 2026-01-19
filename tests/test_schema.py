@@ -78,6 +78,7 @@ def test_union_schema():
     assert "integer" in types
     assert "string" in types
 
+
 def test_rename_schema():
     @lodum
     class RenameModel:
@@ -87,6 +88,7 @@ def test_rename_schema():
     schema = json.schema(RenameModel)
     assert "new_name" in schema["properties"]
     assert "old_name" not in schema["properties"]
+
 
 def test_complex_nesting_schema():
     @lodum

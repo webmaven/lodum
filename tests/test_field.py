@@ -1,6 +1,7 @@
 from lodum.field import Field, _MISSING, field
 import pytest
 
+
 def test_field_repr():
     f = Field(rename="foo", skip_serializing=True)
     f.name = "bar"
@@ -11,6 +12,7 @@ def test_field_repr():
     assert "type=<class 'int'>" in repr_str
     assert "rename='foo'" in repr_str
     assert "skip_serializing=True" in repr_str
+
 
 def test_field_eq():
     f1 = Field(rename="foo")
@@ -33,6 +35,7 @@ def test_field_eq():
     f4.type = int
     assert f1 != f4
 
+
 def test_field_eq_with_defaults():
     f1 = Field(default=10)
     f2 = Field(default=10)
@@ -41,14 +44,17 @@ def test_field_eq_with_defaults():
     f3 = Field(default=20)
     assert f1 != f3
 
+
 def test_field_eq_with_factory():
     def factory():
         return []
+
     f1 = Field(default_factory=factory)
     f2 = Field(default_factory=factory)
     assert f1 == f2
 
     def factory2():
         return []
+
     f3 = Field(default_factory=factory2)
     assert f1 != f3

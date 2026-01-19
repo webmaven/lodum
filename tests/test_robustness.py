@@ -8,11 +8,13 @@ from typing import Optional, List, Any
 from lodum import lodum, json
 from lodum.exception import SerializationError, DeserializationError
 
+
 @lodum
 class Node:
     def __init__(self, value: int, next_node: Optional["Node"] = None):
         self.value = value
         self.next_node = next_node
+
 
 def test_circular_reference():
     n1 = Node(1)
@@ -24,30 +26,38 @@ def test_circular_reference():
         json.dumps(n1)
     assert "Circular reference detected" in str(excinfo.value)
 
+
 def test_deeply_nested_structure():
     root = Node(0)
     curr = root
-    for i in range(1, 1500): # Default Python limit is 1000
+    for i in range(1, 1500):  # Default Python limit is 1000
         curr.next_node = Node(i)
         curr = curr.next_node
 
     with pytest.raises((RecursionError, SerializationError)):
         json.dumps(root)
 
+
 def test_deeply_nested_load():
     # Create a deeply nested JSON string
-    nested_json = '{"value": 1, "next_node": ' * 150 + 'null' + '}' * 150
+    nested_json = '{"value": 1, "next_node": ' * 150 + "null" + "}" * 150
     with pytest.raises(DeserializationError) as excinfo:
         json.loads(Node, nested_json)
     assert "Max recursion depth" in str(excinfo.value)
 
+
 def test_very_large_input():
     # Large JSON string
-    large_json = '[' + '{"value": 1, "next_node": null},' * 1000000 + '{"value": 1, "next_node": null}]'
+    large_json = (
+        "["
+        + '{"value": 1, "next_node": null},' * 1000000
+        + '{"value": 1, "next_node": null}]'
+    )
     # Default limit is 10MB, this string is ~30MB
     with pytest.raises(DeserializationError) as excinfo:
         json.loads(List[Node], large_json)
     assert "exceeds maximum allowed" in str(excinfo.value)
+
 
 def test_thread_safety_compilation():
     @lodum
@@ -70,11 +80,12 @@ def test_thread_safety_compilation():
     for t in threads:
         t.join()
 
+
 def test_invalid_type_annotations():
     # Test with a type that cannot be resolved or is not supported
     @lodum
     class InvalidType:
-        def __init__(self, a: lambda x: x): # Very invalid type annotation
+        def __init__(self, a: lambda x: x):  # Very invalid type annotation
             self.a = a
 
     obj = InvalidType(a=1)
@@ -83,6 +94,7 @@ def test_invalid_type_annotations():
     with pytest.raises((SerializationError, DeserializationError, TypeError)):
         json.loads(InvalidType, '{"a": 1}')
 
+
 def test_recursive_schema():
     @lodum
     class RecursiveNode:
@@ -90,7 +102,7 @@ def test_recursive_schema():
             self.children = children
 
     # Force a recursive type
-    RecursiveNode._lodum_fields['children'].type = List[RecursiveNode]
+    RecursiveNode._lodum_fields["children"].type = List[RecursiveNode]
 
     s = json.schema(RecursiveNode)
     assert s["type"] == "object"
