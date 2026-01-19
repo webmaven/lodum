@@ -4,9 +4,9 @@
 import json
 from typing import Any, Dict, Iterator, Type, TypeVar
 
-from .core import BaseDumper, BaseLoader, Loader
+from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import DEFAULT_MAX_SIZE, dump, generate_schema, load
+from .internal import dump, load, generate_schema, DEFAULT_MAX_SIZE
 
 T = TypeVar("T")
 

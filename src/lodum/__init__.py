@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 __version__ = "0.1.0"
 
-from . import bson, cbor, json, msgpack, pickle, toml, yaml
 from .core import lodum
 from .field import field
+from . import json, yaml, pickle, toml, msgpack, cbor, bson
 
 __all__ = [
     "lodum",

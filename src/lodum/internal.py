@@ -1,25 +1,25 @@
-import array
-import collections
+import inspect
 import datetime
 import enum
-import inspect
-import threading
 import uuid
+import collections
+import array
+import threading
 from decimal import Decimal
 from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
-    ForwardRef,
     List,
     Optional,
     Type,
     TypeVar,
     Union,
-    cast,
-    get_args,
     get_origin,
+    get_args,
+    cast,
+    ForwardRef,
 )
 
 try:
@@ -37,7 +37,7 @@ try:
 except ImportError:
     pl = None  # type: ignore
 
-from .core import Dumper, Loader
+from .core import Loader, Dumper
 from .exception import DeserializationError, SerializationError
 from .field import Field
 
