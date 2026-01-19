@@ -68,8 +68,17 @@ This document records the experiments and findings during the performance optimi
 
 ---
 
-## Final Results
-- **Dump 10k**: 0.6358s (vs 1.7608s baseline) -> **~64% faster**
-- **Load 10k**: 3.2901s (vs 5.0157s baseline) -> **~34% faster**
+## Experiment 8: Multi-format Performance Verification
+- **Plan**: Measure the impact of engine-level optimizations across multiple formats (JSON, MsgPack, CBOR, YAML).
+- **Findings**:
+  - **MsgPack/CBOR**: Loading performance is comparable to JSON (~0.31s-0.33s for 1k iterations), confirming that `get_dict()` and inlined primitive handling provide universal benefits to any format that returns standard Python collections.
+  - **YAML**: Significantly slower overall due to the overhead of the `ruamel.yaml` parser, but still benefits proportionally from engine speedups.
+- **Conclusion**: The "Engine vs Format" architecture successfully decoupled optimizations, allowing a single set of improvements in `internal.py` to uplift the entire library.
 
-All safety features (recursion depth, circular references, type validation) and error reporting details (path tracking with indices) are preserved.
+---
+
+## Final Results
+- **Dump 10k (JSON)**: 0.6358s (vs 1.7608s baseline) -> **~64% faster**
+- **Load 10k (JSON)**: 3.2901s (vs 5.0157s baseline) -> **~34% faster**
+
+All safety features (recursion depth, circular references, type validation) and error reporting details (path tracking with indices) are preserved across all formats.

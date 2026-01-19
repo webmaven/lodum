@@ -249,6 +249,7 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
         str: "dump_str",
         float: "dump_float",
         bool: "dump_bool",
+        bytes: "dump_bytes",
     }
 
     for i, (field_name, field_info) in enumerate(fields.items()):
@@ -470,6 +471,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
         str: "load_str",
         float: "load_float",
         bool: "load_bool",
+        bytes: "load_bytes",
     }
 
     for i, (field_name, field_info) in enumerate(fields.items()):
@@ -497,14 +499,19 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                 lines.append("        if is_raw:")
                 if ftype is int:
                     lines.append(f"            if not isinstance(val, int) or isinstance(val, bool): raise DeserializationError(f'Expected int, got {{type(val).__name__}}', {path_expr})")
+                    lines.append(f"            args['{field_name}'] = val")
                 elif ftype is str:
                     lines.append(f"            if not isinstance(val, str): raise DeserializationError(f'Expected str, got {{type(val).__name__}}', {path_expr})")
+                    lines.append(f"            args['{field_name}'] = val")
                 elif ftype is float:
                     lines.append(f"            if not isinstance(val, (float, int)): raise DeserializationError(f'Expected float, got {{type(val).__name__}}', {path_expr})")
-                    lines.append("            val = float(val)")
+                    lines.append(f"            args['{field_name}'] = float(val)")
                 elif ftype is bool:
                     lines.append(f"            if not isinstance(val, bool): raise DeserializationError(f'Expected bool, got {{type(val).__name__}}', {path_expr})")
-                lines.append(f"            args['{field_name}'] = val")
+                    lines.append(f"            args['{field_name}'] = val")
+                elif ftype is bytes:
+                    lines.append(f"            try: args['{field_name}'] = loader.load_bytes_value(val)")
+                    lines.append(f"            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))")
                 lines.append("        else:")
                 lines.append(
                     f"            try: args['{field_name}'] = val.{load_meth}()"
@@ -657,6 +664,41 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
     if origin is Union and len(args) == 2 and args[1] is type(None):
         return _load_optional
     if origin is Union:
+        # Check if it's a Tagged Union
+        tag_names = set()
+        for arg in args:
+            if inspect.isclass(arg):
+                tag_names.add(getattr(arg, "_lodum_tag", None))
+            else:
+                tag_names.add(None)
+
+        if len(tag_names) == 1 and None not in tag_names:
+            tag_name = tag_names.pop()
+            tag_map = {}
+            for arg in args:
+                tag_value = getattr(arg, "_lodum_tag_value", arg.__name__)
+                tag_map[tag_value] = arg
+
+            # Pre-resolve handlers for each variant
+            handler_map = {tag_val: _get_load_handler(v_type, excluding=excluding)
+                           for tag_val, v_type in tag_map.items()}
+
+            def load_tagged_union(cls_ignore, loader, path, depth):
+                raw = loader.get_dict()
+                data = raw if raw is not None else loader.load_any()
+                if isinstance(data, dict) and tag_name in data:
+                    tv = data[tag_name]
+                    if tv in handler_map:
+                        v_handler = handler_map[tv]
+                        v_type = tag_map[tv]
+                        new_loader = type(loader)(data)
+                        return v_handler(v_type, new_loader, path, depth + 1)
+                return _load_union(t, loader, path, depth)
+
+            with _CACHE_LOCK:
+                _LOAD_HANDLER_CACHE[t] = load_tagged_union
+            return load_tagged_union
+
         return _load_union
 
     if origin in (list, array.array):
@@ -668,6 +710,7 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
             str: "load_str",
             float: "load_float",
             bool: "load_bool",
+        bytes: "load_bytes",
         }
 
         if item_type in PRIMITIVE_LOADERS:

@@ -154,6 +154,7 @@ class Loader(Protocol):
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]: ...
     def load_any(self) -> Any: ...
     def get_dict(self) -> Optional[Dict[str, Any]]: ...
+    def load_bytes_value(self, value: Any) -> bytes: ...
 
 
 class BaseLoader:
@@ -191,6 +192,9 @@ class BaseLoader:
         return None
 
     def load_bytes(self) -> bytes:
-        if not isinstance(self._data, bytes):
-            raise TypeError(f"Expected bytes, got {type(self._data).__name__}")
-        return self._data
+        return self.load_bytes_value(self._data)
+
+    def load_bytes_value(self, value: Any) -> bytes:
+        if not isinstance(value, bytes):
+            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
+        return value
