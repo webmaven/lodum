@@ -3,62 +3,79 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import functools
-from typing import Any, Dict, List, Protocol, Type, Iterator, TypeVar
+from typing import Any, Dict, List, Protocol, Type, Iterator, TypeVar, Optional, Union as TypingUnion
 
 from .field import Field, _MISSING
 
 T = TypeVar("T", bound=Type[Any])
 
 
-def lodum(cls: T) -> T:
+def lodum(
+    cls: Optional[T] = None, *, tag: Optional[str] = None, tag_value: Optional[str] = None
+) -> TypingUnion[T, Any]:
     """
     A class decorator that marks a class as lodum-enabled and processes field metadata.
+
+    Args:
+        cls: The class to decorate.
+        tag: An optional field name to use as a tag for identifying the class in a Union.
+        tag_value: An optional value for the tag field. Defaults to the class name.
     """
-    setattr(cls, "_lodum_enabled", True)
 
-    original_init = cls.__init__
-    init_sig = inspect.signature(original_init)
-    fields: Dict[str, Field] = {}
+    def decorator(c: T) -> T:
+        setattr(c, "_lodum_enabled", True)
+        setattr(c, "_lodum_tag", tag)
+        setattr(c, "_lodum_tag_value", tag_value or c.__name__)
 
-    for param in init_sig.parameters.values():
-        if param.name == "self":
-            continue
+        original_init = c.__init__
+        init_sig = inspect.signature(original_init)
+        fields: Dict[str, Field] = {}
 
-        is_field_spec = isinstance(param.default, Field)
-
-        if is_field_spec:
-            field_info = param.default
-        else:
-            # Create a default Field for params without one, preserving its default value
-            default = param.default if param.default is not param.empty else _MISSING
-            field_info = Field(default=default)
-
-        field_info.name = param.name
-        field_info.type = param.annotation
-        fields[param.name] = field_info
-
-    setattr(cls, "_lodum_fields", fields)
-
-    @functools.wraps(original_init)
-    def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
-        bound_args = init_sig.bind(self, *args, **kwargs)
-        bound_args.apply_defaults()
-
-        resolved_args = {}
-        for name, value in bound_args.arguments.items():
-            if name == "self":
+        for param in init_sig.parameters.values():
+            if param.name == "self":
                 continue
 
-            if isinstance(value, Field):
-                if value.has_default:
-                    resolved_args[name] = value.get_default()
+            is_field_spec = isinstance(param.default, Field)
+
+            if is_field_spec:
+                field_info = param.default
             else:
-                resolved_args[name] = value
+                # Create a default Field for params without one, preserving its default value
+                default = (
+                    param.default if param.default is not param.empty else _MISSING
+                )
+                field_info = Field(default=default)
 
-        original_init(self, **resolved_args)
+            field_info.name = param.name
+            field_info.type = param.annotation
+            fields[param.name] = field_info
 
-    cls.__init__ = new_init  # type: ignore[method-assign]
-    return cls
+        setattr(c, "_lodum_fields", fields)
+
+        @functools.wraps(original_init)
+        def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
+            bound_args = init_sig.bind(self, *args, **kwargs)
+            bound_args.apply_defaults()
+
+            resolved_args = {}
+            for name, value in bound_args.arguments.items():
+                if name == "self":
+                    continue
+
+                if isinstance(value, Field):
+                    if value.has_default:
+                        resolved_args[name] = value.get_default()
+                else:
+                    resolved_args[name] = value
+
+            original_init(self, **resolved_args)
+
+        c.__init__ = new_init  # type: ignore[method-assign]
+        return c
+
+    if cls is None:
+        return decorator
+    return decorator(cls)
 
 
 class Dumper(Protocol):
