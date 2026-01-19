@@ -234,7 +234,9 @@ except Exception as e:
 
 ## Performance
 
-`lodum` is designed for high performance. When you first use a `@lodum`-enabled class, the library analyzes its structure and generates specialized Python bytecode for serialization and deserialization. This generated code is then compiled and cached, avoiding the overhead of generic introspection and `getattr` calls during runtime. This approach allows `lodum` to achieve speeds comparable to hand-written code while maintaining the flexibility of a declarative API.
+`lodum` is designed for high performance. When you first use a `@lodum`-enabled class, the library analyzes its structure and generates specialized Python bytecode for serialization and deserialization. This generated code is then compiled and cached, avoiding the overhead of generic introspection and `getattr` calls during runtime.
+
+See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
 
 ## Binary Data
 
@@ -280,6 +282,7 @@ Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING
 ## Internals & Roadmap
 
 * Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](ARCHITECTURE.md).
+* See how Lodum performs in our [PERFORMANCE.md](PERFORMANCE.md) report.
 * Want to see where we are going? Read our [ROADMAP.md](ROADMAP.md).
 
 ## License
