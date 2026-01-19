@@ -68,6 +68,7 @@ def _sanitize_name(name: str) -> str:
 
 _DUMP_HANDLER_CACHE: Dict[Type[Any], DumpHandler] = {}
 _LOAD_HANDLER_CACHE: Dict[Type[Any], LoadHandler] = {}
+_NAME_TO_TYPE_CACHE: Dict[str, Type[Any]] = {}
 _CACHE_LOCK = threading.Lock()
 
 
@@ -310,6 +311,8 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
+        if inspect.isclass(t) and not isinstance(t, ForwardRef):
+            _NAME_TO_TYPE_CACHE[t.__name__] = t
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
 
@@ -498,6 +501,8 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
+        if inspect.isclass(t) and not isinstance(t, ForwardRef):
+            _NAME_TO_TYPE_CACHE[t.__name__] = t
         if t in _LOAD_HANDLER_CACHE:
             return _LOAD_HANDLER_CACHE[t]
 
@@ -505,13 +510,11 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         return _load_any
     if isinstance(t, ForwardRef):
         ref_name = t.__forward_arg__
-        for cls in LOAD_DISPATCH:
-            if inspect.isclass(cls) and cls.__name__ == ref_name:
-                return _get_load_handler(cls)
+        resolved_type = None
         with _CACHE_LOCK:
-            for cls in _LOAD_HANDLER_CACHE:
-                if inspect.isclass(cls) and cls.__name__ == ref_name:
-                    return _LOAD_HANDLER_CACHE[cls]
+            resolved_type = _NAME_TO_TYPE_CACHE.get(ref_name)
+        if resolved_type:
+            return _get_load_handler(resolved_type)
         raise DeserializationError(f"Cannot resolve ForwardRef {ref_name!r}")
 
     origin = get_origin(t) or t
@@ -1155,3 +1158,8 @@ if pd is not None:
 if pl is not None:
     LOAD_DISPATCH[pl.DataFrame] = _load_polars_dataframe
     LOAD_DISPATCH[pl.Series] = _load_polars_series
+
+# Initialize name-to-type cache with basic types
+for _cls in LOAD_DISPATCH:
+    if inspect.isclass(_cls):
+        _NAME_TO_TYPE_CACHE[_cls.__name__] = _cls
