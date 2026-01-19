@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import dump, load, generate_schema
+from .internal import dump, load, generate_schema, DEFAULT_MAX_SIZE
 
 T = TypeVar("T")
 
@@ -20,8 +20,12 @@ def dumps(obj: Any) -> str:
     return json.dumps(dumped_data)
 
 
-def loads(cls: Type[T], json_string: str) -> T:
+def loads(cls: Type[T], json_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes a JSON string to a Python object (loads)."""
+    if len(json_string) > max_size:
+        raise DeserializationError(
+            f"Input size ({len(json_string)}) exceeds maximum allowed ({max_size})"
+        )
     data = json.loads(json_string)
     loader = JsonLoader(data)
     return load(cls, loader)
