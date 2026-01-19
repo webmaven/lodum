@@ -279,6 +279,7 @@ Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING
 
 ## Internals & Roadmap
 
+* Migrating from another library? See our [Migration Guide](MIGRATION.md).
 * Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](ARCHITECTURE.md).
 * Want to see where we are going? Read our [ROADMAP.md](ROADMAP.md).
 
