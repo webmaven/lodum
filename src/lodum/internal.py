@@ -517,7 +517,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
         lines.append(f"    if {safe_json_name} in data:")
         lines.append(f"        val = data[{safe_json_name}]")
         path_expr = (
-            f"f'{{path}}.{field_name_in_json}' if path else '{field_name_in_json}'"
+            f"(path + '.' + {repr(field_name_in_json)}) if path else {repr(field_name_in_json)}"
         )
 
         if field_info.deserializer:
@@ -585,7 +585,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                             "                if not isinstance(item, int) or isinstance(item, bool):"
                         )
                         lines.append(
-                            f"                    item_path = f'{{{path_expr}}}[{{i}}]'"
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
                         )
                         lines.append(
                             "                    raise DeserializationError(f'Expected int, got {type(item).__name__}', item_path)"
@@ -595,7 +595,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                         lines.append("            for i, item in enumerate(val):")
                         lines.append("                if not isinstance(item, str):")
                         lines.append(
-                            f"                    item_path = f'{{{path_expr}}}[{{i}}]'"
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
                         )
                         lines.append(
                             "                    raise DeserializationError(f'Expected str, got {type(item).__name__}', item_path)"
@@ -608,7 +608,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                             "                if not isinstance(item, (float, int)):"
                         )
                         lines.append(
-                            f"                    item_path = f'{{{path_expr}}}[{{i}}]'"
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
                         )
                         lines.append(
                             "                    raise DeserializationError(f'Expected float, got {type(item).__name__}', item_path)"
@@ -619,7 +619,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                         lines.append("            for i, item in enumerate(val):")
                         lines.append("                if not isinstance(item, bool):")
                         lines.append(
-                            f"                    item_path = f'{{{path_expr}}}[{{i}}]'"
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
                         )
                         lines.append(
                             "                    raise DeserializationError(f'Expected bool, got {type(item).__name__}', item_path)"
