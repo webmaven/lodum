@@ -88,12 +88,12 @@ class JsonLoader(BaseLoader):
             )
         return ((k, JsonLoader(v)) for k, v in self._data.items())
 
-    def load_bytes(self) -> bytes:
-        if not isinstance(self._data, str):
-            raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
+    def load_bytes_value(self, value: Any) -> bytes:
+        if not isinstance(value, str):
+            raise DeserializationError(f"Expected str, got {type(value).__name__}")
         import base64
 
         try:
-            return base64.b64decode(self._data)
+            return base64.b64decode(value)
         except Exception as e:
             raise DeserializationError(f"Failed to decode base64: {e}")
