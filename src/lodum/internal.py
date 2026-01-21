@@ -80,28 +80,8 @@ def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -
     if seen is None:
         seen = set()
 
-    obj_id = id(obj)
-    if obj_id in seen:
-        raise SerializationError("Circular reference detected")
-
-    # Only track containers and lodum objects to detect cycles
-    is_container = (
-        isinstance(obj, (list, dict, set, tuple, collections.deque, array.array))
-        or getattr(obj, "_lodum_enabled", False)
-        or (np is not None and isinstance(obj, np.ndarray))
-        or (pd is not None and isinstance(obj, (pd.DataFrame, pd.Series)))
-        or (pl is not None and isinstance(obj, (pl.DataFrame, pl.Series)))
-    )
-
-    if is_container:
-        seen.add(obj_id)
-
-    try:
-        handler = _get_dump_handler(type(obj))
-        return handler(obj, dumper, depth, seen)
-    finally:
-        if is_container:
-            seen.remove(obj_id)
+    handler = _get_dump_handler(type(obj))
+    return handler(obj, dumper, depth, seen)
 
 
 def load(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0) -> T:
@@ -242,7 +222,14 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     lines = []
     safe_name = _sanitize_name(cls.__name__)
     lines.append(f"def dump_{safe_name}(obj, dumper, dump_fn, depth, seen):")
-    lines.append("    data = dumper.begin_struct(cls)")
+    lines.append("    if depth > 100:")
+    lines.append("        raise SerializationError('Max recursion depth exceeded')")
+    lines.append("    obj_id = id(obj)")
+    lines.append("    if obj_id in seen:")
+    lines.append("        raise SerializationError('Circular reference detected')")
+    lines.append("    seen.add(obj_id)")
+    lines.append("    try:")
+    lines.append("        data = dumper.begin_struct(cls)")
 
     tag = getattr(cls, "_lodum_tag", None)
     tag_value = getattr(cls, "_lodum_tag_value", None)
@@ -256,13 +243,14 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     if tag:
         context["tag_name"] = tag
         context["tag_value"] = tag_value
-        lines.append("    data[tag_name] = dumper.dump_str(tag_value)")
+        lines.append("        data[tag_name] = dumper.dump_str(tag_value)")
 
     PRIMITIVE_TYPES = {
         int: "dump_int",
         str: "dump_str",
         float: "dump_float",
         bool: "dump_bool",
+        bytes: "dump_bytes",
     }
 
     for i, (field_name, field_info) in enumerate(fields.items()):
@@ -276,27 +264,79 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
         if field_info.serializer:
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer
-            lines.append(f"    data[{safe_key}] = {ser_name}(obj.{field_name})")
+            lines.append(f"        data[{safe_key}] = {ser_name}(obj.{field_name})")
         else:
             ftype = field_info.type
             if ftype in PRIMITIVE_TYPES:
                 dump_meth = PRIMITIVE_TYPES[ftype]
-                lines.append(f"    val = obj.{field_name}")
+                lines.append(f"        val = obj.{field_name}")
                 if ftype is float:
                     lines.append(
-                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, (float, int)) else dump_fn(val, dumper, depth + 1, seen)"
+                        f"        data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, (float, int)) else dump_fn(val, dumper, depth + 1, seen)"
                     )
                 else:
                     lines.append(
-                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, {ftype.__name__}) else dump_fn(val, dumper, depth + 1, seen)"
+                        f"        data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, {ftype.__name__}) else dump_fn(val, dumper, depth + 1, seen)"
                     )
             else:
-                lines.append(
-                    f"    data[{safe_key}] = dump_fn(obj.{field_name}, dumper, depth + 1, seen)"
-                )
+                # Try to pre-resolve handler
+                h_name = f"h_{i}"
+                try:
+                    # Use a version of get_dump_handler that avoids recursion during compilation
+                    field_handler = _get_dump_handler(ftype, excluding=cls)
+                    origin = get_origin(ftype) or ftype
+                    args = get_args(ftype)
+                    if origin is list and args and args[0] in PRIMITIVE_TYPES:
+                        item_type = args[0]
+                        lines.append(f"        val_{i} = obj.{field_name}")
+                        lines.append(
+                            f"        if id(val_{i}) in seen: raise SerializationError('Circular reference detected')"
+                        )
+                        lines.append(f"        seen.add(id(val_{i}))")
+                        lines.append("        try:")
+                        # Validate that items match the primitive type hint for safety
+                        if item_type is float:
+                            lines.append(
+                                f"            data[{safe_key}] = [float(item) if isinstance(item, (float, int)) else dump_fn(item, dumper, depth + 2, seen) for item in val_{i}]"
+                            )
+                        else:
+                            lines.append(
+                                f"            data[{safe_key}] = [item if isinstance(item, {item_type.__name__}) else dump_fn(item, dumper, depth + 2, seen) for item in val_{i}]"
+                            )
+                        lines.append("        finally:")
+                        lines.append(f"            seen.remove(id(val_{i}))")
+                    elif origin is dict and args and args[1] in PRIMITIVE_TYPES:
+                        val_type = args[1]
+                        lines.append(f"        val_{i} = obj.{field_name}")
+                        lines.append(
+                            f"        if id(val_{i}) in seen: raise SerializationError('Circular reference detected')"
+                        )
+                        lines.append(f"        seen.add(id(val_{i}))")
+                        lines.append("        try:")
+                        if val_type is float:
+                            lines.append(
+                                f"            data[{safe_key}] = {{str(k): (float(v) if isinstance(v, (float, int)) else dump_fn(v, dumper, depth + 2, seen)) for k, v in val_{i}.items()}}"
+                            )
+                        else:
+                            lines.append(
+                                f"            data[{safe_key}] = {{str(k): (v if isinstance(v, {val_type.__name__}) else dump_fn(v, dumper, depth + 2, seen)) for k, v in val_{i}.items()}}"
+                            )
+                        lines.append("        finally:")
+                        lines.append(f"            seen.remove(id(val_{i}))")
+                    else:
+                        context[h_name] = field_handler
+                        lines.append(
+                            f"        data[{safe_key}] = {h_name}(obj.{field_name}, dumper, depth + 1, seen)"
+                        )
+                except Exception:
+                    lines.append(
+                        f"        data[{safe_key}] = dump_fn(obj.{field_name}, dumper, depth + 1, seen)"
+                    )
 
-    lines.append("    dumper.end_struct()")
-    lines.append("    return data")
+    lines.append("        dumper.end_struct()")
+    lines.append("        return data")
+    lines.append("    finally:")
+    lines.append("        seen.remove(obj_id)")
 
     source = "\n".join(lines)
     local_vars: Dict[str, Any] = {}
@@ -306,22 +346,21 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     return lambda obj, dumper, depth, seen: compiled_fn(obj, dumper, dump, depth, seen)
 
 
-def _get_dump_handler(t: Type[Any]) -> DumpHandler:
-    # Hot path
-    handler = _DUMP_HANDLER_CACHE.get(t)
-    if handler is not None:
-        return handler
-
+def _get_dump_handler(
+    t: Type[Any], excluding: Optional[Type[Any]] = None
+) -> DumpHandler:
     if isinstance(t, str):
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
-        # Check again under lock
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
 
         if inspect.isclass(t) and not isinstance(t, ForwardRef):
             _NAME_TO_TYPE_CACHE[t.__name__] = t
+
+    if t == excluding:
+        raise ValueError("Recursive reference during compilation")
 
     if t in DUMP_DISPATCH:
         handler = DUMP_DISPATCH[t]
@@ -333,12 +372,25 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
     if origin in (list, set, tuple, array.array):
         args = get_args(t)
         item_type = args[0] if args else Any
-        item_handler = _get_dump_handler(item_type)
+        item_handler = _get_dump_handler(item_type, excluding=excluding)
 
         def dump_seq(
             obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
         ) -> List[Any]:
-            return [item_handler(item, dumper, depth + 1, seen) for item in obj]
+            if depth > DEFAULT_MAX_DEPTH:
+                raise SerializationError(
+                    f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded"
+                )
+            if seen is None:
+                seen = set()
+            obj_id = id(obj)
+            if obj_id in seen:
+                raise SerializationError("Circular reference detected")
+            seen.add(obj_id)
+            try:
+                return [item_handler(item, dumper, depth + 1, seen) for item in obj]
+            finally:
+                seen.remove(obj_id)
 
         with _CACHE_LOCK:
             _DUMP_HANDLER_CACHE[t] = dump_seq
@@ -356,14 +408,28 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
             v_type = int
         else:
             v_type = args[1] if len(args) == 2 else Any
-        v_handler = _get_dump_handler(v_type)
+        v_handler = _get_dump_handler(v_type, excluding=excluding)
 
         def dump_mapping(
             obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
         ) -> Dict[str, Any]:
-            return {
-                str(k): v_handler(v, dumper, depth + 1, seen) for k, v in obj.items()
-            }
+            if depth > DEFAULT_MAX_DEPTH:
+                raise SerializationError(
+                    f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded"
+                )
+            if seen is None:
+                seen = set()
+            obj_id = id(obj)
+            if obj_id in seen:
+                raise SerializationError("Circular reference detected")
+            seen.add(obj_id)
+            try:
+                return {
+                    str(k): v_handler(v, dumper, depth + 1, seen)
+                    for k, v in obj.items()
+                }
+            finally:
+                seen.remove(obj_id)
 
         with _CACHE_LOCK:
             _DUMP_HANDLER_CACHE[t] = dump_mapping
@@ -381,7 +447,9 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
                 _DUMP_HANDLER_CACHE[t] = handler
             return handler
 
-    raise SerializationError(f"Object of type {t.__name__} is not lodum-enabled")
+    raise SerializationError(
+        f"Object of type {getattr(t, '__name__', str(t))} is not lodum-enabled"
+    )
 
 
 def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
@@ -389,17 +457,31 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     lines = []
     safe_name = _sanitize_name(cls.__name__)
     lines.append(f"def load_{safe_name}(loader, load_fn, path, depth):")
-    lines.append("    try:")
-    lines.append("        data = {k: v for k, v in loader.load_dict()}")
-    lines.append("    except DeserializationError as e:")
+    lines.append("    if depth > 100:")
     lines.append(
-        f"        raise DeserializationError(f'Expected a dictionary to decode into class {cls.__name__}, but received a different type.', path)"
+        "        raise DeserializationError('Max recursion depth exceeded', path)"
     )
+    lines.append("    raw_data = loader.get_dict()")
+    lines.append("    if raw_data is not None:")
+    lines.append("        data = raw_data")
+    lines.append("        is_raw = True")
+    lines.append("    else:")
+    lines.append("        try:")
+    lines.append("            data = {k: v for k, v in loader.load_dict()}")
+    lines.append("            is_raw = False")
+    lines.append("        except DeserializationError as e:")
+    lines.append(
+        f"            raise DeserializationError(f'Expected a dictionary to decode into class {cls.__name__}, but received a different type.', path)"
+    )
+
+    def function_raise(e):
+        raise e
 
     context: Dict[str, Any] = {
         "cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
+        "function_raise": function_raise,
     }
 
     tag = getattr(cls, "_lodum_tag", None)
@@ -409,7 +491,9 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
         context["tag_name"] = tag
         context["tag_value"] = tag_value
         lines.append("    if tag_name in data:")
-        lines.append("        actual_tag = data[tag_name].load_any()")
+        lines.append(
+            "        actual_tag = data[tag_name] if is_raw else data[tag_name].load_any()"
+        )
         lines.append("        if actual_tag != tag_value:")
         lines.append(
             "            raise DeserializationError(f'Invalid tag value: expected {tag_value}, got {actual_tag}', path)"
@@ -422,6 +506,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
         str: "load_str",
         float: "load_float",
         bool: "load_bool",
+        bytes: "load_bytes",
     }
 
     for i, (field_name, field_info) in enumerate(fields.items()):
@@ -429,40 +514,175 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
         safe_json_name = f"key_{i}"
         context[safe_json_name] = field_name_in_json
 
-        lines.append(
-            f"    field_path = f'{{path}}.{field_name_in_json}' if path else '{field_name_in_json}'"
-        )
         lines.append(f"    if {safe_json_name} in data:")
-        lines.append(f"        val_loader = data[{safe_json_name}]")
+        lines.append(f"        val = data[{safe_json_name}]")
+        path_expr = f"(path + '.' + {repr(field_name_in_json)}) if path else {repr(field_name_in_json)}"
 
         if field_info.deserializer:
             deser_name = f"deser_{i}"
             context[deser_name] = field_info.deserializer
             lines.append(
-                f"        try: args['{field_name}'] = {deser_name}(val_loader.load_any())"
+                f"        try: args['{field_name}'] = {deser_name}(val if is_raw else val.load_any())"
             )
             lines.append(
-                "        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                f"        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
             )
         else:
             ftype = field_info.type
             if ftype in PRIMITIVE_LOADERS:
                 load_meth = PRIMITIVE_LOADERS[ftype]
+                lines.append("        if is_raw:")
+                if ftype is int:
+                    lines.append(
+                        f"            if not isinstance(val, int) or isinstance(val, bool): raise DeserializationError(f'Expected int, got {{type(val).__name__}}', {path_expr})"
+                    )
+                    lines.append(f"            args['{field_name}'] = val")
+                elif ftype is str:
+                    lines.append(
+                        f"            if not isinstance(val, str): raise DeserializationError(f'Expected str, got {{type(val).__name__}}', {path_expr})"
+                    )
+                    lines.append(f"            args['{field_name}'] = val")
+                elif ftype is float:
+                    lines.append(
+                        f"            if not isinstance(val, (float, int)): raise DeserializationError(f'Expected float, got {{type(val).__name__}}', {path_expr})"
+                    )
+                    lines.append(f"            args['{field_name}'] = float(val)")
+                elif ftype is bool:
+                    lines.append(
+                        f"            if not isinstance(val, bool): raise DeserializationError(f'Expected bool, got {{type(val).__name__}}', {path_expr})"
+                    )
+                    lines.append(f"            args['{field_name}'] = val")
+                elif ftype is bytes:
+                    lines.append(
+                        f"            try: args['{field_name}'] = loader.load_bytes_value(val)"
+                    )
+                    lines.append(
+                        f"            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
+                    )
+                lines.append("        else:")
                 lines.append(
-                    f"        try: args['{field_name}'] = val_loader.{load_meth}()"
+                    f"            try: args['{field_name}'] = val.{load_meth}()"
                 )
                 lines.append(
-                    "        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                    f"            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
                 )
             else:
-                type_name = f"type_{i}"
-                context[type_name] = ftype
-                lines.append(
-                    f"        try: args['{field_name}'] = load_fn({type_name}, val_loader, field_path, depth + 1)"
-                )
-                lines.append(
-                    "        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
-                )
+                h_name = f"h_{i}"
+                origin = get_origin(ftype) or ftype
+                args = get_args(ftype)
+                if origin is list and args and args[0] in PRIMITIVE_LOADERS:
+                    item_type = args[0]
+                    load_meth = PRIMITIVE_LOADERS[item_type]
+                    lines.append("        if is_raw:")
+                    lines.append(
+                        f"            if not isinstance(val, list): raise DeserializationError('Expected list', {path_expr})"
+                    )
+                    if item_type is int:
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append(
+                            "                if not isinstance(item, int) or isinstance(item, bool):"
+                        )
+                        lines.append(
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
+                        )
+                        lines.append(
+                            "                    raise DeserializationError(f'Expected int, got {type(item).__name__}', item_path)"
+                        )
+                        lines.append(f"            args['{field_name}'] = val")
+                    elif item_type is str:
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append("                if not isinstance(item, str):")
+                        lines.append(
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
+                        )
+                        lines.append(
+                            "                    raise DeserializationError(f'Expected str, got {type(item).__name__}', item_path)"
+                        )
+                        lines.append(f"            args['{field_name}'] = val")
+                    elif item_type is float:
+                        lines.append("            res = []")
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append(
+                            "                if not isinstance(item, (float, int)):"
+                        )
+                        lines.append(
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
+                        )
+                        lines.append(
+                            "                    raise DeserializationError(f'Expected float, got {type(item).__name__}', item_path)"
+                        )
+                        lines.append("                res.append(float(item))")
+                        lines.append(f"            args['{field_name}'] = res")
+                    elif item_type is bool:
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append("                if not isinstance(item, bool):")
+                        lines.append(
+                            f"                    item_path = ({path_expr}) + '[' + str(i) + ']'"
+                        )
+                        lines.append(
+                            "                    raise DeserializationError(f'Expected bool, got {type(item).__name__}', item_path)"
+                        )
+                        lines.append(f"            args['{field_name}'] = val")
+                    lines.append("        else:")
+                    lines.append(
+                        f"            try: args['{field_name}'] = [item_l.{load_meth}() for item_l in val.load_list()]"
+                    )
+                    lines.append(
+                        f"            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
+                    )
+                elif origin is dict and args and args[1] in PRIMITIVE_LOADERS:
+                    val_type = args[1]
+                    load_meth = PRIMITIVE_LOADERS[val_type]
+                    lines.append("        if is_raw:")
+                    lines.append(
+                        f"            if not isinstance(val, dict): raise DeserializationError('Expected dict', {path_expr})"
+                    )
+                    if val_type is float:
+                        lines.append(
+                            f"            args['{field_name}'] = {{k: float(v) if isinstance(v, (float, int)) else (function_raise(DeserializationError('Expected float', {path_expr}))) for k, v in val.items()}}"
+                        )
+                    else:
+                        lines.append("            for v in val.values():")
+                        if val_type is int:
+                            lines.append(
+                                f"                if not isinstance(v, int) or isinstance(v, bool): raise DeserializationError('Expected int, got {{type(v).__name__}}', {path_expr})"
+                            )
+                        elif val_type is str:
+                            lines.append(
+                                f"                if not isinstance(v, str): raise DeserializationError('Expected str, got {{type(v).__name__}}', {path_expr})"
+                            )
+                        elif val_type is bool:
+                            lines.append(
+                                f"                if not isinstance(v, bool): raise DeserializationError('Expected bool, got {{type(v).__name__}}', {path_expr})"
+                            )
+                        lines.append(f"            args['{field_name}'] = val")
+                    lines.append("        else:")
+                    lines.append(
+                        f"            try: args['{field_name}'] = {{k: v_l.{load_meth}() for k, v_l in val.load_dict()}}"
+                    )
+                    lines.append(
+                        f"            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
+                    )
+                else:
+                    lines.append(
+                        "        val_loader = val if not is_raw else type(loader)(val)"
+                    )
+                    try:
+                        field_handler = _get_load_handler(ftype, excluding=cls)
+                        context[h_name] = field_handler
+                        context[f"type_{i}"] = ftype
+                        lines.append(
+                            f"        try: args['{field_name}'] = {h_name}(type_{i}, val_loader, {path_expr}, depth + 1)"
+                        )
+                    except Exception:
+                        type_name = f"type_{i}"
+                        context[type_name] = ftype
+                        lines.append(
+                            f"        try: args['{field_name}'] = load_fn({type_name}, val_loader, {path_expr}, depth + 1)"
+                        )
+                    lines.append(
+                        f"        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
+                    )
 
         if field_info.has_default:
             lines.append("    else:")
@@ -486,12 +706,12 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                 context[v_name] = v
                 lines.append(f"    try: {v_name}(args['{field_name}'])")
                 lines.append(
-                    "    except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                    f"    except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or ({path_expr}))"
                 )
 
     lines.append("    try: return cls(**args)")
     lines.append(
-        "    except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {{e}}', path)"
+        "    except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {e}', path)"
     )
 
     source = "\n".join(lines)
@@ -503,22 +723,21 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     )
 
 
-def _get_load_handler(t: Type[Any]) -> LoadHandler:
-    # Hot path
-    handler = _LOAD_HANDLER_CACHE.get(t)
-    if handler is not None:
-        return handler
-
+def _get_load_handler(
+    t: Type[Any], excluding: Optional[Type[Any]] = None
+) -> LoadHandler:
     if isinstance(t, str):
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
-        # Check again under lock
         if t in _LOAD_HANDLER_CACHE:
             return _LOAD_HANDLER_CACHE[t]
 
         if inspect.isclass(t) and not isinstance(t, ForwardRef):
             _NAME_TO_TYPE_CACHE[t.__name__] = t
+
+    if t == excluding:
+        raise ValueError("Recursive reference during compilation")
 
     if isinstance(t, TypeVar):
         return _load_any
@@ -528,7 +747,7 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         with _CACHE_LOCK:
             resolved_type = _NAME_TO_TYPE_CACHE.get(ref_name)
         if resolved_type:
-            return _get_load_handler(resolved_type)
+            return _get_load_handler(resolved_type, excluding=excluding)
         raise DeserializationError(f"Cannot resolve ForwardRef {ref_name!r}")
 
     origin = get_origin(t) or t
@@ -537,33 +756,141 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
     if origin is Union and len(args) == 2 and args[1] is type(None):
         return _load_optional
     if origin is Union:
+        # Check if it's a Tagged Union
+        tag_names = set()
+        for arg in args:
+            if inspect.isclass(arg):
+                tag_names.add(getattr(arg, "_lodum_tag", None))
+            else:
+                tag_names.add(None)
+
+        if len(tag_names) == 1 and None not in tag_names:
+            tag_name = tag_names.pop()
+            tag_map = {}
+            for arg in args:
+                tag_value = getattr(arg, "_lodum_tag_value", arg.__name__)
+                tag_map[tag_value] = arg
+
+            # Pre-resolve handlers for each variant
+            handler_map = {
+                tag_val: _get_load_handler(v_type, excluding=excluding)
+                for tag_val, v_type in tag_map.items()
+            }
+
+            def load_tagged_union(cls_ignore, loader, path, depth):
+                if depth > DEFAULT_MAX_DEPTH:
+                    raise DeserializationError(
+                        f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+                    )
+                raw = loader.get_dict()
+                data = raw if raw is not None else loader.load_any()
+                if isinstance(data, dict) and tag_name in data:
+                    tv = data[tag_name]
+                    if tv in handler_map:
+                        v_handler = handler_map[tv]
+                        v_type = tag_map[tv]
+                        new_loader = type(loader)(data)
+                        return v_handler(v_type, new_loader, path, depth + 1)
+                return _load_union(t, loader, path, depth)
+
+            with _CACHE_LOCK:
+                _LOAD_HANDLER_CACHE[t] = load_tagged_union
+            return load_tagged_union
+
         return _load_union
 
     if origin in (list, array.array):
         args = get_args(t)
         item_type = args[0] if args else Any
-        item_loader_fn = _get_load_handler(item_type)
 
-        def load_list(
-            cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
-        ) -> Any:
-            data = [
-                item_loader_fn(
-                    item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1
-                )
-                for i, item_l in enumerate(loader.load_list())
-            ]
-            if origin is array.array:
-                # Guess typecode: 'd' for floats, 'i' for ints
-                typecode = "i"
-                if data and isinstance(data[0], float):
-                    typecode = "d"
-                return array.array(typecode, data)
-            return data
+        PRIMITIVE_LOADERS = {
+            int: "load_int",
+            str: "load_str",
+            float: "load_float",
+            bool: "load_bool",
+            bytes: "load_bytes",
+        }
+
+        handler: LoadHandler
+        if item_type in PRIMITIVE_LOADERS:
+            load_meth = PRIMITIVE_LOADERS[item_type]
+
+            def load_list_primitive(
+                cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
+            ) -> Any:
+                raw = loader.get_dict()
+                if isinstance(raw, list):
+                    # Validate with index for path
+                    if item_type is int:
+                        for i, x in enumerate(raw):
+                            if not isinstance(x, int) or isinstance(x, bool):
+                                item_path = f"{path}[{i}]" if path else f"[{i}]"
+                                raise DeserializationError(
+                                    f"Expected int, got {type(x).__name__}", item_path
+                                )
+                    elif item_type is str:
+                        for i, x in enumerate(raw):
+                            if not isinstance(x, str):
+                                item_path = f"{path}[{i}]" if path else f"[{i}]"
+                                raise DeserializationError(
+                                    f"Expected str, got {type(x).__name__}", item_path
+                                )
+                    elif item_type is bool:
+                        for i, x in enumerate(raw):
+                            if not isinstance(x, bool):
+                                item_path = f"{path}[{i}]" if path else f"[{i}]"
+                                raise DeserializationError(
+                                    f"Expected bool, got {type(x).__name__}", item_path
+                                )
+                    elif item_type is float:
+                        res = []
+                        for i, x in enumerate(raw):
+                            if not isinstance(x, (float, int)):
+                                item_path = f"{path}[{i}]" if path else f"[{i}]"
+                                raise DeserializationError(
+                                    f"Expected float, got {type(x).__name__}", item_path
+                                )
+                            res.append(float(x))
+                        return res
+                    return raw
+                return [
+                    getattr(item_l, load_meth)()
+                    for i, item_l in enumerate(loader.load_list())
+                ]
+
+            handler = load_list_primitive
+        else:
+            item_loader_fn = _get_load_handler(item_type, excluding=excluding)
+
+            def load_list_generic(
+                cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
+            ) -> Any:
+                if depth > DEFAULT_MAX_DEPTH:
+                    raise DeserializationError(
+                        f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+                    )
+                data = [
+                    item_loader_fn(
+                        item_type,
+                        item_l,
+                        f"{path}[{i}]" if path else f"[{i}]",
+                        depth + 1,
+                    )
+                    for i, item_l in enumerate(loader.load_list())
+                ]
+                if origin is array.array:
+                    # Guess typecode: 'd' for floats, 'i' for ints
+                    typecode = "i"
+                    if data and isinstance(data[0], float):
+                        typecode = "d"
+                    return array.array(typecode, data)
+                return data
+
+            handler = load_list_generic
 
         with _CACHE_LOCK:
-            _LOAD_HANDLER_CACHE[t] = load_list
-        return load_list
+            _LOAD_HANDLER_CACHE[t] = handler
+        return handler
 
     if origin in (
         dict,
@@ -581,11 +908,15 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
 
         if k_type is not str and k_type is not Any:
             raise DeserializationError("JSON/YAML object keys must be strings")
-        v_loader_fn = _get_load_handler(v_type)
+        v_loader_fn = _get_load_handler(v_type, excluding=excluding)
 
         def load_dict(
             cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
         ) -> Any:
+            if depth > DEFAULT_MAX_DEPTH:
+                raise DeserializationError(
+                    f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+                )
             data = {
                 k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k, depth + 1)
                 for k, v_l in loader.load_dict()
@@ -641,13 +972,45 @@ def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -
 def _dump_sequence(
     obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
 ) -> List[Any]:
-    return [dump(item, dumper, depth + 1, seen) for item in obj]
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        raise SerializationError("Circular reference detected")
+    seen.add(obj_id)
+    try:
+        # Optimized path for primitive sequences that avoids generic dump() entry
+        # We still need to handle heterogeneous cases safely.
+        return [
+            item
+            if type(item) in (int, str, bool, type(None))
+            else dump(item, dumper, depth + 1, seen)
+            for item in obj
+        ]
+    finally:
+        seen.remove(obj_id)
 
 
 def _dump_dict(
     obj: Dict[Any, Any], dumper: Dumper, depth: int, seen: Optional[set]
 ) -> Dict[str, Any]:
-    return {str(k): dump(v, dumper, depth + 1, seen) for k, v in obj.items()}
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        raise SerializationError("Circular reference detected")
+    seen.add(obj_id)
+    try:
+        return {
+            str(k): (
+                v
+                if type(v) in (int, str, bool, type(None))
+                else dump(v, dumper, depth + 1, seen)
+            )
+            for k, v in obj.items()
+        }
+    finally:
+        seen.remove(obj_id)
 
 
 def _dump_bytes(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
@@ -659,7 +1022,16 @@ def _dump_bytearray(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any
 
 
 def _dump_array(obj: array.array, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return [dump(item, d, depth + 1, seen) for item in obj]
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        raise SerializationError("Circular reference detected")
+    seen.add(obj_id)
+    try:
+        return [dump(item, d, depth + 1, seen) for item in obj]
+    finally:
+        seen.remove(obj_id)
 
 
 def _dump_datetime(

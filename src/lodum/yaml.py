@@ -12,7 +12,7 @@ except ImportError:
     YAML = None  # type: ignore
     yaml_available = False
 
-from .core import Loader, BaseDumper
+from .core import Loader, BaseDumper, BaseLoader
 from .internal import dump, load, DEFAULT_MAX_SIZE
 from .exception import DeserializationError
 
@@ -81,7 +81,7 @@ class YamlDumper(BaseDumper):
 # --- YAML Loader Implementation ---
 
 
-class YamlLoader(Loader):
+class YamlLoader(BaseLoader):
     """
     Decodes a YAML-compatible intermediate representation into Python objects.
     """
