@@ -68,6 +68,7 @@ def _sanitize_name(name: str) -> str:
 
 _DUMP_HANDLER_CACHE: Dict[Type[Any], DumpHandler] = {}
 _LOAD_HANDLER_CACHE: Dict[Type[Any], LoadHandler] = {}
+_NAME_TO_TYPE_CACHE: Dict[str, Type[Any]] = {}
 _CACHE_LOCK = threading.Lock()
 
 
@@ -420,7 +421,9 @@ def _get_dump_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Du
                 _DUMP_HANDLER_CACHE[t] = handler
             return handler
 
-    raise SerializationError(f"Object of type {getattr(t, '__name__', str(t))} is not lodum-enabled")
+    raise SerializationError(
+        f"Object of type {getattr(t, '__name__', str(t))} is not lodum-enabled"
+    )
 
 
 def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
@@ -642,6 +645,9 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
         if t in _LOAD_HANDLER_CACHE:
             return _LOAD_HANDLER_CACHE[t]
 
+        if inspect.isclass(t) and not isinstance(t, ForwardRef):
+            _NAME_TO_TYPE_CACHE[t.__name__] = t
+
     if t == excluding:
         raise ValueError("Recursive reference during compilation")
 
@@ -652,10 +658,11 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
         for cls in LOAD_DISPATCH:
             if inspect.isclass(cls) and cls.__name__ == ref_name:
                 return _get_load_handler(cls, excluding=excluding)
+        resolved_type = None
         with _CACHE_LOCK:
-            for cls in _LOAD_HANDLER_CACHE:
-                if inspect.isclass(cls) and cls.__name__ == ref_name:
-                    return _LOAD_HANDLER_CACHE[cls]
+            resolved_type = _NAME_TO_TYPE_CACHE.get(ref_name)
+        if resolved_type:
+            return _get_load_handler(resolved_type, excluding=excluding)
         raise DeserializationError(f"Cannot resolve ForwardRef {ref_name!r}")
 
     origin = get_origin(t) or t
@@ -684,6 +691,16 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
                            for tag_val, v_type in tag_map.items()}
 
             def load_tagged_union(cls_ignore, loader, path, depth):
+            handler_map = {
+                tag_val: _get_load_handler(v_type, excluding=excluding)
+                for tag_val, v_type in tag_map.items()
+            }
+
+            def load_tagged_union(cls_ignore, loader, path, depth):
+                if depth > DEFAULT_MAX_DEPTH:
+                    raise DeserializationError(
+                        f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+                    )
                 raw = loader.get_dict()
                 data = raw if raw is not None else loader.load_any()
                 if isinstance(data, dict) and tag_name in data:
@@ -761,6 +778,16 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
                 data = [
                     item_loader_fn(
                         item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1
+                if depth > DEFAULT_MAX_DEPTH:
+                    raise DeserializationError(
+                        f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+                    )
+                data = [
+                    item_loader_fn(
+                        item_type,
+                        item_l,
+                        f"{path}[{i}]" if path else f"[{i}]",
+                        depth + 1,
                     )
                     for i, item_l in enumerate(loader.load_list())
                 ]
@@ -799,6 +826,10 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
         def load_dict(
             cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
         ) -> Any:
+            if depth > DEFAULT_MAX_DEPTH:
+                raise DeserializationError(
+                    f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
+                )
             data = {
                 k: v_loader_fn(v_type, v_l, f"{path}.{k}" if path else k, depth + 1)
                 for k, v_l in loader.load_dict()
@@ -1421,3 +1452,8 @@ if pd is not None:
 if pl is not None:
     LOAD_DISPATCH[pl.DataFrame] = _load_polars_dataframe
     LOAD_DISPATCH[pl.Series] = _load_polars_series
+
+# Initialize name-to-type cache with basic types
+for _cls in LOAD_DISPATCH:
+    if inspect.isclass(_cls):
+        _NAME_TO_TYPE_CACHE[_cls.__name__] = _cls

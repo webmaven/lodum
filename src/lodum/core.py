@@ -16,6 +16,7 @@ from typing import (
 )
 
 from .field import Field, _MISSING
+from .exception import DeserializationError
 
 T = TypeVar("T", bound=Type[Any])
 
