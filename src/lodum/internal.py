@@ -505,7 +505,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
         lines.append(f"    if {safe_json_name} in data:")
         lines.append(f"        val = data[{safe_json_name}]")
         path_expr = (
-            f"f'{{path}}.{field_name_in_json}' if path else '{field_name_in_json}'"
+            f'f"{{path}}.{field_name_in_json}" if path else "{field_name_in_json}"'
         )
 
         if field_info.deserializer:
