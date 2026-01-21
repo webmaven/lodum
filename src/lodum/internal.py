@@ -342,6 +342,9 @@ def _get_dump_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Du
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
 
+        if inspect.isclass(t) and not isinstance(t, ForwardRef):
+            _NAME_TO_TYPE_CACHE[t.__name__] = t
+
     if t == excluding:
         raise ValueError("Recursive reference during compilation")
 
@@ -532,30 +535,30 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                     lines.append("        if is_raw:")
                     lines.append(f"            if not isinstance(val, list): raise DeserializationError('Expected list', {path_expr})")
                     if item_type is int:
-                        lines.append(f"            for i, item in enumerate(val):")
-                        lines.append(f"                if not isinstance(item, int) or isinstance(item, bool):")
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append("                if not isinstance(item, int) or isinstance(item, bool):")
                         lines.append(f"                    item_path = f'{{{path_expr}}}[{{i}}]'")
-                        lines.append(f"                    raise DeserializationError(f'Expected int, got {{type(item).__name__}}', item_path)")
+                        lines.append("                    raise DeserializationError(f'Expected int, got {type(item).__name__}', item_path)")
                         lines.append(f"            args['{field_name}'] = val")
                     elif item_type is str:
-                        lines.append(f"            for i, item in enumerate(val):")
-                        lines.append(f"                if not isinstance(item, str):")
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append("                if not isinstance(item, str):")
                         lines.append(f"                    item_path = f'{{{path_expr}}}[{{i}}]'")
-                        lines.append(f"                    raise DeserializationError(f'Expected str, got {{type(item).__name__}}', item_path)")
+                        lines.append("                    raise DeserializationError(f'Expected str, got {type(item).__name__}', item_path)")
                         lines.append(f"            args['{field_name}'] = val")
                     elif item_type is float:
-                        lines.append(f"            res = []")
-                        lines.append(f"            for i, item in enumerate(val):")
-                        lines.append(f"                if not isinstance(item, (float, int)):")
+                        lines.append("            res = []")
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append("                if not isinstance(item, (float, int)):")
                         lines.append(f"                    item_path = f'{{{path_expr}}}[{{i}}]'")
-                        lines.append(f"                    raise DeserializationError(f'Expected float, got {{type(item).__name__}}', item_path)")
-                        lines.append(f"                res.append(float(item))")
+                        lines.append("                    raise DeserializationError(f'Expected float, got {type(item).__name__}', item_path)")
+                        lines.append("                res.append(float(item))")
                         lines.append(f"            args['{field_name}'] = res")
                     elif item_type is bool:
-                        lines.append(f"            for i, item in enumerate(val):")
-                        lines.append(f"                if not isinstance(item, bool):")
+                        lines.append("            for i, item in enumerate(val):")
+                        lines.append("                if not isinstance(item, bool):")
                         lines.append(f"                    item_path = f'{{{path_expr}}}[{{i}}]'")
-                        lines.append(f"                    raise DeserializationError(f'Expected bool, got {{type(item).__name__}}', item_path)")
+                        lines.append("                    raise DeserializationError(f'Expected bool, got {type(item).__name__}', item_path)")
                         lines.append(f"            args['{field_name}'] = val")
                     lines.append("        else:")
                     lines.append(f"            try: args['{field_name}'] = [item_l.{load_meth}() for item_l in val.load_list()]")
@@ -568,7 +571,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                     if val_type is float:
                         lines.append(f"            args['{field_name}'] = {{k: float(v) if isinstance(v, (float, int)) else (function_raise(DeserializationError('Expected float', {path_expr}))) for k, v in val.items()}}")
                     else:
-                        lines.append(f"            for v in val.values():")
+                        lines.append("            for v in val.values():")
                         if val_type is int:
                             lines.append(f"                if not isinstance(v, int) or isinstance(v, bool): raise DeserializationError('Expected int, got {{type(v).__name__}}', {path_expr})")
                         elif val_type is str:
@@ -667,6 +670,7 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
 
     origin = get_origin(t) or t
     args = get_args(t)
+    handler: LoadHandler
 
     if origin is Union and len(args) == 2 and args[1] is type(None):
         return _load_optional
@@ -687,10 +691,6 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
                 tag_map[tag_value] = arg
 
             # Pre-resolve handlers for each variant
-            handler_map = {tag_val: _get_load_handler(v_type, excluding=excluding)
-                           for tag_val, v_type in tag_map.items()}
-
-            def load_tagged_union(cls_ignore, loader, path, depth):
             handler_map = {
                 tag_val: _get_load_handler(v_type, excluding=excluding)
                 for tag_val, v_type in tag_map.items()
@@ -775,9 +775,6 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
             def load_list_generic(
                 cls_ignore: Type[Any], loader: Loader, path: Optional[str], depth: int
             ) -> Any:
-                data = [
-                    item_loader_fn(
-                        item_type, item_l, f"{path}[{i}]" if path else f"[{i}]", depth + 1
                 if depth > DEFAULT_MAX_DEPTH:
                     raise DeserializationError(
                         f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path

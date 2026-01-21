@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict
 from lodum import lodum
 from pydantic import BaseModel
 from marshmallow import Schema, fields, post_load
