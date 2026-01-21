@@ -1,8 +1,8 @@
 import pytest
 import json as std_json
-from lodum import lodum, field, json
+from lodum import lodum, json
 from lodum.exception import DeserializationError
-from typing import Union, List
+from typing import Union
 
 @lodum
 class VariantA:

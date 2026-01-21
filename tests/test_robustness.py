@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 import threading
-import time
 from typing import Optional, List, Any
 from lodum import lodum, json
 from lodum.exception import SerializationError, DeserializationError
@@ -88,7 +87,7 @@ def test_invalid_type_annotations():
         def __init__(self, a: lambda x: x):  # Very invalid type annotation
             self.a = a
 
-    obj = InvalidType(a=1)
+    InvalidType(a=1)
     # Serialization might still work if it doesn't look at the type,
     # but Deserialization should definitely fail if it tries to use the type.
     with pytest.raises((SerializationError, DeserializationError, TypeError)):

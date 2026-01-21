@@ -1,6 +1,5 @@
 import timeit
 import json
-import os
 import sys
 import statistics
 
@@ -29,12 +28,11 @@ except ImportError:
 
 try:
     import tomli_w
-    import tomli # for python < 3.11, but lodum handles it
 except ImportError:
     tomli_w = None
 
 import pickle
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 from benchmarks.models import (
     LodumSimple, LodumComplex, LodumNested,
     PydanticSimple, PydanticComplex, PydanticNested,
@@ -132,7 +130,7 @@ def bench(func):
             "mean": statistics.mean(us_per_op),
             "stdev": statistics.stdev(us_per_op)
         }
-    except Exception as e:
+    except Exception:
         # print(f"Error: {e}")
         return None
 
