@@ -197,7 +197,5 @@ class BaseLoader:
 
     def load_bytes_value(self, value: Any) -> bytes:
         if not isinstance(value, bytes):
-            raise DeserializationError(
-                f"Expected bytes, got {type(value).__name__}", None
-            )
+            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
         return value
