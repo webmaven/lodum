@@ -39,7 +39,7 @@ except ImportError:
 
 from .core import Loader, Dumper
 from .exception import DeserializationError, SerializationError
-from .field import Field
+from .field import Field, _NAME_TO_TYPE_CACHE, _REGISTRY_LOCK
 
 T = TypeVar("T")
 
@@ -65,8 +65,6 @@ def _sanitize_name(name: str) -> str:
         return "unknown"
     return "".join(c if c.isalnum() else "_" for c in name)
 
-
-from .field import _NAME_TO_TYPE_CACHE, _REGISTRY_LOCK
 
 _DUMP_HANDLER_CACHE: Dict[Type[Any], DumpHandler] = {}
 _LOAD_HANDLER_CACHE: Dict[Type[Any], LoadHandler] = {}
