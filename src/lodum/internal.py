@@ -66,9 +66,10 @@ def _sanitize_name(name: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in name)
 
 
+from .field import _NAME_TO_TYPE_CACHE, _REGISTRY_LOCK
+
 _DUMP_HANDLER_CACHE: Dict[Type[Any], DumpHandler] = {}
 _LOAD_HANDLER_CACHE: Dict[Type[Any], LoadHandler] = {}
-_NAME_TO_TYPE_CACHE: Dict[str, Type[Any]] = {}
 _CACHE_LOCK = threading.Lock()
 
 
@@ -357,7 +358,8 @@ def _get_dump_handler(
             return _DUMP_HANDLER_CACHE[t]
 
         if inspect.isclass(t) and not isinstance(t, ForwardRef):
-            _NAME_TO_TYPE_CACHE[t.__name__] = t
+            with _REGISTRY_LOCK:
+                _NAME_TO_TYPE_CACHE[t.__name__] = t
 
     if t == excluding:
         raise ValueError("Recursive reference during compilation")
@@ -450,7 +452,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     safe_name = _sanitize_name(cls.__name__)
     lines.append(f"def load_{safe_name}(loader, load_fn, path, depth):")
     lines.append("    raw_data = loader.get_dict()")
-    lines.append("    if raw_data is not None:")
+    lines.append("    if isinstance(raw_data, dict):")
     lines.append("        data = raw_data")
     lines.append("        is_raw = True")
     lines.append("    else:")
@@ -629,21 +631,21 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                     )
                     if val_type is float:
                         lines.append(
-                            f"            args['{field_name}'] = {{k: float(v) if isinstance(v, (float, int)) else (function_raise(DeserializationError('Expected float', {path_expr}))) for k, v in val.items()}}"
+                            f"            args['{field_name}'] = {{k: float(v) if isinstance(v, (float, int)) else (function_raise(DeserializationError(f'Expected float, got {{type(v).__name__}}', f'{{{path_expr}}}.{{k}}'))) for k, v in val.items()}}"
                         )
                     else:
-                        lines.append("            for v in val.values():")
+                        lines.append("            for k, v in val.items():")
                         if val_type is int:
                             lines.append(
-                                f"                if not isinstance(v, int) or isinstance(v, bool): raise DeserializationError('Expected int, got {{type(v).__name__}}', {path_expr})"
+                                f"                if not isinstance(v, int) or isinstance(v, bool): raise DeserializationError(f'Expected int, got {{type(v).__name__}}', f'{{{path_expr}}}.{{k}}')"
                             )
                         elif val_type is str:
                             lines.append(
-                                f"                if not isinstance(v, str): raise DeserializationError('Expected str, got {{type(v).__name__}}', {path_expr})"
+                                f"                if not isinstance(v, str): raise DeserializationError(f'Expected str, got {{type(v).__name__}}', f'{{{path_expr}}}.{{k}}')"
                             )
                         elif val_type is bool:
                             lines.append(
-                                f"                if not isinstance(v, bool): raise DeserializationError('Expected bool, got {{type(v).__name__}}', {path_expr})"
+                                f"                if not isinstance(v, bool): raise DeserializationError(f'Expected bool, got {{type(v).__name__}}', f'{{{path_expr}}}.{{k}}')"
                             )
                         lines.append(f"            args['{field_name}'] = val")
                     lines.append("        else:")
@@ -724,7 +726,8 @@ def _get_load_handler(
             return _LOAD_HANDLER_CACHE[t]
 
         if inspect.isclass(t) and not isinstance(t, ForwardRef):
-            _NAME_TO_TYPE_CACHE[t.__name__] = t
+            with _REGISTRY_LOCK:
+                _NAME_TO_TYPE_CACHE[t.__name__] = t
 
     if t == excluding:
         raise ValueError("Recursive reference during compilation")
@@ -737,7 +740,7 @@ def _get_load_handler(
             if inspect.isclass(cls) and cls.__name__ == ref_name:
                 return _get_load_handler(cls, excluding=excluding)
         resolved_type = None
-        with _CACHE_LOCK:
+        with _REGISTRY_LOCK:
             resolved_type = _NAME_TO_TYPE_CACHE.get(ref_name)
         if resolved_type:
             return _get_load_handler(resolved_type, excluding=excluding)
@@ -846,10 +849,14 @@ def _get_load_handler(
                             res.append(float(x))
                         return res
                     return raw
-                return [
-                    getattr(item_l, load_meth)()
-                    for i, item_l in enumerate(loader.load_list())
-                ]
+                res = []
+                for i, item_l in enumerate(loader.load_list()):
+                    item_path = f"{path}[{i}]" if path else f"[{i}]"
+                    try:
+                        res.append(getattr(item_l, load_meth)())
+                    except DeserializationError as e:
+                        raise DeserializationError(e.raw_message, e.path or item_path)
+                return res
 
             handler = load_list_primitive
         else:
@@ -1539,6 +1546,7 @@ if pl is not None:
     LOAD_DISPATCH[pl.Series] = _load_polars_series
 
 # Initialize name-to-type cache with basic types
-for _cls in LOAD_DISPATCH:
-    if inspect.isclass(_cls):
-        _NAME_TO_TYPE_CACHE[_cls.__name__] = _cls
+with _REGISTRY_LOCK:
+    for _cls in LOAD_DISPATCH:
+        if inspect.isclass(_cls):
+            _NAME_TO_TYPE_CACHE[_cls.__name__] = _cls

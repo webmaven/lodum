@@ -1,7 +1,19 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Callable, List, Optional, Union
+import threading
+from typing import Any, Callable, Dict, List, Optional, Type, Union
+
+
+# Global registry for lodum-enabled classes to support ForwardRef resolution
+_NAME_TO_TYPE_CACHE: Dict[str, Type[Any]] = {}
+_REGISTRY_LOCK = threading.RLock()
+
+
+def register_type(cls: Type[Any]) -> None:
+    """Registers a class in the global name-to-type cache."""
+    with _REGISTRY_LOCK:
+        _NAME_TO_TYPE_CACHE[cls.__name__] = cls
 
 
 # A sentinel object to detect if a parameter is supplied or not.

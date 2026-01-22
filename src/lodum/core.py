@@ -15,7 +15,7 @@ from typing import (
     Union as TypingUnion,
 )
 
-from .field import Field, _MISSING
+from .field import Field, _MISSING, register_type
 from .exception import DeserializationError
 
 T = TypeVar("T", bound=Type[Any])
@@ -85,6 +85,7 @@ def lodum(
             original_init(self, **resolved_args)
 
         c.__init__ = new_init  # type: ignore[method-assign]
+        register_type(c)
         return c
 
     if cls is None:
@@ -154,7 +155,7 @@ class Loader(Protocol):
     def load_list(self) -> Iterator["Loader"]: ...
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]: ...
     def load_any(self) -> Any: ...
-    def get_dict(self) -> Optional[Dict[str, Any]]: ...
+    def get_dict(self) -> Optional[TypingUnion[Dict[str, Any], List[Any]]]: ...
     def load_bytes_value(self, value: Any) -> bytes: ...
 
 
@@ -187,8 +188,8 @@ class BaseLoader:
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
         raise NotImplementedError
 
-    def get_dict(self) -> Optional[Dict[str, Any]]:
-        if isinstance(self._data, dict):
+    def get_dict(self) -> Optional[TypingUnion[Dict[str, Any], List[Any]]]:
+        if isinstance(self._data, (dict, list)):
             return self._data
         return None
 
