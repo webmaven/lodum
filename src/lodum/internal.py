@@ -5,6 +5,7 @@ import uuid
 import collections
 import array
 import threading
+import ast
 from decimal import Decimal
 from pathlib import Path
 from typing import (
@@ -19,6 +20,7 @@ from typing import (
     get_args,
     cast,
     ForwardRef,
+    Tuple,
 )
 
 from .core import Loader, Dumper
@@ -149,29 +151,84 @@ def generate_schema(
     return {}
 
 
-def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
+def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str, Any]]:
     """
-    Compiles an optimized dump handler for a lodum-enabled class.
+    Builds the AST for the optimized dump handler of a lodum-enabled class.
+    Returns the FunctionDef node and the context dictionary.
     """
     fields: Dict[str, Field] = getattr(cls, "_lodum_fields", {})
-    lines = []
     safe_name = _sanitize_name(cls.__name__)
-    lines.append(f"def dump_{safe_name}(obj, dumper, dump_fn, depth, seen):")
-    lines.append("    data = dumper.begin_struct(cls)")
-
-    tag = getattr(cls, "_lodum_tag", None)
-    tag_value = getattr(cls, "_lodum_tag_value", None)
+    func_name = f"dump_{safe_name}"
 
     context: Dict[str, Any] = {
         "cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
+        "dump_fn_orig": dump,
     }
+
+    # Parameters: (obj, dumper, dump_fn, depth, seen)
+    args = ast.arguments(
+        args=[
+            ast.arg(arg="obj", annotation=None),
+            ast.arg(arg="dumper", annotation=None),
+            ast.arg(arg="dump_fn", annotation=None),
+            ast.arg(arg="depth", annotation=None),
+            ast.arg(arg="seen", annotation=None),
+        ],
+        posonlyargs=[],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[],
+        vararg=None,
+        kwarg=None,
+    )
+
+    body = []
+
+    # data = dumper.begin_struct(cls)
+    body.append(
+        ast.Assign(
+            targets=[ast.Name(id="data", ctx=ast.Store())],
+            value=ast.Call(
+                func=ast.Attribute(
+                    value=ast.Name(id="dumper", ctx=ast.Load()),
+                    attr="begin_struct",
+                    ctx=ast.Load(),
+                ),
+                args=[ast.Name(id="cls", ctx=ast.Load())],
+                keywords=[],
+            ),
+        )
+    )
+
+    tag = getattr(cls, "_lodum_tag", None)
+    tag_value = getattr(cls, "_lodum_tag_value", None)
 
     if tag:
         context["tag_name"] = tag
         context["tag_value"] = tag_value
-        lines.append("    data[tag_name] = dumper.dump_str(tag_value)")
+        # data[tag_name] = dumper.dump_str(tag_value)
+        body.append(
+            ast.Assign(
+                targets=[
+                    ast.Subscript(
+                        value=ast.Name(id="data", ctx=ast.Load()),
+                        slice=ast.Name(id="tag_name", ctx=ast.Load()),
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="dumper", ctx=ast.Load()),
+                        attr="dump_str",
+                        ctx=ast.Load(),
+                    ),
+                    args=[ast.Name(id="tag_value", ctx=ast.Load())],
+                    keywords=[],
+                ),
+            )
+        )
 
     PRIMITIVE_TYPES = {
         int: "dump_int",
@@ -189,36 +246,175 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
         safe_key = f"key_{i}"
         context[safe_key] = key
 
+        # val = obj.field_name
+        body.append(
+            ast.Assign(
+                targets=[ast.Name(id="val", ctx=ast.Store())],
+                value=ast.Attribute(
+                    value=ast.Name(id="obj", ctx=ast.Load()),
+                    attr=field_name,
+                    ctx=ast.Load(),
+                ),
+            )
+        )
+
+        target_subscript = ast.Subscript(
+            value=ast.Name(id="data", ctx=ast.Load()),
+            slice=ast.Name(id=safe_key, ctx=ast.Load()),
+            ctx=ast.Store(),
+        )
+
         if field_info.serializer:
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer
-            lines.append(f"    data[{safe_key}] = {ser_name}(obj.{field_name})")
+            # data[key] = ser_n(val)
+            body.append(
+                ast.Assign(
+                    targets=[target_subscript],
+                    value=ast.Call(
+                        func=ast.Name(id=ser_name, ctx=ast.Load()),
+                        args=[ast.Name(id="val", ctx=ast.Load())],
+                        keywords=[],
+                    ),
+                )
+            )
         else:
             ftype = field_info.type
             if ftype in PRIMITIVE_TYPES:
                 dump_meth = PRIMITIVE_TYPES[ftype]
-                lines.append(f"    val = obj.{field_name}")
-                if ftype is float:
-                    lines.append(
-                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, (float, int)) else dump_fn(val, dumper, depth + 1, seen)"
+                # data[key] = dumper.dump_X(val) if isinstance(val, X) else dump_fn(val, dumper, depth + 1, seen)
+                check_type = (float, int) if ftype is float else ftype
+                context[f"type_{i}"] = check_type
+
+                body.append(
+                    ast.Assign(
+                        targets=[target_subscript],
+                        value=ast.IfExp(
+                            test=ast.Call(
+                                func=ast.Name(id="isinstance", ctx=ast.Load()),
+                                args=[
+                                    ast.Name(id="val", ctx=ast.Load()),
+                                    ast.Name(id=f"type_{i}", ctx=ast.Load()),
+                                ],
+                                keywords=[],
+                            ),
+                            body=ast.Call(
+                                func=ast.Attribute(
+                                    value=ast.Name(id="dumper", ctx=ast.Load()),
+                                    attr=dump_meth,
+                                    ctx=ast.Load(),
+                                ),
+                                args=[ast.Name(id="val", ctx=ast.Load())],
+                                keywords=[],
+                            ),
+                            orelse=ast.Call(
+                                func=ast.Name(id="dump_fn", ctx=ast.Load()),
+                                args=[
+                                    ast.Name(id="val", ctx=ast.Load()),
+                                    ast.Name(id="dumper", ctx=ast.Load()),
+                                    ast.BinOp(
+                                        left=ast.Name(id="depth", ctx=ast.Load()),
+                                        op=ast.Add(),
+                                        right=ast.Constant(value=1),
+                                    ),
+                                    ast.Name(id="seen", ctx=ast.Load()),
+                                ],
+                                keywords=[],
+                            ),
+                        ),
                     )
-                else:
-                    lines.append(
-                        f"    data[{safe_key}] = dumper.{dump_meth}(val) if isinstance(val, {ftype.__name__}) else dump_fn(val, dumper, depth + 1, seen)"
-                    )
-            else:
-                lines.append(
-                    f"    data[{safe_key}] = dump_fn(obj.{field_name}, dumper, depth + 1, seen)"
                 )
+            else:
+                # Pre-resolve handler
+                try:
+                    # We pass 'cls' as excluding to detect direct recursion
+                    handler = _get_dump_handler(ftype, excluding=cls)
+                    handler_name = f"h_{i}"
+                    context[handler_name] = handler
+                    # data[key] = h_i(val, dumper, depth + 1, seen)
+                    body.append(
+                        ast.Assign(
+                            targets=[target_subscript],
+                            value=ast.Call(
+                                func=ast.Name(id=handler_name, ctx=ast.Load()),
+                                args=[
+                                    ast.Name(id="val", ctx=ast.Load()),
+                                    ast.Name(id="dumper", ctx=ast.Load()),
+                                    ast.BinOp(
+                                        left=ast.Name(id="depth", ctx=ast.Load()),
+                                        op=ast.Add(),
+                                        right=ast.Constant(value=1),
+                                    ),
+                                    ast.Name(id="seen", ctx=ast.Load()),
+                                ],
+                                keywords=[],
+                            ),
+                        )
+                    )
+                except ValueError:
+                    # Recursive reference, fall back to global dump_fn
+                    body.append(
+                        ast.Assign(
+                            targets=[target_subscript],
+                            value=ast.Call(
+                                func=ast.Name(id="dump_fn", ctx=ast.Load()),
+                                args=[
+                                    ast.Name(id="val", ctx=ast.Load()),
+                                    ast.Name(id="dumper", ctx=ast.Load()),
+                                    ast.BinOp(
+                                        left=ast.Name(id="depth", ctx=ast.Load()),
+                                        op=ast.Add(),
+                                        right=ast.Constant(value=1),
+                                    ),
+                                    ast.Name(id="seen", ctx=ast.Load()),
+                                ],
+                                keywords=[],
+                            ),
+                        )
+                    )
 
-    lines.append("    dumper.end_struct()")
-    lines.append("    return data")
+    # dumper.end_struct()
+    body.append(
+        ast.Expr(
+            value=ast.Call(
+                func=ast.Attribute(
+                    value=ast.Name(id="dumper", ctx=ast.Load()),
+                    attr="end_struct",
+                    ctx=ast.Load(),
+                ),
+                args=[],
+                keywords=[],
+            )
+        )
+    )
 
-    source = "\n".join(lines)
+    # return data
+    body.append(ast.Return(value=ast.Name(id="data", ctx=ast.Load())))
+
+    func_def = ast.FunctionDef(
+        name=func_name,
+        args=args,
+        body=body,
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
+    return func_def, context
+
+
+def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
+    """
+    Compiles an optimized dump handler for a lodum-enabled class using AST.
+    """
+    func_def, context = _build_dump_function_ast(cls)
+    module = ast.Module(body=[func_def], type_ignores=[])
+    ast.fix_missing_locations(module)
+    code = compile(module, filename="<lodum-codegen>", mode="exec")
+
     local_vars: Dict[str, Any] = {}
-    exec(source, context, local_vars)
+    exec(code, context, local_vars)
 
-    compiled_fn = local_vars[f"dump_{safe_name}"]
+    compiled_fn = local_vars[func_def.name]
     return lambda obj, dumper, depth, seen: compiled_fn(obj, dumper, dump, depth, seen)
 
 
@@ -238,6 +434,33 @@ def _get_dump_handler(
 
     if t == excluding:
         raise ValueError("Recursive reference during compilation")
+
+    if isinstance(t, ForwardRef):
+        ref_name = t.__forward_arg__
+        # Try registry first
+        for cls_reg in registry._handlers:
+            try:
+                if inspect.isclass(cls_reg) and cls_reg.__name__ == ref_name:
+                    return _get_dump_handler(cls_reg, excluding=excluding)
+            except TypeError:
+                continue
+        # Try cache
+        with _CACHE_LOCK:
+            for cls_cache in _DUMP_HANDLER_CACHE:
+                try:
+                    if inspect.isclass(cls_cache) and cls_cache.__name__ == ref_name:
+                        return _DUMP_HANDLER_CACHE[cls_cache]
+                except TypeError:
+                    continue
+
+        resolved_type = None
+        with _REGISTRY_LOCK:
+            resolved_type = _NAME_TO_TYPE_CACHE.get(ref_name)
+        if resolved_type:
+            return _get_dump_handler(resolved_type, excluding=excluding)
+
+        # Fallback to global dump for unresolved ForwardRef
+        return dump
 
     if t in registry._handlers:
         handler = registry._handlers[t].dump_fn
@@ -307,33 +530,138 @@ def _get_dump_handler(
         except TypeError:
             continue
 
-    raise SerializationError(f"Object of type {t.__name__} is not lodum-enabled")
+    type_name = t.__name__ if hasattr(t, "__name__") else str(t)
+    raise SerializationError(f"Object of type {type_name} is not lodum-enabled")
 
 
-def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
+def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str, Any]]:
+    """
+    Builds the AST for the optimized load handler of a lodum-enabled class.
+    Returns the FunctionDef node and the context dictionary.
+    """
     fields: Dict[str, Field] = getattr(cls, "_lodum_fields", {})
-    lines = []
     safe_name = _sanitize_name(cls.__name__)
-    lines.append(f"def load_{safe_name}(loader, load_fn, path, depth):")
-    lines.append("    raw_data = loader.get_dict()")
-    lines.append("    if isinstance(raw_data, dict):")
-    lines.append("        data = raw_data")
-    lines.append("        is_raw = True")
-    lines.append("    else:")
-    lines.append("        try:")
-    lines.append("            data = {k: v for k, v in loader.load_dict()}")
-    lines.append("            is_raw = False")
-    lines.append("        except DeserializationError as e:")
-    lines.append(
-        f"            raise DeserializationError(f'Expected a dictionary to decode into class {cls.__name__}, but received a different type.', path)"
-    )
-    lines.append("    args = {}")
+    func_name = f"load_{safe_name}"
 
     context: Dict[str, Any] = {
         "cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
+        "type": type,
+        "isinstance": isinstance,
+        "dict": dict,
     }
+
+    # Parameters: (loader, load_fn, path, depth)
+    args = ast.arguments(
+        args=[
+            ast.arg(arg="loader", annotation=None),
+            ast.arg(arg="load_fn", annotation=None),
+            ast.arg(arg="path", annotation=None),
+            ast.arg(arg="depth", annotation=None),
+        ],
+        posonlyargs=[],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[],
+        vararg=None,
+        kwarg=None,
+    )
+
+    body = []
+
+    # raw_data = loader.get_dict()
+    body.append(
+        ast.Assign(
+            targets=[ast.Name(id="raw_data", ctx=ast.Store())],
+            value=ast.Call(
+                func=ast.Attribute(
+                    value=ast.Name(id="loader", ctx=ast.Load()),
+                    attr="get_dict",
+                    ctx=ast.Load(),
+                ),
+                args=[],
+                keywords=[],
+            ),
+        )
+    )
+
+    # if isinstance(raw_data, dict): ... else: ...
+    # data = raw_data; is_raw = True
+    # try: data = {k: v for k, v in loader.load_dict()}; is_raw = False
+    # except DeserializationError: raise ...
+    body.append(
+        ast.If(
+            test=ast.Call(
+                func=ast.Name(id="isinstance", ctx=ast.Load()),
+                args=[ast.Name(id="raw_data", ctx=ast.Load()), ast.Name(id="dict", ctx=ast.Load())],
+                keywords=[],
+            ),
+            body=[
+                ast.Assign(targets=[ast.Name(id="data", ctx=ast.Store())], value=ast.Name(id="raw_data", ctx=ast.Load())),
+                ast.Assign(targets=[ast.Name(id="is_raw", ctx=ast.Store())], value=ast.Constant(value=True)),
+            ],
+            orelse=[
+                ast.Try(
+                    body=[
+                        ast.Assign(
+                            targets=[ast.Name(id="data", ctx=ast.Store())],
+                            value=ast.DictComp(
+                                key=ast.Name(id="k", ctx=ast.Load()),
+                                value=ast.Name(id="v", ctx=ast.Load()),
+                                generators=[
+                                    ast.comprehension(
+                                        target=ast.Tuple(
+                                            elts=[ast.Name(id="k", ctx=ast.Store()), ast.Name(id="v", ctx=ast.Store())],
+                                            ctx=ast.Store(),
+                                        ),
+                                        iter=ast.Call(
+                                            func=ast.Attribute(
+                                                value=ast.Name(id="loader", ctx=ast.Load()),
+                                                attr="load_dict",
+                                                ctx=ast.Load(),
+                                            ),
+                                            args=[],
+                                            keywords=[],
+                                        ),
+                                        is_async=0,
+                                    )
+                                ],
+                            ),
+                        ),
+                        ast.Assign(targets=[ast.Name(id="is_raw", ctx=ast.Store())], value=ast.Constant(value=False)),
+                    ],
+                    handlers=[
+                        ast.ExceptHandler(
+                            type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                            name=None,
+                            body=[
+                                ast.Raise(
+                                    exc=ast.Call(
+                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        args=[
+                                            ast.JoinedStr(
+                                                values=[
+                                                    ast.Constant(value=f"Expected a dictionary to decode into class {cls.__name__}, but received a different type.")
+                                                ]
+                                            ),
+                                            ast.Name(id="path", ctx=ast.Load()),
+                                        ],
+                                        keywords=[],
+                                    )
+                                )
+                            ],
+                        )
+                    ],
+                    orelse=[],
+                    finalbody=[],
+                )
+            ],
+        )
+    )
+
+    # args = {}
+    body.append(ast.Assign(targets=[ast.Name(id="args_dict", ctx=ast.Store())], value=ast.Dict(keys=[], values=[])))
 
     tag = getattr(cls, "_lodum_tag", None)
     tag_value = getattr(cls, "_lodum_tag_value", None)
@@ -341,13 +669,71 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     if tag:
         context["tag_name"] = tag
         context["tag_value"] = tag_value
-        lines.append("    if tag_name in data:")
-        lines.append(
-            "        actual_tag = data[tag_name] if is_raw else data[tag_name].load_any()"
-        )
-        lines.append("        if actual_tag != tag_value:")
-        lines.append(
-            "            raise DeserializationError(f'Invalid tag value: expected {tag_value}, got {actual_tag}', path)"
+        # if tag_name in data:
+        #     actual_tag = data[tag_name] if is_raw else data[tag_name].load_any()
+        #     if actual_tag != tag_value: raise ...
+        body.append(
+            ast.If(
+                test=ast.Compare(
+                    left=ast.Name(id="tag_name", ctx=ast.Load()),
+                    ops=[ast.In()],
+                    comparators=[ast.Name(id="data", ctx=ast.Load())],
+                ),
+                body=[
+                    ast.Assign(
+                        targets=[ast.Name(id="actual_tag", ctx=ast.Store())],
+                        value=ast.IfExp(
+                            test=ast.Name(id="is_raw", ctx=ast.Load()),
+                            body=ast.Subscript(
+                                value=ast.Name(id="data", ctx=ast.Load()),
+                                slice=ast.Name(id="tag_name", ctx=ast.Load()),
+                                ctx=ast.Load(),
+                            ),
+                            orelse=ast.Call(
+                                func=ast.Attribute(
+                                    value=ast.Subscript(
+                                        value=ast.Name(id="data", ctx=ast.Load()),
+                                        slice=ast.Name(id="tag_name", ctx=ast.Load()),
+                                        ctx=ast.Load(),
+                                    ),
+                                    attr="load_any",
+                                    ctx=ast.Load(),
+                                ),
+                                args=[],
+                                keywords=[],
+                            ),
+                        ),
+                    ),
+                    ast.If(
+                        test=ast.Compare(
+                            left=ast.Name(id="actual_tag", ctx=ast.Load()),
+                            ops=[ast.NotEq()],
+                            comparators=[ast.Name(id="tag_value", ctx=ast.Load())],
+                        ),
+                        body=[
+                            ast.Raise(
+                                exc=ast.Call(
+                                    func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                    args=[
+                                        ast.JoinedStr(
+                                            values=[
+                                                ast.Constant(value="Invalid tag value: expected "),
+                                                ast.FormattedValue(value=ast.Name(id="tag_value", ctx=ast.Load()), conversion=-1),
+                                                ast.Constant(value=", got "),
+                                                ast.FormattedValue(value=ast.Name(id="actual_tag", ctx=ast.Load()), conversion=-1),
+                                            ]
+                                        ),
+                                        ast.Name(id="path", ctx=ast.Load()),
+                                    ],
+                                    keywords=[],
+                                )
+                            )
+                        ],
+                        orelse=[],
+                    ),
+                ],
+                orelse=[],
+            )
         )
 
     PRIMITIVE_LOADERS = {
@@ -359,114 +745,699 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     }
 
     for i, (field_name, field_info) in enumerate(fields.items()):
-        field_name_in_json = field_info.rename if field_info.rename else field_info.name
-        safe_json_name = f"key_{i}"
-        context[safe_json_name] = field_name_in_json
+        field_json_name = field_info.rename if field_info.rename else field_info.name
+        safe_json_key = f"key_{i}"
+        context[safe_json_key] = field_json_name
 
-        lines.append(
-            f"    field_path = f'{{path}}.{field_name_in_json}' if path else '{field_name_in_json}'"
+        # field_path = f'{path}.{field_json_name}' if path else field_json_name
+        body.append(
+            ast.Assign(
+                targets=[ast.Name(id="field_path", ctx=ast.Store())],
+                value=ast.IfExp(
+                    test=ast.Name(id="path", ctx=ast.Load()),
+                    body=ast.JoinedStr(
+                        values=[
+                            ast.FormattedValue(value=ast.Name(id="path", ctx=ast.Load()), conversion=-1),
+                            ast.Constant(value=f".{field_json_name}"),
+                        ]
+                    ),
+                    orelse=ast.Constant(value=field_json_name),
+                ),
+            )
         )
-        lines.append(f"    if {safe_json_name} in data:")
-        lines.append(f"        val_loader = data[{safe_json_name}]")
+
+        # if safe_json_key in data:
+        field_present_body = []
+        val_loader_assign = ast.Assign(
+            targets=[ast.Name(id="val_loader", ctx=ast.Store())],
+            value=ast.Subscript(
+                value=ast.Name(id="data", ctx=ast.Load()),
+                slice=ast.Name(id=safe_json_key, ctx=ast.Load()),
+                ctx=ast.Load(),
+            ),
+        )
+        field_present_body.append(val_loader_assign)
 
         if field_info.deserializer:
             deser_name = f"deser_{i}"
             context[deser_name] = field_info.deserializer
-            lines.append(
-                f"        try: args['{field_name}'] = {deser_name}(val_loader if is_raw else val_loader.load_any())"
-            )
-            lines.append(
-                "        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+            # try: args['field_name'] = deser_n(val_loader if is_raw else val_loader.load_any())
+            # except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)
+            field_present_body.append(
+                ast.Try(
+                    body=[
+                        ast.Assign(
+                            targets=[
+                                ast.Subscript(
+                                    value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                    slice=ast.Constant(value=field_name),
+                                    ctx=ast.Store(),
+                                )
+                            ],
+                            value=ast.Call(
+                                func=ast.Name(id=deser_name, ctx=ast.Load()),
+                                args=[
+                                    ast.IfExp(
+                                        test=ast.Name(id="is_raw", ctx=ast.Load()),
+                                        body=ast.Name(id="val_loader", ctx=ast.Load()),
+                                        orelse=ast.Call(
+                                            func=ast.Attribute(
+                                                value=ast.Name(id="val_loader", ctx=ast.Load()),
+                                                attr="load_any",
+                                                ctx=ast.Load(),
+                                            ),
+                                            args=[],
+                                            keywords=[],
+                                        ),
+                                    )
+                                ],
+                                keywords=[],
+                            ),
+                        )
+                    ],
+                                            handlers=[
+                                                ast.ExceptHandler(
+                                                    type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                    name="e",
+                                                    body=[
+                                                        ast.Raise(
+                                                            exc=ast.Call(
+                                                                func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                                args=[
+                                                                    ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                                    ast.BoolOp(
+                                                                        op=ast.Or(),
+                                                                        values=[
+                                                                            ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
+                                                                            ast.Name(id="field_path", ctx=ast.Load()),
+                                                                        ]
+                                                                    ),
+                                                                ],
+                                                                keywords=[],
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+                                            ],                    orelse=[],
+                    finalbody=[],
+                )
             )
         else:
             ftype = field_info.type
             if ftype in PRIMITIVE_LOADERS:
                 load_meth = PRIMITIVE_LOADERS[ftype]
-                lines.append("        if is_raw:")
+                # if is_raw: check type and assign; else: val_loader.load_X()
+                raw_body = []
                 if ftype is int:
-                    lines.append(
-                        "            if not isinstance(val_loader, int) or isinstance(val_loader, bool): raise DeserializationError(f'Expected int, got {type(val_loader).__name__}', field_path)"
+                    raw_body.append(
+                        ast.If(
+                            test=ast.BoolOp(
+                                op=ast.Or(),
+                                values=[
+                                    ast.UnaryOp(
+                                        op=ast.Not(),
+                                        operand=ast.Call(
+                                            func=ast.Name(id="isinstance", ctx=ast.Load()),
+                                            args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                                            keywords=[],
+                                        ),
+                                    ),
+                                    ast.Call(
+                                        func=ast.Name(id="isinstance", ctx=ast.Load()),
+                                        args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="bool", ctx=ast.Load())],
+                                        keywords=[],
+                                    ),
+                                ],
+                            ),
+                            body=[
+                                ast.Raise(
+                                    exc=ast.Call(
+                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        args=[
+                                            ast.JoinedStr(
+                                                values=[
+                                                    ast.Constant(value="Expected int, got "),
+                                                    ast.FormattedValue(
+                                                        value=ast.Attribute(
+                                                            value=ast.Call(
+                                                                func=ast.Name(id="type", ctx=ast.Load()),
+                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                keywords=[],
+                                                            ),
+                                                            attr="__name__",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        conversion=-1,
+                                                    ),
+                                                ]
+                                            ),
+                                            ast.Name(id="field_path", ctx=ast.Load()),
+                                        ],
+                                        keywords=[],
+                                    )
+                                )
+                            ],
+                            orelse=[],
+                        )
                     )
-                    lines.append(f"            args['{field_name}'] = val_loader")
+                    raw_body.append(
+                        ast.Assign(
+                            targets=[
+                                ast.Subscript(
+                                    value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                    slice=ast.Constant(value=field_name),
+                                    ctx=ast.Store(),
+                                )
+                            ],
+                            value=ast.Name(id="val_loader", ctx=ast.Load()),
+                        )
+                    )
                 elif ftype is str:
-                    lines.append(
-                        "            if not isinstance(val_loader, str): raise DeserializationError(f'Expected str, got {type(val_loader).__name__}', field_path)"
+                    raw_body.append(
+                        ast.If(
+                            test=ast.UnaryOp(
+                                op=ast.Not(),
+                                operand=ast.Call(
+                                    func=ast.Name(id="isinstance", ctx=ast.Load()),
+                                    args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="str", ctx=ast.Load())],
+                                    keywords=[],
+                                ),
+                            ),
+                            body=[
+                                ast.Raise(
+                                    exc=ast.Call(
+                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        args=[
+                                            ast.JoinedStr(
+                                                values=[
+                                                    ast.Constant(value="Expected str, got "),
+                                                    ast.FormattedValue(
+                                                        value=ast.Attribute(
+                                                            value=ast.Call(
+                                                                func=ast.Name(id="type", ctx=ast.Load()),
+                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                keywords=[],
+                                                            ),
+                                                            attr="__name__",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        conversion=-1,
+                                                    ),
+                                                ]
+                                            ),
+                                            ast.Name(id="field_path", ctx=ast.Load()),
+                                        ],
+                                        keywords=[],
+                                    )
+                                )
+                            ],
+                            orelse=[],
+                        )
                     )
-                    lines.append(f"            args['{field_name}'] = val_loader")
+                    raw_body.append(
+                        ast.Assign(
+                            targets=[
+                                ast.Subscript(
+                                    value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                    slice=ast.Constant(value=field_name),
+                                    ctx=ast.Store(),
+                                )
+                            ],
+                            value=ast.Name(id="val_loader", ctx=ast.Load()),
+                        )
+                    )
                 elif ftype is float:
-                    lines.append(
-                        "            if not isinstance(val_loader, (float, int)): raise DeserializationError(f'Expected float, got {type(val_loader).__name__}', field_path)"
+                    raw_body.append(
+                        ast.If(
+                            test=ast.UnaryOp(
+                                op=ast.Not(),
+                                operand=ast.Call(
+                                    func=ast.Name(id="isinstance", ctx=ast.Load()),
+                                    args=[
+                                        ast.Name(id="val_loader", ctx=ast.Load()),
+                                        ast.Tuple(elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())], ctx=ast.Load()),
+                                    ],
+                                    keywords=[],
+                                ),
+                            ),
+                            body=[
+                                ast.Raise(
+                                    exc=ast.Call(
+                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        args=[
+                                            ast.JoinedStr(
+                                                values=[
+                                                    ast.Constant(value="Expected float, got "),
+                                                    ast.FormattedValue(
+                                                        value=ast.Attribute(
+                                                            value=ast.Call(
+                                                                func=ast.Name(id="type", ctx=ast.Load()),
+                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                keywords=[],
+                                                            ),
+                                                            attr="__name__",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        conversion=-1,
+                                                    ),
+                                                ]
+                                            ),
+                                            ast.Name(id="field_path", ctx=ast.Load()),
+                                        ],
+                                        keywords=[],
+                                    )
+                                )
+                            ],
+                            orelse=[],
+                        )
                     )
-                    lines.append(
-                        f"            args['{field_name}'] = float(val_loader)"
+                    raw_body.append(
+                        ast.Assign(
+                            targets=[
+                                ast.Subscript(
+                                    value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                    slice=ast.Constant(value=field_name),
+                                    ctx=ast.Store(),
+                                )
+                            ],
+                            value=ast.Call(
+                                func=ast.Name(id="float", ctx=ast.Load()),
+                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                keywords=[],
+                            ),
+                        )
                     )
                 elif ftype is bool:
-                    lines.append(
-                        "            if not isinstance(val_loader, bool): raise DeserializationError(f'Expected bool, got {type(val_loader).__name__}', field_path)"
+                    raw_body.append(
+                        ast.If(
+                            test=ast.UnaryOp(
+                                op=ast.Not(),
+                                operand=ast.Call(
+                                    func=ast.Name(id="isinstance", ctx=ast.Load()),
+                                    args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="bool", ctx=ast.Load())],
+                                    keywords=[],
+                                ),
+                            ),
+                            body=[
+                                ast.Raise(
+                                    exc=ast.Call(
+                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        args=[
+                                            ast.JoinedStr(
+                                                values=[
+                                                    ast.Constant(value="Expected bool, got "),
+                                                    ast.FormattedValue(
+                                                        value=ast.Attribute(
+                                                            value=ast.Call(
+                                                                func=ast.Name(id="type", ctx=ast.Load()),
+                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                keywords=[],
+                                                            ),
+                                                            attr="__name__",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        conversion=-1,
+                                                    ),
+                                                ]
+                                            ),
+                                            ast.Name(id="field_path", ctx=ast.Load()),
+                                        ],
+                                        keywords=[],
+                                    )
+                                )
+                            ],
+                            orelse=[],
+                        )
                     )
-                    lines.append(f"            args['{field_name}'] = val_loader")
+                    raw_body.append(
+                        ast.Assign(
+                            targets=[
+                                ast.Subscript(
+                                    value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                    slice=ast.Constant(value=field_name),
+                                    ctx=ast.Store(),
+                                )
+                            ],
+                            value=ast.Name(id="val_loader", ctx=ast.Load()),
+                        )
+                    )
                 elif ftype is bytes:
-                    lines.append(
-                        f"            try: args['{field_name}'] = loader.load_bytes_value(val_loader)"
-                    )
-                    lines.append(
-                        "            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                    raw_body.append(
+                        ast.Try(
+                            body=[
+                                ast.Assign(
+                                    targets=[
+                                        ast.Subscript(
+                                            value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                            slice=ast.Constant(value=field_name),
+                                            ctx=ast.Store(),
+                                        )
+                                    ],
+                                    value=ast.Call(
+                                        func=ast.Attribute(
+                                            value=ast.Name(id="loader", ctx=ast.Load()),
+                                            attr="load_bytes_value",
+                                            ctx=ast.Load(),
+                                        ),
+                                        args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                        keywords=[],
+                                    ),
+                                )
+                            ],
+                                                    handlers=[
+                                                        ast.ExceptHandler(
+                                                            type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                            name="e",
+                                                            body=[
+                                                                ast.Raise(
+                                                                    exc=ast.Call(
+                                                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                                        args=[
+                                                                            ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                                            ast.BoolOp(
+                                                                                op=ast.Or(),
+                                                                                values=[
+                                                                                    ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
+                                                                                    ast.Name(id="field_path", ctx=ast.Load()),
+                                                                                ]
+                                                                            ),
+                                                                        ],
+                                                                        keywords=[],
+                                                                    )
+                                                                )
+                                                            ],
+                                                        )
+                                                    ],                            orelse=[],
+                            finalbody=[],
+                        )
                     )
 
-                lines.append("        else:")
-                lines.append(
-                    f"            try: args['{field_name}'] = val_loader.{load_meth}()"
-                )
-                lines.append(
-                    "            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                field_present_body.append(
+                    ast.If(
+                        test=ast.Name(id="is_raw", ctx=ast.Load()),
+                        body=raw_body,
+                        orelse=[
+                            ast.Try(
+                                body=[
+                                    ast.Assign(
+                                        targets=[
+                                            ast.Subscript(
+                                                value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                                slice=ast.Constant(value=field_name),
+                                                ctx=ast.Store(),
+                                            )
+                                        ],
+                                        value=ast.Call(
+                                            func=ast.Attribute(
+                                                value=ast.Name(id="val_loader", ctx=ast.Load()),
+                                                attr=load_meth,
+                                                ctx=ast.Load(),
+                                            ),
+                                            args=[],
+                                            keywords=[],
+                                        ),
+                                    )
+                                ],
+                                                        handlers=[
+                                                            ast.ExceptHandler(
+                                                                type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                                name="e",
+                                                                body=[
+                                                                    ast.Raise(
+                                                                        exc=ast.Call(
+                                                                            func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                                            args=[
+                                                                                ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                                                ast.BoolOp(
+                                                                                    op=ast.Or(),
+                                                                                    values=[
+                                                                                        ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
+                                                                                        ast.Name(id="field_path", ctx=ast.Load()),
+                                                                                    ]
+                                                                                ),
+                                                                            ],
+                                                                            keywords=[],
+                                                                        )
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],                                orelse=[],
+                                finalbody=[],
+                            )
+                        ],
+                    )
                 )
             else:
                 type_name = f"type_{i}"
                 context[type_name] = ftype
-                lines.append(
-                    "        val_to_load = val_loader if not is_raw else type(loader)(val_loader)"
-                )
-                lines.append(
-                    f"        try: args['{field_name}'] = load_fn({type_name}, val_to_load, field_path, depth + 1)"
-                )
-                lines.append(
-                    "        except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                # val_to_load = val_loader if not is_raw else type(loader)(val_loader)
+                # try: args['field_name'] = load_fn(type_name, val_to_load, field_path, depth + 1)
+                field_present_body.append(
+                    ast.Assign(
+                        targets=[ast.Name(id="val_to_load", ctx=ast.Store())],
+                        value=ast.IfExp(
+                            test=ast.UnaryOp(op=ast.Not(), operand=ast.Name(id="is_raw", ctx=ast.Load())),
+                            body=ast.Name(id="val_loader", ctx=ast.Load()),
+                            orelse=ast.Call(
+                                func=ast.Call(func=ast.Name(id="type", ctx=ast.Load()), args=[ast.Name(id="loader", ctx=ast.Load())], keywords=[]),
+                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                keywords=[],
+                            ),
+                        ),
+                    )
                 )
 
+                load_call_args = [
+                    ast.Name(id=type_name, ctx=ast.Load()),
+                    ast.Name(id="val_to_load", ctx=ast.Load()),
+                    ast.Name(id="field_path", ctx=ast.Load()),
+                    ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                ]
+
+                try:
+                    # Pre-resolve handler
+                    handler = _get_load_handler(ftype, excluding=cls)
+                    handler_name = f"h_{i}"
+                    context[handler_name] = handler
+                    load_call_val = ast.Call(
+                        func=ast.Name(id=handler_name, ctx=ast.Load()),
+                        args=load_call_args,
+                        keywords=[],
+                    )
+                except ValueError:
+                    # Recursive reference, fall back to global load_fn
+                    load_call_val = ast.Call(
+                        func=ast.Name(id="load_fn", ctx=ast.Load()),
+                        args=load_call_args,
+                        keywords=[],
+                    )
+
+                field_present_body.append(
+                    ast.Try(
+                        body=[
+                            ast.Assign(
+                                targets=[
+                                    ast.Subscript(
+                                        value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                        slice=ast.Constant(value=field_name),
+                                        ctx=ast.Store(),
+                                    )
+                                ],
+                                value=load_call_val,
+                            )
+                        ],
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                name="e",
+                                body=[
+                                    ast.Raise(
+                                        exc=ast.Call(
+                                            func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                            args=[
+                                                ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                ast.BoolOp(
+                                                    op=ast.Or(),
+                                                    values=[
+                                                        ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
+                                                        ast.Name(id="field_path", ctx=ast.Load()),
+                                                    ]
+                                                ),
+                                            ],
+                                            keywords=[],
+                                        )
+                                    )
+                                ],
+                            )
+                        ],
+                        orelse=[],
+                        finalbody=[],
+                    )
+                )
+
+        field_missing_body = []
         if field_info.has_default:
-            lines.append("    else:")
             default_getter = f"default_{i}"
             context[default_getter] = field_info.get_default
-            lines.append(f"        args['{field_name}'] = {default_getter}()")
+            field_missing_body.append(
+                ast.Assign(
+                    targets=[
+                        ast.Subscript(
+                            value=ast.Name(id="args_dict", ctx=ast.Load()),
+                            slice=ast.Constant(value=field_name),
+                            ctx=ast.Store(),
+                        )
+                    ],
+                    value=ast.Call(func=ast.Name(id=default_getter, ctx=ast.Load()), args=[], keywords=[]),
+                )
+            )
         else:
-            lines.append("    else:")
-            lines.append(
-                f"        raise DeserializationError(f'Missing required field \\'{{{safe_json_name}}}\\' for class {cls.__name__}', path)"
+            field_missing_body.append(
+                ast.Raise(
+                    exc=ast.Call(
+                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                        args=[
+                            ast.JoinedStr(
+                                values=[
+                                    ast.Constant(value=f"Missing required field '"),
+                                    ast.Constant(value=field_json_name),
+                                    ast.Constant(value=f"' for class {cls.__name__}"),
+                                ]
+                            ),
+                            ast.Name(id="path", ctx=ast.Load()),
+                        ],
+                        keywords=[],
+                    )
+                )
             )
 
-        if field_info.validate:
-            validators = (
-                field_info.validate
-                if isinstance(field_info.validate, list)
-                else [field_info.validate]
+        body.append(
+            ast.If(
+                test=ast.Compare(
+                    left=ast.Name(id=safe_json_key, ctx=ast.Load()),
+                    ops=[ast.In()],
+                    comparators=[ast.Name(id="data", ctx=ast.Load())],
+                ),
+                body=field_present_body,
+                orelse=field_missing_body,
             )
+        )
+
+        if field_info.validate:
+            validators = field_info.validate if isinstance(field_info.validate, list) else [field_info.validate]
             for j, v in enumerate(validators):
                 v_name = f"v_{i}_{j}"
                 context[v_name] = v
-                lines.append(f"    try: {v_name}(args['{field_name}'])")
-                lines.append(
-                    "    except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                body.append(
+                    ast.Try(
+                        body=[
+                            ast.Expr(
+                                value=ast.Call(
+                                    func=ast.Name(id=v_name, ctx=ast.Load()),
+                                    args=[
+                                        ast.Subscript(
+                                            value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                            slice=ast.Constant(value=field_name),
+                                            ctx=ast.Load(),
+                                        )
+                                    ],
+                                    keywords=[],
+                                )
+                            )
+                        ],
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                name="e",
+                                body=[
+                                    ast.Raise(
+                                        exc=ast.Call(
+                                            func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                            args=[
+                                                ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                ast.BoolOp(
+                                                    op=ast.Or(),
+                                                    values=[
+                                                        ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
+                                                        ast.Name(id="field_path", ctx=ast.Load()),
+                                                    ]
+                                                ),
+                                            ],
+                                            keywords=[],
+                                        )
+                                    )
+                                ],
+                            )
+                        ],
+                        orelse=[],
+                        finalbody=[],
+                    )
                 )
 
-    lines.append("    try: return cls(**args)")
-    lines.append(
-        "    except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {{e}}', path)"
+    # try: return cls(**args_dict)
+    # except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {e}', path)
+    body.append(
+        ast.Try(
+            body=[
+                ast.Return(
+                    value=ast.Call(
+                        func=ast.Name(id="cls", ctx=ast.Load()),
+                        args=[],
+                        keywords=[ast.keyword(arg=None, value=ast.Name(id="args_dict", ctx=ast.Load()))],
+                    )
+                )
+            ],
+            handlers=[
+                ast.ExceptHandler(
+                    type=ast.Name(id="TypeError", ctx=ast.Load()),
+                    name="e",
+                    body=[
+                        ast.Raise(
+                            exc=ast.Call(
+                                func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                args=[
+                                    ast.JoinedStr(
+                                        values=[
+                                            ast.Constant(value=f"Failed to instantiate {cls.__name__}. Original error: "),
+                                            ast.FormattedValue(value=ast.Name(id="e", ctx=ast.Load()), conversion=-1),
+                                        ]
+                                    ),
+                                    ast.Name(id="path", ctx=ast.Load()),
+                                ],
+                                keywords=[],
+                            )
+                        )
+                    ],
+                )
+            ],
+            orelse=[],
+            finalbody=[],
+        )
     )
 
-    source = "\n".join(lines)
+    func_def = ast.FunctionDef(
+        name=func_name,
+        args=args,
+        body=body,
+        decorator_list=[],
+        returns=None,
+        type_comment=None,
+    )
+    return func_def, context
+
+
+def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
+    """
+    Compiles an optimized load handler for a lodum-enabled class using AST.
+    """
+    func_def, context = _build_load_function_ast(cls)
+    module = ast.Module(body=[func_def], type_ignores=[])
+    ast.fix_missing_locations(module)
+    code = compile(module, filename="<lodum-codegen>", mode="exec")
+
     local_vars: Dict[str, Any] = {}
-    exec(source, context, local_vars)
-    compiled_fn = local_vars[f"load_{safe_name}"]
+    exec(code, context, local_vars)
+    compiled_fn = local_vars[func_def.name]
     return lambda cls_ignore, loader, path, depth: compiled_fn(
         loader, load, path, depth
     )
@@ -762,6 +1733,22 @@ def _schema_enum(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, 
 
 
 # --- Generic Handlers (Dump/Load) ---
+
+
+def _dump_int(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> int:
+    return dumper.dump_int(obj)
+
+
+def _dump_str(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> str:
+    return dumper.dump_str(obj)
+
+
+def _dump_float(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> float:
+    return dumper.dump_float(obj)
+
+
+def _dump_bool(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> bool:
+    return dumper.dump_bool(obj)
 
 
 def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
@@ -1186,18 +2173,18 @@ def _load_set(
 
 # --- Registration ---
 
-registry.register(int, TypeHandler(_dump_primitive, _load_primitive, _schema_int))
-registry.register(str, TypeHandler(_dump_primitive, _load_primitive, _schema_str))
-registry.register(float, TypeHandler(_dump_primitive, _load_primitive, _schema_float))
-registry.register(bool, TypeHandler(_dump_primitive, _load_primitive, _schema_bool))
+registry.register(int, TypeHandler(_dump_int, _load_primitive, _schema_int))
+registry.register(str, TypeHandler(_dump_str, _load_primitive, _schema_str))
+registry.register(float, TypeHandler(_dump_float, _load_primitive, _schema_float))
+registry.register(bool, TypeHandler(_dump_bool, _load_primitive, _schema_bool))
 registry.register(
     type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
 )
 registry.register(
     Any,
     TypeHandler(
-        _dump_primitive, _load_any, _schema_any
-    ),  # Any might need custom handling?
+        dump, _load_any, _schema_any
+    ),  # Use global dump for Any
 )
 
 # Containers
@@ -1205,7 +2192,7 @@ registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
 registry.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
 registry.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
 registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
-registry.register(Union, TypeHandler(_dump_primitive, _load_union, _schema_union))  # type: ignore[arg-type]
+registry.register(Union, TypeHandler(dump, _load_union, _schema_union))  # Use global dump for Union
 
 # Library types
 registry.register(
