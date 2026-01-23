@@ -5,6 +5,7 @@ from typing import List
 
 from typing import Dict
 
+
 @lodum
 class PrimitiveLists:
     def __init__(
@@ -13,7 +14,7 @@ class PrimitiveLists:
         floats: List[float],
         bools: List[bool],
         strs: List[str],
-        dict_ints: Dict[str, int] = field(default_factory=dict)
+        dict_ints: Dict[str, int] = field(default_factory=dict),
     ):
         self.ints = ints
         self.floats = floats
@@ -21,13 +22,14 @@ class PrimitiveLists:
         self.strs = strs
         self.dict_ints = dict_ints
 
+
 def test_primitive_list_success():
     data = {
         "ints": [1, 2, 3],
-        "floats": [1.1, 2, 3.3], # Note: int should be allowed for float
+        "floats": [1.1, 2, 3.3],  # Note: int should be allowed for float
         "bools": [True, False],
         "strs": ["a", "b"],
-        "dict_ints": {"a": 1, "b": 2}
+        "dict_ints": {"a": 1, "b": 2},
     }
     encoded = json.dumps(data)
     decoded = json.loads(PrimitiveLists, encoded)
@@ -37,12 +39,16 @@ def test_primitive_list_success():
     assert decoded.strs == ["a", "b"]
     assert decoded.dict_ints == {"a": 1, "b": 2}
 
+
 def test_primitive_list_float_error():
-    data = '{"ints": [1], "floats": [1.1, "not a float"], "bools": [true], "strs": ["a"]}'
+    data = (
+        '{"ints": [1], "floats": [1.1, "not a float"], "bools": [true], "strs": ["a"]}'
+    )
     with pytest.raises(DeserializationError) as excinfo:
         json.loads(PrimitiveLists, data)
     assert "Expected float, got str" in str(excinfo.value)
     assert "floats[1]" in str(excinfo.value)
+
 
 def test_primitive_list_int_error():
     data = '{"ints": [1, 1.1], "floats": [1.1], "bools": [true], "strs": ["a"]}'
@@ -50,6 +56,7 @@ def test_primitive_list_int_error():
         json.loads(PrimitiveLists, data)
     assert "Expected int, got float" in str(excinfo.value)
     assert "ints[1]" in str(excinfo.value)
+
 
 def test_primitive_list_bool_error():
     data = '{"ints": [1], "floats": [1.1], "bools": [true, 0], "strs": ["a"]}'
@@ -59,6 +66,7 @@ def test_primitive_list_bool_error():
     assert "Expected bool, got int" in str(excinfo.value)
     assert "bools[1]" in str(excinfo.value)
 
+
 def test_primitive_list_str_error():
     data = '{"ints": [1], "floats": [1.1], "bools": [true], "strs": ["a", 1]}'
     with pytest.raises(DeserializationError) as excinfo:
@@ -66,12 +74,14 @@ def test_primitive_list_str_error():
     assert "Expected str, got int" in str(excinfo.value)
     assert "strs[1]" in str(excinfo.value)
 
+
 def test_primitive_dict_error():
     data = '{"ints": [], "floats": [], "bools": [], "strs": [], "dict_ints": {"a": "not int"}}'
     with pytest.raises(DeserializationError) as excinfo:
         json.loads(PrimitiveLists, data)
     assert "Expected int, got str" in str(excinfo.value)
     assert "dict_ints.a" in str(excinfo.value)
+
 
 def test_generic_load_list_primitive():
     # To hit the non-compiled path, we can call load() directly with a List[int] type

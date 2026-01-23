@@ -4,11 +4,13 @@ from lodum import lodum, json
 from lodum.exception import DeserializationError
 from typing import Union
 
+
 @lodum
 class VariantA:
     def __init__(self, name: str, value: int):
         self.name = name
         self.value = value
+
 
 @lodum
 class VariantB:
@@ -16,10 +18,12 @@ class VariantB:
         self.name = name
         self.value = value
 
+
 @lodum
 class Container:
     def __init__(self, item: Union[VariantA, VariantB]):
         self.item = item
+
 
 def test_union_ambiguity():
     # Currently, this will probably pick VariantA because it's first in Union
@@ -29,6 +33,7 @@ def test_union_ambiguity():
     # The current implementation of _load_union will try them in order.
     # It should pick VariantA because it's first.
     assert isinstance(c.item, VariantA)
+
 
 def test_tagged_union_resolution():
     @lodum(tag="type")
@@ -57,6 +62,7 @@ def test_tagged_union_resolution():
     assert isinstance(cb.item, TaggedB)
     assert cb.item.name == "Bob"
 
+
 def test_tagged_union_serialization():
     @lodum(tag="type")
     class TaggedA:
@@ -69,6 +75,7 @@ def test_tagged_union_serialization():
     assert "type" in data
     assert data["type"] == "TaggedA"
     assert data["name"] == "Alice"
+
 
 def test_custom_tag_value():
     @lodum(tag="kind", tag_value="rect")
@@ -86,6 +93,7 @@ def test_custom_tag_value():
     assert loaded.w == 10
     assert loaded.h == 20
 
+
 def test_invalid_tag():
     @lodum(tag="type")
     class TaggedA:
@@ -95,6 +103,7 @@ def test_invalid_tag():
     with pytest.raises(DeserializationError) as exc_info:
         json.loads(TaggedA, std_json.dumps({"type": "TaggedB", "name": "Alice"}))
     assert "Invalid tag value" in str(exc_info.value)
+
 
 def test_tagged_union_schema():
     @lodum(tag="type")
@@ -128,6 +137,7 @@ def test_tagged_union_schema():
 
     for v in item_schema["anyOf"]:
         assert "type" in v["required"]
+
 
 def test_tag_with_quote():
     @lodum(tag="type", tag_value="O'Reilly")

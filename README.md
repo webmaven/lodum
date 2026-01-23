@@ -6,9 +6,9 @@
   <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg" alt="License"></a>
 </p>
 
-A Python serialization library inspired by Rust's `serde`.
+`Lodum` is a framework for **lo**ading and **dum**ping Python data structures efficiently and ergonomically.
 
-`lodum` is an experimental Python library designed to provide a flexible and ergonomic way to serialize and deserialize Python objects to and from various data formats. The core design is heavily inspired by the robustness and efficiency of Rust's `serde` framework.
+The core design is heavily inspired by the robustness and efficiency of Rust's `serde` framework.
 
 ## Installation
 
@@ -23,7 +23,7 @@ pip install lodum
 The architecture of `lodum` is built on a clear separation of concerns, just like `serde`:
 
 1. **lodum-enabled Data Structures**: You define the data you want to encode by decorating your classes with `@lodum`. This decorator introspects your class to understand its structure.
-2. **Data Formats (Dumpers/Loaders)**: The logic for converting data into a specific format (like JSON) is handled by `Dumper` and `Loader` implementations. This makes the core library format-agnostic.
+2. **Data Formats (Loaders/Dumpers)**: The logic for converting data into a specific format (like JSON) is handled by `Loader` and `Dumper` implementations. This makes the core library format-agnostic.
 
 This means you can define how your data is structured once, and then easily encode it to multiple formats (JSON, YAML, etc.) by simply using a different module.
 

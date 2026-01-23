@@ -5,6 +5,7 @@ from marshmallow import Schema, fields, post_load
 
 # --- Lodum Models ---
 
+
 @lodum
 class LodumSimple:
     def __init__(self, name: str, age: int, active: bool):
@@ -12,14 +13,23 @@ class LodumSimple:
         self.age = age
         self.active = active
 
+
 @lodum
 class LodumComplex:
-    def __init__(self, id: int, name: str, tags: List[str], metadata: Dict[str, str], score: float):
+    def __init__(
+        self,
+        id: int,
+        name: str,
+        tags: List[str],
+        metadata: Dict[str, str],
+        score: float,
+    ):
         self.id = id
         self.name = name
         self.tags = tags
         self.metadata = metadata
         self.score = score
+
 
 @lodum
 class LodumNested:
@@ -28,12 +38,15 @@ class LodumNested:
         self.simple = simple
         self.children = children
 
+
 # --- Pydantic Models ---
+
 
 class PydanticSimple(BaseModel):
     name: str
     age: int
     active: bool
+
 
 class PydanticComplex(BaseModel):
     id: int
@@ -42,18 +55,22 @@ class PydanticComplex(BaseModel):
     metadata: Dict[str, str]
     score: float
 
+
 class PydanticNested(BaseModel):
     id: int
     simple: PydanticSimple
     children: List[PydanticSimple]
 
+
 # --- Marshmallow Schemas ---
+
 
 class MarshmallowSimple:
     def __init__(self, name, age, active):
         self.name = name
         self.age = age
         self.active = active
+
 
 class MarshmallowSimpleSchema(Schema):
     name = fields.Str()
@@ -64,6 +81,7 @@ class MarshmallowSimpleSchema(Schema):
     def make_obj(self, data, **kwargs):
         return MarshmallowSimple(**data)
 
+
 class MarshmallowComplex:
     def __init__(self, id, name, tags, metadata, score):
         self.id = id
@@ -71,6 +89,7 @@ class MarshmallowComplex:
         self.tags = tags
         self.metadata = metadata
         self.score = score
+
 
 class MarshmallowComplexSchema(Schema):
     id = fields.Int()
@@ -83,11 +102,13 @@ class MarshmallowComplexSchema(Schema):
     def make_obj(self, data, **kwargs):
         return MarshmallowComplex(**data)
 
+
 class MarshmallowNested:
     def __init__(self, id, simple, children):
         self.id = id
         self.simple = simple
         self.children = children
+
 
 class MarshmallowNestedSchema(Schema):
     id = fields.Int()

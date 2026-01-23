@@ -126,3 +126,9 @@ class YamlLoader(BaseLoader):
 
     def load_any(self) -> Any:
         return self._data
+
+    def mark(self) -> Any:
+        return None
+
+    def rewind(self, marker: Any) -> None:
+        pass

@@ -2,11 +2,13 @@ from lodum import lodum, json
 from lodum.exception import SerializationError
 import pytest
 
+
 @lodum
 class Node:
-    def __init__(self, value: int, next: 'Node' = None):
+    def __init__(self, value: int, next: "Node" = None):
         self.value = value
         self.next = next
+
 
 def test_circular_reference():
     a = Node(1)
@@ -16,6 +18,7 @@ def test_circular_reference():
 
     with pytest.raises(SerializationError, match="Circular reference detected"):
         json.dumps(a)
+
 
 def test_multiple_references_same_object():
     # This is NOT a circular reference, just multiple paths to the same object
@@ -34,11 +37,13 @@ def test_multiple_references_same_object():
     json_str = json.dumps(r)
     assert '"value": 100' in json_str
 
+
 def test_list_cycle():
     a = []
     a.append(a)
     with pytest.raises(SerializationError, match="Circular reference detected"):
         json.dumps(a)
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
