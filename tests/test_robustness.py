@@ -9,15 +9,15 @@ from lodum.exception import SerializationError, DeserializationError
 
 
 @lodum
-class Node:
-    def __init__(self, value: int, next_node: Optional["Node"] = None):
+class RobustNode:
+    def __init__(self, value: int, next_node: Optional["RobustNode"] = None):
         self.value = value
         self.next_node = next_node
 
 
 def test_circular_reference():
-    n1 = Node(1)
-    n2 = Node(2)
+    n1 = RobustNode(1)
+    n2 = RobustNode(2)
     n1.next_node = n2
     n2.next_node = n1
 
@@ -27,10 +27,10 @@ def test_circular_reference():
 
 
 def test_deeply_nested_structure():
-    root = Node(0)
+    root = RobustNode(0)
     curr = root
     for i in range(1, 1500):  # Default Python limit is 1000
-        curr.next_node = Node(i)
+        curr.next_node = RobustNode(i)
         curr = curr.next_node
 
     with pytest.raises((RecursionError, SerializationError)):
@@ -41,7 +41,7 @@ def test_deeply_nested_load():
     # Create a deeply nested JSON string
     nested_json = '{"value": 1, "next_node": ' * 150 + "null" + "}" * 150
     with pytest.raises(DeserializationError) as excinfo:
-        json.loads(Node, nested_json)
+        json.loads(RobustNode, nested_json)
     assert "Max recursion depth" in str(excinfo.value)
 
 
@@ -54,7 +54,7 @@ def test_very_large_input():
     )
     # Default limit is 10MB, this string is ~30MB
     with pytest.raises(DeserializationError) as excinfo:
-        json.loads(List[Node], large_json)
+        json.loads(List[RobustNode], large_json)
     assert "exceeds maximum allowed" in str(excinfo.value)
 
 
@@ -87,7 +87,7 @@ def test_invalid_type_annotations():
         def __init__(self, a: lambda x: x):  # Very invalid type annotation
             self.a = a
 
-    obj = InvalidType(a=1)
+    InvalidType(a=1)
     # Serialization might still work if it doesn't look at the type,
     # but Deserialization should definitely fail if it tries to use the type.
     with pytest.raises((SerializationError, DeserializationError, TypeError)):
