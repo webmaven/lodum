@@ -123,6 +123,8 @@ class Loader(Protocol):
     def load_list(self) -> Iterator["Loader"]: ...
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]: ...
     def load_any(self) -> Any: ...
+    def mark(self) -> Any: ...
+    def rewind(self, marker: Any) -> None: ...
 
 
 class BaseLoader:
@@ -135,6 +137,12 @@ class BaseLoader:
 
     def load_any(self) -> Any:
         return self._data
+
+    def mark(self) -> Any:
+        return None
+
+    def rewind(self, marker: Any) -> None:
+        pass
 
     def load_int(self) -> int:
         raise NotImplementedError

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 import threading
-import time
 from typing import Optional, List, Any
 from lodum import lodum, json
 from lodum.exception import SerializationError, DeserializationError

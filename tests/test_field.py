@@ -1,5 +1,4 @@
-from lodum.field import Field, _MISSING, field
-import pytest
+from lodum.field import Field
 
 
 def test_field_repr():

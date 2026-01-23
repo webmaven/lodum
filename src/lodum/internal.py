@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Optional,
@@ -22,34 +21,12 @@ from typing import (
     ForwardRef,
 )
 
-try:
-    import numpy as np
-except ImportError:
-    np = None  # type: ignore
-
-try:
-    import pandas as pd
-except ImportError:
-    pd = None  # type: ignore
-
-try:
-    import polars as pl
-except ImportError:
-    pl = None  # type: ignore
-
 from .core import Loader, Dumper
 from .exception import DeserializationError, SerializationError
 from .field import Field
+from .registry import registry, TypeHandler, DumpHandler, LoadHandler
 
 T = TypeVar("T")
-
-# --- Type-to-Handler Dispatch Tables ---
-
-DumpHandler = Callable[[Any, Dumper, int, Optional[set]], Any]
-LoadHandler = Callable[[Type[Any], Loader, Optional[str], int], Any]
-
-DUMP_DISPATCH: Dict[Type[Any], DumpHandler] = {}
-LOAD_DISPATCH: Dict[Type[Any], LoadHandler] = {}
 
 # --- Security Limits ---
 
@@ -84,13 +61,9 @@ def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -
         raise SerializationError("Circular reference detected")
 
     # Only track containers and lodum objects to detect cycles
-    is_container = (
-        isinstance(obj, (list, dict, set, tuple, collections.deque, array.array))
-        or getattr(obj, "_lodum_enabled", False)
-        or (np is not None and isinstance(obj, np.ndarray))
-        or (pd is not None and isinstance(obj, (pd.DataFrame, pd.Series)))
-        or (pl is not None and isinstance(obj, (pl.DataFrame, pl.Series)))
-    )
+    is_container = isinstance(
+        obj, (list, dict, set, tuple, collections.deque, array.array)
+    ) or getattr(obj, "_lodum_enabled", False)
 
     if is_container:
         seen.add(obj_id)
@@ -124,66 +97,24 @@ def generate_schema(
 
     if visited is None:
         visited = set()
-    if t is int:
-        return {"type": "integer"}
-    if t is str:
-        return {"type": "string"}
-    if t is float:
-        return {"type": "number"}
-    if t is bool:
-        return {"type": "boolean"}
-    if t is type(None):
-        return {"type": "null"}
-    if t is Any:
-        return {}
-    if t is uuid.UUID:
-        return {"type": "string", "format": "uuid"}
-    if t is Decimal:
-        return {"type": "string"}
-    if t is Path:
-        return {"type": "string"}
-    if t in (bytes, bytearray):
-        return {"type": "string", "contentEncoding": "base64"}
+
+    # Direct registry lookup
+    if t in registry._handlers:
+        return registry._handlers[t].schema_fn(t, depth, visited)
 
     origin = get_origin(t) or t
-    args = get_args(t)
 
-    if origin in (list, array.array):
-        item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
-        return {"type": "array", "items": item_schema}
+    # Generic lookup (exact match)
+    if origin in registry._handlers:
+        return registry._handlers[origin].schema_fn(t, depth, visited)
 
-    if origin in (
-        dict,
-        collections.defaultdict,
-        collections.OrderedDict,
-        collections.Counter,
-    ):
-        if origin is collections.Counter:
-            val_schema = {"type": "integer"}
-        else:
-            val_schema = (
-                generate_schema(args[1], depth + 1, visited) if len(args) == 2 else {}
-            )
-        return {"type": "object", "additionalProperties": val_schema}
-
-    if origin is Union:
-        return {"anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]}
-
-    if origin is tuple:
-        return {
-            "type": "array",
-            "prefixItems": [generate_schema(arg, depth + 1, visited) for arg in args],
-        }
-
-    if origin is set:
-        item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
-        return {"type": "array", "items": item_schema, "uniqueItems": True}
-
-    if t is datetime.datetime:
-        return {"type": "string", "format": "date-time"}
-
-    if inspect.isclass(t) and issubclass(t, enum.Enum):
-        return {"enum": [m.value for m in t]}
+    # Inheritance lookup
+    for super_t, h_obj in registry._handlers.items():
+        try:
+            if inspect.isclass(origin) and issubclass(origin, super_t):
+                return h_obj.schema_fn(t, depth, visited)
+        except TypeError:
+            continue
 
     if inspect.isclass(t) and getattr(t, "_lodum_enabled", False):
         if t in visited:
@@ -282,13 +213,22 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
 
-    if t in DUMP_DISPATCH:
-        handler = DUMP_DISPATCH[t]
+    if t in registry._handlers:
+        handler = registry._handlers[t].dump_fn
         with _CACHE_LOCK:
             _DUMP_HANDLER_CACHE[t] = handler
         return handler
 
     origin = get_origin(t) or t
+    if origin in registry._handlers:
+        handler = registry._handlers[origin].dump_fn
+        with _CACHE_LOCK:
+            _DUMP_HANDLER_CACHE[t] = handler
+        return handler
+
+    # Special case for generic containers that need per-instance handling based on args
+    # (Though ideally these would be handled by generic-aware handlers in the registry,
+    # for now we keep the factory logic here if it constructs a specialized closure)
     if origin in (list, set, tuple, array.array):
         args = get_args(t)
         item_type = args[0] if args else Any
@@ -334,11 +274,15 @@ def _get_dump_handler(t: Type[Any]) -> DumpHandler:
             _DUMP_HANDLER_CACHE[t] = handler
         return handler
 
-    for super_t, handler in DUMP_DISPATCH.items():
-        if inspect.isclass(t) and issubclass(t, super_t):
-            with _CACHE_LOCK:
-                _DUMP_HANDLER_CACHE[t] = handler
-            return handler
+    for super_t, h_obj in registry._handlers.items():
+        try:
+            if inspect.isclass(t) and issubclass(t, super_t):
+                handler = h_obj.dump_fn
+                with _CACHE_LOCK:
+                    _DUMP_HANDLER_CACHE[t] = handler
+                return handler
+        except TypeError:
+            continue
 
     raise SerializationError(f"Object of type {t.__name__} is not lodum-enabled")
 
@@ -460,9 +404,11 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         return _load_any
     if isinstance(t, ForwardRef):
         ref_name = t.__forward_arg__
-        for cls in LOAD_DISPATCH:
+        # Try registry first
+        for cls in registry._handlers:
             if inspect.isclass(cls) and cls.__name__ == ref_name:
                 return _get_load_handler(cls)
+        # Try cache
         with _CACHE_LOCK:
             for cls in _LOAD_HANDLER_CACHE:
                 if inspect.isclass(cls) and cls.__name__ == ref_name:
@@ -476,6 +422,17 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
         return _load_optional
     if origin is Union:
         return _load_union
+
+    # Registry lookup for origin (e.g., list, dict) or concrete type
+    if origin in registry._handlers:
+        # Note: We return the generic handler, but for some types (like list[int]),
+        # we might want the specialized closures below.
+        # For now, we prefer the cache-miss logic below which constructs
+        # the specialized handlers for generic types if they are list/dict/etc.
+        # BUT, if we want to centralize, we should eventually move that logic too.
+        # For this refactor, let's keep the specialized construction for list/dict
+        # as it was in the original code, but use registry for simple types.
+        pass
 
     if origin in (list, array.array):
         args = get_args(t)
@@ -541,8 +498,8 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
             _LOAD_HANDLER_CACHE[t] = load_dict
         return load_dict
 
-    if origin in LOAD_DISPATCH:
-        handler = LOAD_DISPATCH[origin]
+    if origin in registry._handlers:
+        handler = registry._handlers[origin].load_fn
         with _CACHE_LOCK:
             _LOAD_HANDLER_CACHE[origin] = handler
         return handler
@@ -553,13 +510,106 @@ def _get_load_handler(t: Type[Any]) -> LoadHandler:
             _LOAD_HANDLER_CACHE[origin] = handler
         return handler
 
-    for super_t, handler in LOAD_DISPATCH.items():
-        if inspect.isclass(origin) and issubclass(origin, super_t):
-            return handler
+    for super_t, h_obj in registry._handlers.items():
+        try:
+            if inspect.isclass(origin) and issubclass(origin, super_t):
+                return h_obj.load_fn
+        except TypeError:
+            continue
     raise DeserializationError(f"Cannot deserialize to type {t}")
 
 
-# --- Generic Handlers ---
+# --- Schema Handlers ---
+
+
+def _schema_int(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "integer"}
+
+
+def _schema_str(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "string"}
+
+
+def _schema_float(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "number"}
+
+
+def _schema_bool(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "boolean"}
+
+
+def _schema_none(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "null"}
+
+
+def _schema_any(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {}
+
+
+def _schema_uuid(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "string", "format": "uuid"}
+
+
+def _schema_decimal(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "string"}
+
+
+def _schema_path(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "string"}
+
+
+def _schema_bytes(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"type": "string", "contentEncoding": "base64"}
+
+
+def _schema_list(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    args = get_args(t)
+    item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
+    return {"type": "array", "items": item_schema}
+
+
+def _schema_dict(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    args = get_args(t)
+    origin = get_origin(t) or t
+    if origin is collections.Counter:
+        val_schema = {"type": "integer"}
+    else:
+        val_schema = (
+            generate_schema(args[1], depth + 1, visited) if len(args) == 2 else {}
+        )
+    return {"type": "object", "additionalProperties": val_schema}
+
+
+def _schema_union(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    args = get_args(t)
+    return {"anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]}
+
+
+def _schema_tuple(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    args = get_args(t)
+    return {
+        "type": "array",
+        "prefixItems": [generate_schema(arg, depth + 1, visited) for arg in args],
+    }
+
+
+def _schema_set(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    args = get_args(t)
+    item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
+    return {"type": "array", "items": item_schema, "uniqueItems": True}
+
+
+def _schema_datetime(
+    t: Type[Any], depth: int, visited: Optional[set]
+) -> Dict[str, Any]:
+    return {"type": "string", "format": "date-time"}
+
+
+def _schema_enum(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+    return {"enum": [m.value for m in t]}
+
+
+# --- Generic Handlers (Dump/Load) ---
 
 
 def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
@@ -620,61 +670,6 @@ def _dump_decimal(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
 
 def _dump_path(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
     return d.dump_str(str(obj))
-
-
-def _dump_numpy_array(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return dump(obj.tolist(), d, depth + 1, seen)
-
-
-def _dump_pandas_dataframe(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return dump(obj.to_dict(orient="records"), d, depth + 1, seen)
-
-
-def _dump_pandas_series(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return dump(obj.to_dict(), d, depth + 1, seen)
-
-
-def _dump_polars_dataframe(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return dump(obj.to_dict(), d, depth + 1, seen)
-
-
-def _dump_polars_series(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return dump(obj.to_list(), d, depth + 1, seen)
-
-
-DUMP_DISPATCH.update(
-    {
-        int: _dump_primitive,
-        str: _dump_primitive,
-        float: _dump_primitive,
-        bool: _dump_primitive,
-        type(None): _dump_primitive,
-        list: _dump_sequence,
-        dict: _dump_dict,
-        tuple: _dump_sequence,
-        set: _dump_sequence,
-        datetime.datetime: _dump_datetime,
-        enum.Enum: _dump_enum,
-        uuid.UUID: _dump_uuid,
-        Decimal: _dump_decimal,
-        Path: _dump_path,
-        bytes: _dump_bytes,
-        bytearray: _dump_bytearray,
-        array.array: _dump_array,
-        collections.defaultdict: _dump_dict,
-        collections.OrderedDict: _dump_dict,
-        collections.Counter: _dump_dict,
-    }
-)
-
-if np is not None:
-    DUMP_DISPATCH[np.ndarray] = _dump_numpy_array
-if pd is not None:
-    DUMP_DISPATCH[pd.DataFrame] = _dump_pandas_dataframe
-    DUMP_DISPATCH[pd.Series] = _dump_pandas_series
-if pl is not None:
-    DUMP_DISPATCH[pl.DataFrame] = _dump_polars_dataframe
-    DUMP_DISPATCH[pl.Series] = _dump_polars_series
 
 
 def _load_primitive(
@@ -746,7 +741,10 @@ def _load_optional(
 def _load_union(
     cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
 ) -> T:
+    marker = loader.mark()
     data = loader.load_any()
+    # Reset loader state after inspection
+    loader.rewind(marker)
 
     def get_priority(t: Type[Any]) -> int:
         origin = get_origin(t) or t
@@ -807,11 +805,7 @@ def _load_union(
         if get_priority(inner_type) < 0:
             continue
         try:
-            # We need a new loader for the same data because the previous one might have been consumed
-            # or it might be a specialized loader that we can re-instantiate.
-            # Using type(loader)(data) is a bit of a hack but it works for current loaders.
-            new_loader = type(loader)(data)  # type: ignore[operator, call-arg]
-            return load(inner_type, new_loader, path, depth + 1)
+            return load(inner_type, loader, path, depth + 1)
         except (
             DeserializationError,
             ValueError,
@@ -821,6 +815,7 @@ def _load_union(
         ) as e:
             msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
             errors.append(f" - Failed as {inner_type}: {msg}")
+            loader.rewind(marker)
             continue
     error_details = "\n".join(errors)
     raise DeserializationError(
@@ -1024,77 +1019,47 @@ def _load_set(
         )
 
 
-def _load_numpy_array(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
-) -> T:
-    if np is None:
-        raise ImportError("numpy is required for numpy array deserialization")
-    return cast(T, np.array(load(List, loader, path, depth + 1)))
+# --- Registration ---
 
-
-def _load_pandas_dataframe(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
-) -> T:
-    if pd is None:
-        raise ImportError("pandas is required for pandas DataFrame deserialization")
-    return cast(T, pd.DataFrame.from_records(load(list, loader, path, depth + 1)))
-
-
-def _load_pandas_series(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
-) -> T:
-    if pd is None:
-        raise ImportError("pandas is required for pandas Series deserialization")
-    return cast(T, pd.Series(load(dict, loader, path, depth + 1)))
-
-
-def _load_polars_dataframe(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
-) -> T:
-    if pl is None:
-        raise ImportError("polars is required for polars DataFrame deserialization")
-    return cast(T, pl.DataFrame(load(dict, loader, path, depth + 1)))
-
-
-def _load_polars_series(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
-) -> T:
-    if pl is None:
-        raise ImportError("polars is required for polars Series deserialization")
-    return cast(T, pl.Series(load(list, loader, path, depth + 1)))
-
-
-LOAD_DISPATCH.update(
-    {
-        int: _load_primitive,
-        str: _load_primitive,
-        float: _load_primitive,
-        bool: _load_primitive,
-        type(None): _load_primitive,
-        list: _load_list,
-        dict: _load_dict,
-        tuple: _load_tuple,
-        set: _load_set,
-        datetime.datetime: _load_datetime,
-        enum.Enum: _load_enum,
-        uuid.UUID: _load_uuid,
-        Decimal: _load_decimal,
-        Path: _load_path,
-        bytes: _load_bytes,
-        bytearray: _load_bytearray,
-        array.array: _load_array,
-        collections.defaultdict: _load_defaultdict,
-        collections.OrderedDict: _load_ordered_dict,
-        collections.Counter: _load_counter,
-        Any: _load_any,
-    }
+registry.register(int, TypeHandler(_dump_primitive, _load_primitive, _schema_int))
+registry.register(str, TypeHandler(_dump_primitive, _load_primitive, _schema_str))
+registry.register(float, TypeHandler(_dump_primitive, _load_primitive, _schema_float))
+registry.register(bool, TypeHandler(_dump_primitive, _load_primitive, _schema_bool))
+registry.register(
+    type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
 )
+registry.register(
+    Any, TypeHandler(_dump_primitive, _load_any, _schema_any)
+)  # Any might need custom handling?
 
-if np is not None:
-    LOAD_DISPATCH[np.ndarray] = _load_numpy_array
-if pd is not None:
-    LOAD_DISPATCH[pd.DataFrame] = _load_pandas_dataframe
-    LOAD_DISPATCH[pd.Series] = _load_pandas_series
-if pl is not None:
-    LOAD_DISPATCH[pl.DataFrame] = _load_polars_dataframe
-    LOAD_DISPATCH[pl.Series] = _load_polars_series
+# Containers
+registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
+registry.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
+registry.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
+registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
+registry.register(Union, TypeHandler(_dump_primitive, _load_union, _schema_union)) # type: ignore[arg-type] # dump_primitive is wrong for Union but used for generic dispatch? No, dump uses type(obj) so it hits the concrete type.
+
+# Library types
+registry.register(
+    datetime.datetime, TypeHandler(_dump_datetime, _load_datetime, _schema_datetime)
+)
+registry.register(enum.Enum, TypeHandler(_dump_enum, _load_enum, _schema_enum))
+registry.register(uuid.UUID, TypeHandler(_dump_uuid, _load_uuid, _schema_uuid))
+registry.register(Decimal, TypeHandler(_dump_decimal, _load_decimal, _schema_decimal))
+registry.register(Path, TypeHandler(_dump_path, _load_path, _schema_path))
+registry.register(bytes, TypeHandler(_dump_bytes, _load_bytes, _schema_bytes))
+registry.register(
+    bytearray, TypeHandler(_dump_bytearray, _load_bytearray, _schema_bytes)
+)
+registry.register(array.array, TypeHandler(_dump_array, _load_array, _schema_list))
+
+# Collections
+registry.register(
+    collections.defaultdict, TypeHandler(_dump_dict, _load_defaultdict, _schema_dict)
+)
+registry.register(
+    collections.OrderedDict, TypeHandler(_dump_dict, _load_ordered_dict, _schema_dict)
+)
+registry.register(
+    collections.Counter, TypeHandler(_dump_dict, _load_counter, _schema_dict)
+)
