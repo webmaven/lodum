@@ -25,7 +25,8 @@ def _load_pandas_dataframe(
 ) -> Any:
     from ..internal import load
 
-    return pd.DataFrame.from_records(load(List, loader, path, depth + 1))
+    data = load(List[Dict[str, Any]], loader, path, depth + 1)
+    return pd.DataFrame.from_records(data)
 
 
 def _load_pandas_series(

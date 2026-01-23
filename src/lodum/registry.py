@@ -16,10 +16,10 @@ class TypeHandler(NamedTuple):
 
 
 class TypeRegistry:
-    def __init__(self):
+    def __init__(self) -> None:
         self._handlers: Dict[Type[Any], TypeHandler] = {}
 
-    def register(self, t: Type[Any], handler: TypeHandler):
+    def register(self, t: Type[Any], handler: TypeHandler) -> None:
         self._handlers[t] = handler
 
     def get(self, t: Type[Any]) -> Optional[TypeHandler]:

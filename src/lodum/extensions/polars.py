@@ -33,7 +33,7 @@ def _load_polars_series(
 ) -> Any:
     from ..internal import load
 
-    return pl.Series(load(List, loader, path, depth + 1))
+    return pl.Series(load(List[Any], loader, path, depth + 1))
 
 
 def _schema_polars_dataframe(
