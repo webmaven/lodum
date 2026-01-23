@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Optional,
@@ -62,10 +61,9 @@ def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -
         raise SerializationError("Circular reference detected")
 
     # Only track containers and lodum objects to detect cycles
-    is_container = (
-        isinstance(obj, (list, dict, set, tuple, collections.deque, array.array))
-        or getattr(obj, "_lodum_enabled", False)
-    )
+    is_container = isinstance(
+        obj, (list, dict, set, tuple, collections.deque, array.array)
+    ) or getattr(obj, "_lodum_enabled", False)
 
     if is_container:
         seen.add(obj_id)
@@ -105,7 +103,7 @@ def generate_schema(
         return registry._handlers[t].schema_fn(t, depth, visited)
 
     origin = get_origin(t) or t
-    
+
     # Generic lookup (exact match)
     if origin in registry._handlers:
         return registry._handlers[origin].schema_fn(t, depth, visited)
@@ -134,7 +132,7 @@ def generate_schema(
                 required.append(key)
 
         schema = {"type": "object", "properties": properties}
-        
+
         tag_name = getattr(t, "_lodum_tag", None)
         if tag_name:
             tag_value = getattr(t, "_lodum_tag_value", t.__name__)
@@ -224,14 +222,16 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     return lambda obj, dumper, depth, seen: compiled_fn(obj, dumper, dump, depth, seen)
 
 
-def _get_dump_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> DumpHandler:
+def _get_dump_handler(
+    t: Type[Any], excluding: Optional[Type[Any]] = None
+) -> DumpHandler:
     if isinstance(t, str):
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
-        
+
         if inspect.isclass(t) and not isinstance(t, ForwardRef):
             with _REGISTRY_LOCK:
                 _NAME_TO_TYPE_CACHE[t.__name__] = t
@@ -384,21 +384,35 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
                 load_meth = PRIMITIVE_LOADERS[ftype]
                 lines.append("        if is_raw:")
                 if ftype is int:
-                    lines.append(f"            if not isinstance(val_loader, int) or isinstance(val_loader, bool): raise DeserializationError(f'Expected int, got {{type(val_loader).__name__}}', field_path)")
+                    lines.append(
+                        "            if not isinstance(val_loader, int) or isinstance(val_loader, bool): raise DeserializationError(f'Expected int, got {type(val_loader).__name__}', field_path)"
+                    )
                     lines.append(f"            args['{field_name}'] = val_loader")
                 elif ftype is str:
-                    lines.append(f"            if not isinstance(val_loader, str): raise DeserializationError(f'Expected str, got {{type(val_loader).__name__}}', field_path)")
+                    lines.append(
+                        "            if not isinstance(val_loader, str): raise DeserializationError(f'Expected str, got {type(val_loader).__name__}', field_path)"
+                    )
                     lines.append(f"            args['{field_name}'] = val_loader")
                 elif ftype is float:
-                    lines.append(f"            if not isinstance(val_loader, (float, int)): raise DeserializationError(f'Expected float, got {{type(val_loader).__name__}}', field_path)")
-                    lines.append(f"            args['{field_name}'] = float(val_loader)")
+                    lines.append(
+                        "            if not isinstance(val_loader, (float, int)): raise DeserializationError(f'Expected float, got {type(val_loader).__name__}', field_path)"
+                    )
+                    lines.append(
+                        f"            args['{field_name}'] = float(val_loader)"
+                    )
                 elif ftype is bool:
-                    lines.append(f"            if not isinstance(val_loader, bool): raise DeserializationError(f'Expected bool, got {{type(val_loader).__name__}}', field_path)")
+                    lines.append(
+                        "            if not isinstance(val_loader, bool): raise DeserializationError(f'Expected bool, got {type(val_loader).__name__}', field_path)"
+                    )
                     lines.append(f"            args['{field_name}'] = val_loader")
                 elif ftype is bytes:
-                    lines.append(f"            try: args['{field_name}'] = loader.load_bytes_value(val_loader)")
-                    lines.append(f"            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)")
-                
+                    lines.append(
+                        f"            try: args['{field_name}'] = loader.load_bytes_value(val_loader)"
+                    )
+                    lines.append(
+                        "            except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)"
+                    )
+
                 lines.append("        else:")
                 lines.append(
                     f"            try: args['{field_name}'] = val_loader.{load_meth}()"
@@ -409,7 +423,9 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
             else:
                 type_name = f"type_{i}"
                 context[type_name] = ftype
-                lines.append("        val_to_load = val_loader if not is_raw else type(loader)(val_loader)")
+                lines.append(
+                    "        val_to_load = val_loader if not is_raw else type(loader)(val_loader)"
+                )
                 lines.append(
                     f"        try: args['{field_name}'] = load_fn({type_name}, val_to_load, field_path, depth + 1)"
                 )
@@ -456,14 +472,16 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     )
 
 
-def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> LoadHandler:
+def _get_load_handler(
+    t: Type[Any], excluding: Optional[Type[Any]] = None
+) -> LoadHandler:
     if isinstance(t, str):
         t = ForwardRef(t)
 
     with _CACHE_LOCK:
         if t in _LOAD_HANDLER_CACHE:
             return _LOAD_HANDLER_CACHE[t]
-        
+
         if inspect.isclass(t) and not isinstance(t, ForwardRef):
             with _REGISTRY_LOCK:
                 _NAME_TO_TYPE_CACHE[t.__name__] = t
@@ -490,7 +508,7 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
                         return _LOAD_HANDLER_CACHE[cls]
                 except TypeError:
                     continue
-        
+
         resolved_type = None
         with _REGISTRY_LOCK:
             resolved_type = _NAME_TO_TYPE_CACHE.get(ref_name)
@@ -504,7 +522,7 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
 
     if origin is Union and len(args) == 2 and args[1] is type(None):
         return _load_optional
-    
+
     if origin is Union:
         # Check if it's a Tagged Union
         tag_names = set()
@@ -546,7 +564,7 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
             with _CACHE_LOCK:
                 _LOAD_HANDLER_CACHE[t] = load_tagged_union
             return load_tagged_union
-        
+
         return _load_union
 
     # Registry lookup for origin (e.g., list, dict) or concrete type
@@ -640,40 +658,52 @@ def _get_load_handler(t: Type[Any], excluding: Optional[Type[Any]] = None) -> Lo
 
 # --- Schema Handlers ---
 
+
 def _schema_int(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "integer"}
+
 
 def _schema_str(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "string"}
 
+
 def _schema_float(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "number"}
+
 
 def _schema_bool(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "boolean"}
 
+
 def _schema_none(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "null"}
+
 
 def _schema_any(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {}
 
+
 def _schema_uuid(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "string", "format": "uuid"}
+
 
 def _schema_decimal(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "string"}
 
+
 def _schema_path(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "string"}
 
+
 def _schema_bytes(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"type": "string", "contentEncoding": "base64"}
+
 
 def _schema_list(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     args = get_args(t)
     item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
     return {"type": "array", "items": item_schema}
+
 
 def _schema_dict(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     args = get_args(t)
@@ -686,10 +716,13 @@ def _schema_dict(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, 
         )
     return {"type": "object", "additionalProperties": val_schema}
 
+
 def _schema_union(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     args = get_args(t)
-    schema = {"anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]}
-    
+    schema: Dict[str, Any] = {
+        "anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]
+    }
+
     tag_names = set()
     for arg in args:
         if inspect.isclass(arg) and getattr(arg, "_lodum_enabled", False):
@@ -700,8 +733,9 @@ def _schema_union(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str,
     if len(tag_names) == 1 and None not in tag_names:
         tag_name = tag_names.pop()
         schema["discriminator"] = {"propertyName": tag_name}
-    
+
     return schema
+
 
 def _schema_tuple(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     args = get_args(t)
@@ -710,13 +744,18 @@ def _schema_tuple(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str,
         "prefixItems": [generate_schema(arg, depth + 1, visited) for arg in args],
     }
 
+
 def _schema_set(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     args = get_args(t)
     item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
     return {"type": "array", "items": item_schema, "uniqueItems": True}
 
-def _schema_datetime(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+
+def _schema_datetime(
+    t: Type[Any], depth: int, visited: Optional[set]
+) -> Dict[str, Any]:
     return {"type": "string", "format": "date-time"}
+
 
 def _schema_enum(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
     return {"enum": [m.value for m in t]}
@@ -1155,7 +1194,10 @@ registry.register(
     type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
 )
 registry.register(
-    Any, TypeHandler(_dump_primitive, _load_any, _schema_any)  # Any might need custom handling?
+    Any,
+    TypeHandler(
+        _dump_primitive, _load_any, _schema_any
+    ),  # Any might need custom handling?
 )
 
 # Containers
@@ -1163,7 +1205,7 @@ registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
 registry.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
 registry.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
 registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
-registry.register(Union, TypeHandler(_dump_primitive, _load_union, _schema_union)) # type: ignore[arg-type]
+registry.register(Union, TypeHandler(_dump_primitive, _load_union, _schema_union))  # type: ignore[arg-type]
 
 # Library types
 registry.register(
