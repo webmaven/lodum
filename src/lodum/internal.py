@@ -151,6 +151,189 @@ def generate_schema(
     return {}
 
 
+def _build_dump_expr(
+    ftype: Type[Any],
+    val_node: ast.AST,
+    context: Dict[str, Any],
+    cls: Type[Any],
+    i: int,
+) -> ast.expr:
+    """
+    Builds an optimized AST expression to dump a value of type 'ftype'.
+    Inlines primitive calls and comprehensions for common containers.
+    """
+    PRIMITIVE_TYPES = {
+        int: "dump_int",
+        str: "dump_str",
+        float: "dump_float",
+        bool: "dump_bool",
+        bytes: "dump_bytes",
+    }
+
+    if ftype in PRIMITIVE_TYPES:
+        dump_meth = PRIMITIVE_TYPES[ftype]
+        if ftype is float:
+            type_test = ast.Tuple(
+                elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                ctx=ast.Load(),
+            )
+        else:
+            type_test = ast.Name(id=ftype.__name__, ctx=ast.Load())
+
+        return ast.IfExp(
+            test=ast.Call(
+                func=ast.Name(id="isinstance", ctx=ast.Load()),
+                args=[val_node, type_test],
+                keywords=[],
+            ),
+            body=ast.Call(
+                func=ast.Attribute(value=ast.Name(id="dumper", ctx=ast.Load()), attr=dump_meth, ctx=ast.Load()),
+                args=[val_node],
+                keywords=[],
+            ),
+            orelse=ast.Call(
+                func=ast.Name(id="dump_fn", ctx=ast.Load()),
+                args=[
+                    val_node,
+                    ast.Name(id="dumper", ctx=ast.Load()),
+                    ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                    ast.Name(id="seen", ctx=ast.Load()),
+                ],
+                keywords=[],
+            ),
+        )
+
+    origin = get_origin(ftype) or ftype
+    if origin in (list, set, tuple):
+        args = get_args(ftype)
+        item_type = args[0] if args else Any
+        # Inline comprehension if item_type is primitive
+        if item_type in PRIMITIVE_TYPES:
+            item_dump_meth = PRIMITIVE_TYPES[item_type]
+            if item_type is float:
+                item_type_test = ast.Tuple(
+                    elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                    ctx=ast.Load(),
+                )
+            else:
+                item_type_test = ast.Name(id=item_type.__name__, ctx=ast.Load())
+
+            elt_dump_expr = ast.IfExp(
+                test=ast.Call(
+                    func=ast.Name(id="isinstance", ctx=ast.Load()),
+                    args=[ast.Name(id="item", ctx=ast.Load()), item_type_test],
+                    keywords=[],
+                ),
+                body=ast.Call(
+                    func=ast.Attribute(value=ast.Name(id="dumper", ctx=ast.Load()), attr=item_dump_meth, ctx=ast.Load()),
+                    args=[ast.Name(id="item", ctx=ast.Load())],
+                    keywords=[],
+                ),
+                orelse=ast.Call(
+                    func=ast.Name(id="dump_fn", ctx=ast.Load()),
+                    args=[
+                        ast.Name(id="item", ctx=ast.Load()),
+                        ast.Name(id="dumper", ctx=ast.Load()),
+                        ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                        ast.Name(id="seen", ctx=ast.Load()),
+                    ],
+                    keywords=[],
+                ),
+            )
+            
+            # Note: For set/tuple we still produce a list here because lodum dumpers expect list-like for sequences in JSON/MsgPack etc.
+            comprehension = ast.ListComp(
+                elt=elt_dump_expr,
+                generators=[
+                    ast.comprehension(
+                        target=ast.Name(id="item", ctx=ast.Store()),
+                        iter=val_node,
+                        is_async=0,
+                    )
+                ],
+            )
+            return comprehension
+
+    if origin is dict:
+        args = get_args(ftype)
+        if len(args) == 2:
+            k_type, v_type = args
+            if k_type is str and v_type in PRIMITIVE_TYPES:
+                v_dump_meth = PRIMITIVE_TYPES[v_type]
+                if v_type is float:
+                    v_type_test = ast.Tuple(
+                        elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                        ctx=ast.Load(),
+                    )
+                else:
+                    v_type_test = ast.Name(id=v_type.__name__, ctx=ast.Load())
+
+                val_dump_expr = ast.IfExp(
+                    test=ast.Call(
+                        func=ast.Name(id="isinstance", ctx=ast.Load()),
+                        args=[ast.Name(id="v", ctx=ast.Load()), v_type_test],
+                        keywords=[],
+                    ),
+                    body=ast.Call(
+                        func=ast.Attribute(value=ast.Name(id="dumper", ctx=ast.Load()), attr=v_dump_meth, ctx=ast.Load()),
+                        args=[ast.Name(id="v", ctx=ast.Load())],
+                        keywords=[],
+                    ),
+                    orelse=ast.Call(
+                        func=ast.Name(id="dump_fn", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id="v", ctx=ast.Load()),
+                            ast.Name(id="dumper", ctx=ast.Load()),
+                            ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                            ast.Name(id="seen", ctx=ast.Load()),
+                        ],
+                        keywords=[],
+                    ),
+                )
+
+                # {str(k): dumper.dump_X(v) for k, v in val_node.items()}
+                dict_comp = ast.DictComp(
+                    key=ast.Call(func=ast.Name(id="str", ctx=ast.Load()), args=[ast.Name(id="k", ctx=ast.Load())], keywords=[]),
+                    value=val_dump_expr,
+                    generators=[
+                        ast.comprehension(
+                            target=ast.Tuple(elts=[ast.Name(id="k", ctx=ast.Store()), ast.Name(id="v", ctx=ast.Store())], ctx=ast.Store()),
+                            iter=ast.Call(func=ast.Attribute(value=val_node, attr="items", ctx=ast.Load()), args=[], keywords=[]),
+                            is_async=0,
+                        )
+                    ],
+                )
+                return dict_comp
+
+    # Pre-resolve handler
+    try:
+        handler = _get_dump_handler(ftype, excluding=cls)
+        handler_name = f"h_{i}"
+        context[handler_name] = handler
+        return ast.Call(
+            func=ast.Name(id=handler_name, ctx=ast.Load()),
+            args=[
+                val_node,
+                ast.Name(id="dumper", ctx=ast.Load()),
+                ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                ast.Name(id="seen", ctx=ast.Load()),
+            ],
+            keywords=[],
+        )
+    except ValueError:
+        # Recursive reference, fall back to global dump_fn
+        return ast.Call(
+            func=ast.Name(id="dump_fn", ctx=ast.Load()),
+            args=[
+                val_node,
+                ast.Name(id="dumper", ctx=ast.Load()),
+                ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                ast.Name(id="seen", ctx=ast.Load()),
+            ],
+            keywords=[],
+        )
+
+
 def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str, Any]]:
     """
     Builds the AST for the optimized dump handler of a lodum-enabled class.
@@ -162,6 +345,7 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
 
     context: Dict[str, Any] = {
         "cls": cls,
+        "_cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
         "dump_fn_orig": dump,
@@ -186,7 +370,23 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
 
     body: list[ast.stmt] = []
 
-    # data = dumper.begin_struct(cls)
+    PRIMITIVE_TYPES = {
+        int: "dump_int",
+        str: "dump_str",
+        float: "dump_float",
+        bool: "dump_bool",
+        bytes: "dump_bytes",
+    }
+
+    # _cls = cls
+    body.append(
+        ast.Assign(
+            targets=[ast.Name(id="_cls", ctx=ast.Store())],
+            value=ast.Name(id="cls", ctx=ast.Load()),
+        )
+    )
+
+    # data = dumper.begin_struct(_cls)
     body.append(
         ast.Assign(
             targets=[ast.Name(id="data", ctx=ast.Store())],
@@ -196,7 +396,7 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     attr="begin_struct",
                     ctx=ast.Load(),
                 ),
-                args=[ast.Name(id="cls", ctx=ast.Load())],
+                args=[ast.Name(id="_cls", ctx=ast.Load())],
                 keywords=[],
             ),
         )
@@ -206,7 +406,6 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
     tag_value = getattr(cls, "_lodum_tag_value", None)
 
     if tag:
-        context["tag_name"] = tag
         context["tag_value"] = tag_value
         # data[tag_name] = dumper.dump_str(tag_value)
         body.append(
@@ -214,7 +413,7 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                 targets=[
                     ast.Subscript(
                         value=ast.Name(id="data", ctx=ast.Load()),
-                        slice=ast.Name(id="tag_name", ctx=ast.Load()),
+                        slice=ast.Constant(value=tag),
                         ctx=ast.Store(),
                     )
                 ],
@@ -229,14 +428,6 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                 ),
             )
         )
-
-    PRIMITIVE_TYPES = {
-        int: "dump_int",
-        str: "dump_str",
-        float: "dump_float",
-        bool: "dump_bool",
-        bytes: "dump_bytes",
-    }
 
     for i, (field_name, field_info) in enumerate(fields.items()):
         if field_info.skip_serializing:
@@ -260,7 +451,7 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
 
         target_subscript = ast.Subscript(
             value=ast.Name(id="data", ctx=ast.Load()),
-            slice=ast.Name(id=safe_key, ctx=ast.Load()),
+            slice=ast.Constant(value=key),
             ctx=ast.Store(),
         )
 
@@ -268,110 +459,20 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer
             # data[key] = ser_n(val)
-            body.append(
-                ast.Assign(
-                    targets=[target_subscript],
-                    value=ast.Call(
-                        func=ast.Name(id=ser_name, ctx=ast.Load()),
-                        args=[ast.Name(id="val", ctx=ast.Load())],
-                        keywords=[],
-                    ),
-                )
+            dump_expr = ast.Call(
+                func=ast.Name(id=ser_name, ctx=ast.Load()),
+                args=[ast.Name(id="val", ctx=ast.Load())],
+                keywords=[],
             )
         else:
-            ftype = field_info.type
-            if ftype in PRIMITIVE_TYPES:
-                dump_meth = PRIMITIVE_TYPES[ftype]
-                # data[key] = dumper.dump_X(val) if isinstance(val, X) else dump_fn(val, dumper, depth + 1, seen)
-                check_type = (float, int) if ftype is float else ftype
-                context[f"type_{i}"] = check_type
+            dump_expr = _build_dump_expr(field_info.type, ast.Name(id="val", ctx=ast.Load()), context, cls, i)
 
-                body.append(
-                    ast.Assign(
-                        targets=[target_subscript],
-                        value=ast.IfExp(
-                            test=ast.Call(
-                                func=ast.Name(id="isinstance", ctx=ast.Load()),
-                                args=[
-                                    ast.Name(id="val", ctx=ast.Load()),
-                                    ast.Name(id=f"type_{i}", ctx=ast.Load()),
-                                ],
-                                keywords=[],
-                            ),
-                            body=ast.Call(
-                                func=ast.Attribute(
-                                    value=ast.Name(id="dumper", ctx=ast.Load()),
-                                    attr=dump_meth,
-                                    ctx=ast.Load(),
-                                ),
-                                args=[ast.Name(id="val", ctx=ast.Load())],
-                                keywords=[],
-                            ),
-                            orelse=ast.Call(
-                                func=ast.Name(id="dump_fn", ctx=ast.Load()),
-                                args=[
-                                    ast.Name(id="val", ctx=ast.Load()),
-                                    ast.Name(id="dumper", ctx=ast.Load()),
-                                    ast.BinOp(
-                                        left=ast.Name(id="depth", ctx=ast.Load()),
-                                        op=ast.Add(),
-                                        right=ast.Constant(value=1),
-                                    ),
-                                    ast.Name(id="seen", ctx=ast.Load()),
-                                ],
-                                keywords=[],
-                            ),
-                        ),
-                    )
-                )
-            else:
-                # Pre-resolve handler
-                try:
-                    # We pass 'cls' as excluding to detect direct recursion
-                    handler = _get_dump_handler(ftype, excluding=cls)
-                    handler_name = f"h_{i}"
-                    context[handler_name] = handler
-                    # data[key] = h_i(val, dumper, depth + 1, seen)
-                    body.append(
-                        ast.Assign(
-                            targets=[target_subscript],
-                            value=ast.Call(
-                                func=ast.Name(id=handler_name, ctx=ast.Load()),
-                                args=[
-                                    ast.Name(id="val", ctx=ast.Load()),
-                                    ast.Name(id="dumper", ctx=ast.Load()),
-                                    ast.BinOp(
-                                        left=ast.Name(id="depth", ctx=ast.Load()),
-                                        op=ast.Add(),
-                                        right=ast.Constant(value=1),
-                                    ),
-                                    ast.Name(id="seen", ctx=ast.Load()),
-                                ],
-                                keywords=[],
-                            ),
-                        )
-                    )
-                except ValueError:
-                    # Recursive reference, fall back to global dump_fn
-                    body.append(
-                        ast.Assign(
-                            targets=[target_subscript],
-                            value=ast.Call(
-                                func=ast.Name(id="dump_fn", ctx=ast.Load()),
-                                args=[
-                                    ast.Name(id="val", ctx=ast.Load()),
-                                    ast.Name(id="dumper", ctx=ast.Load()),
-                                    ast.BinOp(
-                                        left=ast.Name(id="depth", ctx=ast.Load()),
-                                        op=ast.Add(),
-                                        right=ast.Constant(value=1),
-                                    ),
-                                    ast.Name(id="seen", ctx=ast.Load()),
-                                ],
-                                keywords=[],
-                            ),
-                        )
-                    )
+        body.append(
+            ast.Assign(
+                targets=[target_subscript],
+                value=dump_expr,
+            )
+        )
 
     # dumper.end_struct()
     body.append(
@@ -534,6 +635,121 @@ def _get_dump_handler(
     raise SerializationError(f"Object of type {type_name} is not lodum-enabled")
 
 
+def _build_load_expr(
+    ftype: Type[Any],
+    loader_node: ast.AST,
+    context: Dict[str, Any],
+    cls: Type[Any],
+    i: int,
+    path_node: ast.AST,
+) -> ast.expr:
+    """
+    Builds an optimized AST expression to load a value of type 'ftype'.
+    Inlines primitive calls and comprehensions for common containers.
+    """
+    PRIMITIVE_LOADERS = {
+        int: "load_int",
+        str: "load_str",
+        float: "load_float",
+        bool: "load_bool",
+        bytes: "load_bytes",
+    }
+
+    if ftype in PRIMITIVE_LOADERS:
+        load_meth = PRIMITIVE_LOADERS[ftype]
+        # if is_raw: ... else: loader_node.load_X()
+        # For simplicity in _build_load_expr, we use the attribute call.
+        # The is_raw optimization is handled in the main loop for primitives.
+        return ast.Call(
+            func=ast.Attribute(value=loader_node, attr=load_meth, ctx=ast.Load()),
+            args=[],
+            keywords=[],
+        )
+
+    origin = get_origin(ftype) or ftype
+    if origin in (list, tuple, set):
+        args = get_args(ftype)
+        item_type = args[0] if args else Any
+        if item_type in PRIMITIVE_LOADERS:
+            item_load_meth = PRIMITIVE_LOADERS[item_type]
+            # [item_l.load_X() for item_l in loader_node.load_list()]
+            comp = ast.ListComp(
+                elt=ast.Call(
+                    func=ast.Attribute(value=ast.Name(id="item_l", ctx=ast.Load()), attr=item_load_meth, ctx=ast.Load()),
+                    args=[],
+                    keywords=[],
+                ),
+                generators=[
+                    ast.comprehension(
+                        target=ast.Name(id="item_l", ctx=ast.Store()),
+                        iter=ast.Call(
+                            func=ast.Attribute(value=loader_node, attr="load_list", ctx=ast.Load()),
+                            args=[],
+                            keywords=[],
+                        ),
+                        is_async=0,
+                    )
+                ],
+            )
+            if origin is set:
+                return ast.Call(func=ast.Name(id="set", ctx=ast.Load()), args=[comp], keywords=[])
+            if origin is tuple:
+                return ast.Call(func=ast.Name(id="tuple", ctx=ast.Load()), args=[comp], keywords=[])
+            return comp
+
+    if origin is dict:
+        args = get_args(ftype)
+        if len(args) == 2:
+            k_type, v_type = args
+            if k_type is str and v_type in PRIMITIVE_LOADERS:
+                v_load_meth = PRIMITIVE_LOADERS[v_type]
+                # {k: v_l.load_X() for k, v_l in loader_node.load_dict()}
+                return ast.DictComp(
+                    key=ast.Name(id="k", ctx=ast.Load()),
+                    value=ast.Call(
+                        func=ast.Attribute(value=ast.Name(id="v_l", ctx=ast.Load()), attr=v_load_meth, ctx=ast.Load()),
+                        args=[],
+                        keywords=[],
+                    ),
+                    generators=[
+                        ast.comprehension(
+                            target=ast.Tuple(elts=[ast.Name(id="k", ctx=ast.Store()), ast.Name(id="v_l", ctx=ast.Store())], ctx=ast.Store()),
+                            iter=ast.Call(
+                                func=ast.Attribute(value=loader_node, attr="load_dict", ctx=ast.Load()),
+                                args=[],
+                                keywords=[],
+                            ),
+                            is_async=0,
+                        )
+                    ],
+                )
+
+    # Pre-resolve handler
+    load_call_args = [
+        ast.Name(id=f"type_{i}", ctx=ast.Load()),
+        loader_node,
+        path_node,
+        ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+    ]
+    context[f"type_{i}"] = ftype
+
+    try:
+        handler = _get_load_handler(ftype, excluding=cls)
+        handler_name = f"h_{i}"
+        context[handler_name] = handler
+        return ast.Call(
+            func=ast.Name(id=handler_name, ctx=ast.Load()),
+            args=load_call_args,
+            keywords=[],
+        )
+    except ValueError:
+        return ast.Call(
+            func=ast.Name(id="load_fn", ctx=ast.Load()),
+            args=load_call_args,
+            keywords=[],
+        )
+
+
 def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str, Any]]:
     """
     Builds the AST for the optimized load handler of a lodum-enabled class.
@@ -545,6 +761,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
 
     context: Dict[str, Any] = {
         "cls": cls,
+        "_cls": cls,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
         "type": type,
@@ -569,6 +786,14 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
     )
 
     body: list[ast.stmt] = []
+
+    # _cls = cls
+    body.append(
+        ast.Assign(
+            targets=[ast.Name(id="_cls", ctx=ast.Store())],
+            value=ast.Name(id="cls", ctx=ast.Load()),
+        )
+    )
 
     # raw_data = loader.get_dict()
     body.append(
@@ -643,7 +868,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                             ast.JoinedStr(
                                                 values=[
                                                     ast.Constant(value="Expected a dictionary to decode into class "),
-                                                    ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
+                                                    ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="_cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
                                                     ast.Constant(value=", but received a different type."),
                                                 ]
                                             ),
@@ -748,8 +973,6 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
 
     for i, (field_name, field_info) in enumerate(fields.items()):
         field_json_name = field_info.rename if field_info.rename else field_info.name
-        safe_json_key = f"key_{i}"
-        context[safe_json_key] = field_json_name
 
         # field_path = f'{path}.{field_json_name}' if path else field_json_name
         body.append(
@@ -768,13 +991,13 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
             )
         )
 
-        # if safe_json_key in data:
+        # if field_json_name in data:
         field_present_body: list[ast.stmt] = []
         val_loader_assign = ast.Assign(
             targets=[ast.Name(id="val_loader", ctx=ast.Store())],
             value=ast.Subscript(
                 value=ast.Name(id="data", ctx=ast.Load()),
-                slice=ast.Name(id=safe_json_key, ctx=ast.Load()),
+                slice=ast.Constant(value=field_json_name),
                 ctx=ast.Load(),
             ),
         )
@@ -783,7 +1006,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         if field_info.deserializer:
             deser_name = f"deser_{i}"
             context[deser_name] = field_info.deserializer
-            # try: args['field_name'] = deser_n(val_loader if is_raw else val_loader.load_any())
+            # try: args_dict['field_name'] = deser_n(val_loader if is_raw else val_loader.load_any())
             # except DeserializationError as e: raise DeserializationError(e.raw_message, e.path or field_path)
             field_present_body.append(
                 ast.Try(
@@ -841,7 +1064,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                             ],
                         )
                     ],
-                                        orelse=[],
+                    orelse=[],
                     finalbody=[],
                 )
             )
@@ -1196,7 +1419,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                 type_name = f"type_{i}"
                 context[type_name] = ftype
                 # val_to_load = val_loader if not is_raw else type(loader)(val_loader)
-                # try: args['field_name'] = load_fn(type_name, val_to_load, field_path, depth + 1)
+                # try: args_dict['field_name'] = load_fn(type_name, val_to_load, field_path, depth + 1)
                 field_present_body.append(
                     ast.Assign(
                         targets=[ast.Name(id="val_to_load", ctx=ast.Store())],
@@ -1307,7 +1530,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                     ast.Constant(value="Missing required field '"),
                                     ast.Constant(value=field_json_name),
                                     ast.Constant(value="' for class "),
-                                    ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
+                                    ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="_cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
                                 ]
                             ),
                             ast.Name(id="path", ctx=ast.Load()),
@@ -1320,7 +1543,7 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         body.append(
             ast.If(
                 test=ast.Compare(
-                    left=ast.Name(id=safe_json_key, ctx=ast.Load()),
+                    left=ast.Constant(value=field_json_name),
                     ops=[ast.In()],
                     comparators=[ast.Name(id="data", ctx=ast.Load())],
                 ),
@@ -1380,14 +1603,14 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     )
                 )
 
-    # try: return cls(**args_dict)
-    # except TypeError as e: raise DeserializationError(f'Failed to instantiate {cls.__name__}. Original error: {e}', path)
+    # try: return _cls(**args_dict)
+    # except TypeError as e: raise DeserializationError(f'Failed to instantiate {_cls.__name__}. Original error: {e}', path)
     body.append(
         ast.Try(
             body=[
                 ast.Return(
                     value=ast.Call(
-                        func=ast.Name(id="cls", ctx=ast.Load()),
+                        func=ast.Name(id="_cls", ctx=ast.Load()),
                         args=[],
                         keywords=[ast.keyword(arg=None, value=ast.Name(id="args_dict", ctx=ast.Load()))],
                     )
@@ -1404,7 +1627,9 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                 args=[
                                     ast.JoinedStr(
                                         values=[
-                                            ast.Constant(value=f"Failed to instantiate {cls.__name__}. Original error: "),
+                                            ast.Constant(value="Failed to instantiate "),
+                                            ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="_cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
+                                            ast.Constant(value=". Original error: "),
                                             ast.FormattedValue(value=ast.Name(id="e", ctx=ast.Load()), conversion=-1),
                                         ]
                                     ),
