@@ -77,8 +77,16 @@ This document records the experiments and findings during the performance optimi
 
 ---
 
-## Final Results
-- **Dump 10k (JSON)**: 0.6358s (vs 1.7608s baseline) -> **~64% faster**
-- **Load 10k (JSON)**: 3.2901s (vs 5.0157s baseline) -> **~34% faster**
+## Experiment 9: Modular Thread-Safe Architecture
+- **Plan**: Refactor the "God Module" `internal.py` into modular components and encapsulate global state into a thread-safe `Context` object.
+- **Hypothesis**: Decoupling the engine and implementing thread-local storage for registry/caches will improve maintainability without significantly increasing overhead.
+- **Findings**: No regression in "happy path" performance. The lock-free fast path for cache lookups ensures that high-concurrency access remains efficient.
+- **Integration**: Created `compiler/` and `handlers/` subpackages. All global state now flows through `get_context()`.
 
-All safety features (recursion depth, circular references, type validation) and error reporting details (path tracking with indices) are preserved across all formats.
+---
+
+## Final Results (Post-Refactor)
+- **Dump 10k (JSON)**: 0.63s - 0.65s (Baseline: 1.76s) -> **~64% faster**
+- **Load 10k (JSON)**: 3.25s - 3.30s (Baseline: 5.01s) -> **~35% faster**
+
+All safety features (recursion depth, circular references, type validation) and error reporting details are preserved across all formats. Feature parity and standardized error messages are now implemented across the entire library.
