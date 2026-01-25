@@ -73,6 +73,19 @@ Before submitting a pull request, please run the following checks to ensure code
 - We use [Ruff](https://github.com/astral-sh/ruff) for code formatting and linting. Please run it on your code before submitting a pull request.
 - We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for all Python code.
 
+## Core Development Guidelines
+
+### Modular Architecture
+The core engine is split into two primary areas:
+- `src/lodum/compiler/`: Handles type analysis and specialized bytecode generation.
+- `src/lodum/handlers/`: Contains generic fallback logic for types when specialized code cannot be compiled.
+
+### AST Generation
+When modifying the compiler, use the `ASTBuilder` DSL found in `src/lodum/compiler/dsl.py`. This ensures that generated code is readable and consistent across different Python versions.
+
+### Thread Safety
+Lodum uses a `Context` object to manage global state. All handlers must be stateless or use the provided `Context` for caching. Avoid global variables that could cause race conditions during concurrent serialization.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the Apache License 2.0.

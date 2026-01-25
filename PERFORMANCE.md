@@ -42,6 +42,8 @@ The following benchmarks were run on Python 3.13.7 (win32). Results are in micro
 - **AST Optimization**: The move to AST-based code generation has significantly improved performance compared to string-based `exec` methods while providing better type safety and more informative error messages.
 - **Thread Safety**: The modular refactor introduced thread-safe global state management via `Context` without performance regressions, thanks to a lock-free fast path for handler cache lookups.
 
+For a detailed analysis of performance improvements over time, see [PERFORMANCE_ANALYSIS.md](PERFORMANCE_ANALYSIS.md).
+
 ## Running Benchmarks Yourself
 
 See the [benchmarks/](benchmarks/) directory for instructions on how to run these benchmarks on your own machine.

@@ -33,17 +33,18 @@ Here is a quick example of how to encode a simple Python object to JSON and deco
 
 ### 1. Define your data structure
 
-Use the `@lodum` decorator on your class. Make sure to include type hints, as `lodum` uses them to understand your data.
+Use the `@lodum` decorator on your class. You can use standard `__init__` methods or `dataclasses`. Make sure to include type hints, as `lodum` uses them to understand your data.
 
 ```python
 from lodum import lodum
+from dataclasses import dataclass
 
 @lodum
+@dataclass
 class User:
-    def __init__(self, name: str, age: int, is_active: bool):
-        self.name = name
-        self.age = age
-        self.is_active = is_active
+    name: str
+    age: int
+    is_active: bool
 ```
 
 ### 2. Encode to JSON
@@ -232,9 +233,41 @@ except Exception as e:
     print(e)
 ```
 
+## JSON Schema
+
+You can generate a standard JSON Schema for any `@lodum`-decorated class using `lodum.schema()`. This is particularly useful for documenting your data models or for use with LLM tool definitions.
+
+```python
+import lodum
+
+@lodum
+class User:
+    def __init__(self, id: int, name: str):
+        self.id = id
+        self.name = name
+
+# Generate the schema
+schema = lodum.schema(User)
+
+import json
+print(json.dumps(schema, indent=2))
+# {
+#   "type": "object",
+#   "properties": {
+#     "id": { "type": "integer" },
+#     "name": { "type": "string" }
+#   },
+#   "required": ["id", "name"]
+# }
+```
+
 ## Performance
 
-`lodum` is designed for high performance. When you first use a `@lodum`-enabled class, the library analyzes its structure and generates specialized Python bytecode for serialization and deserialization. This generated code is then compiled and cached, avoiding the overhead of generic introspection and `getattr` calls during runtime.
+`lodum` is designed for high performance. When you first use a `@lodum`-enabled class, the library analyzes its structure and generates specialized Python bytecode for serialization and deserialization using an internal Abstract Syntax Tree (AST) compiler. 
+
+This approach eliminates the overhead of generic introspection and `getattr` calls during runtime, resulting in:
+- **~64% faster dumping** (serialization) than the baseline.
+- **~35% faster loading** (deserialization) than the baseline.
 
 See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
 
