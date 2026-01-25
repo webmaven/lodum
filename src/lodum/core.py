@@ -20,6 +20,11 @@ from .exception import DeserializationError
 
 T = TypeVar("T", bound=Type[Any])
 
+# --- Security Limits ---
+
+DEFAULT_MAX_DEPTH = 100
+DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+
 
 def lodum(
     cls: Optional[T] = None,
