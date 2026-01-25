@@ -33,7 +33,6 @@ from .core import (
     get_context,
 )
 from .exception import DeserializationError, SerializationError
-from .field import _REGISTRY_LOCK
 from .registry import DumpHandler, LoadHandler, TypeHandler
 from .compiler.analyzer import _resolve_forward_ref
 from .compiler.dump_codegen import _build_dump_function_ast
@@ -257,7 +256,9 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     local_vars: Dict[str, Any] = {}
     exec(code, context, local_vars)
     compiled_fn = local_vars[func_def.name]
-    return lambda cls_ignore, loader, path, depth: compiled_fn(loader, load, path, depth)
+    return lambda cls_ignore, loader, path, depth: compiled_fn(
+        loader, load, path, depth
+    )
 
 
 def _get_load_handler(
@@ -461,7 +462,9 @@ from .schema import (  # noqa: E402
 def _register_builtin_handlers(ctx: Context) -> None:
     ctx.registry.register(int, TypeHandler(_dump_int, _load_primitive, _schema_int))
     ctx.registry.register(str, TypeHandler(_dump_str, _load_primitive, _schema_str))
-    ctx.registry.register(float, TypeHandler(_dump_float, _load_primitive, _schema_float))
+    ctx.registry.register(
+        float, TypeHandler(_dump_float, _load_primitive, _schema_float)
+    )
     ctx.registry.register(bool, TypeHandler(_dump_bool, _load_primitive, _schema_bool))
     ctx.registry.register(
         type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
@@ -474,7 +477,9 @@ def _register_builtin_handlers(ctx: Context) -> None:
     # Containers
     ctx.registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
     ctx.registry.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
-    ctx.registry.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
+    ctx.registry.register(
+        tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple)
+    )
     ctx.registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
     ctx.registry.register(
         cast(Type[Any], Union), TypeHandler(dump, _load_union, _schema_union)
@@ -495,7 +500,9 @@ def _register_builtin_handlers(ctx: Context) -> None:
     ctx.registry.register(
         bytearray, TypeHandler(_dump_bytearray, _load_bytearray, _schema_bytes)
     )
-    ctx.registry.register(array.array, TypeHandler(_dump_array, _load_array, _schema_list))
+    ctx.registry.register(
+        array.array, TypeHandler(_dump_array, _load_array, _schema_list)
+    )
 
     # Collections
     ctx.registry.register(
