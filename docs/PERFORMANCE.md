@@ -46,4 +46,6 @@ For a detailed analysis of performance improvements over time, see [PERFORMANCE_
 
 ## Running Benchmarks Yourself
 
-See the [benchmarks/](benchmarks/) directory for instructions on how to run these benchmarks on your own machine.
+
+
+See the [benchmarks/](../benchmarks/) directory for instructions on how to run these benchmarks on your own machine.
