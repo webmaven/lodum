@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+from typing import Any
 import pytest
 from lodum import lodum, toml
 from lodum.exception import DeserializationError
@@ -77,3 +78,42 @@ def test_toml_decode_error():
     with pytest.raises(DeserializationError) as excinfo:
         toml.loads(Simple, "this is not toml")
     assert "Failed to parse TOML" in str(excinfo.value)
+
+
+def test_toml_generic_types():
+    from typing import Dict, List
+
+    toml_str = "items = [1, 2, 3]\n"
+    data = toml.loads(Dict[str, List[int]], toml_str)
+    assert data == {"items": [1, 2, 3]}
+
+
+def test_toml_generic_all_primitives():
+    from typing import Dict
+
+    toml_str = 'f = 1.1\nb = true\nby = "Ynl0ZXM="\n'
+    # Use load() directly to hit non-raw paths for bytes specifically if needed,
+    # but loads() with explicit types should also work.
+    data = toml.loads(Dict[str, Any], toml_str)
+    assert data["f"] == 1.1
+    assert data["b"] is True
+
+    # Test explicit float and bool in generic dict
+    data2 = toml.loads(Dict[str, float], "f = 1.1\n")
+    assert data2["f"] == 1.1
+    data3 = toml.loads(Dict[str, bool], "b = true\n")
+    assert data3["b"] is True
+
+
+def test_toml_dump_bytes():
+    data = {"by": b"hello"}
+    res = toml.dumps(data)
+    assert 'by = "aGVsbG8="' in res
+
+
+def test_toml_load_bytes():
+    from typing import Dict
+
+    toml_str = 'by = "aGVsbG8="'
+    data = toml.loads(Dict[str, bytes], toml_str)
+    assert data["by"] == b"hello"

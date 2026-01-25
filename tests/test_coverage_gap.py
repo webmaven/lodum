@@ -7,6 +7,53 @@ from typing import Dict
 
 
 @lodum
+class AllPrimitives:
+    def __init__(self, i: int, f: float, b: bool, s: str, by: bytes):
+        self.i = i
+        self.f = f
+        self.b = b
+        self.s = s
+        self.by = by
+
+
+def test_all_primitives_success():
+    data = {"i": 1, "f": 1.1, "b": True, "s": "hello", "by": "Ynl0ZXM="}
+    obj = json.loads(AllPrimitives, json.dumps(data))
+    assert obj.i == 1
+    assert obj.f == 1.1
+    assert obj.b is True
+    assert obj.s == "hello"
+    assert obj.by == b"bytes"
+
+
+def test_all_primitives_errors():
+    # Int error
+    with pytest.raises(DeserializationError) as exc:
+        json.loads(AllPrimitives, '{"i": "not int", "f": 1.1, "b": true, "s": "a", "by": "a"}')
+    assert "i" in str(exc.value)
+
+    # Float error
+    with pytest.raises(DeserializationError) as exc:
+        json.loads(AllPrimitives, '{"i": 1, "f": "not float", "b": true, "s": "a", "by": "a"}')
+    assert "f" in str(exc.value)
+
+    # Bool error
+    with pytest.raises(DeserializationError) as exc:
+        json.loads(AllPrimitives, '{"i": 1, "f": 1.1, "b": "not bool", "s": "a", "by": "a"}')
+    assert "b" in str(exc.value)
+
+    # Str error
+    with pytest.raises(DeserializationError) as exc:
+        json.loads(AllPrimitives, '{"i": 1, "f": 1.1, "b": true, "s": 1, "by": "a"}')
+    assert "s" in str(exc.value)
+
+    # Bytes error
+    with pytest.raises(DeserializationError) as exc:
+        json.loads(AllPrimitives, '{"i": 1, "f": 1.1, "b": true, "s": "a", "by": 1}')
+    assert "by" in str(exc.value)
+
+
+@lodum
 class PrimitiveLists:
     def __init__(
         self,

@@ -153,7 +153,7 @@ def generate_schema(
 
 def _build_dump_expr(
     ftype: Type[Any],
-    val_node: ast.AST,
+    val_node: ast.expr,
     context: Dict[str, Any],
     cls: Type[Any],
     i: int,
@@ -172,9 +172,13 @@ def _build_dump_expr(
 
     if ftype in PRIMITIVE_TYPES:
         dump_meth = PRIMITIVE_TYPES[ftype]
+        type_test: ast.expr
         if ftype is float:
             type_test = ast.Tuple(
-                elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                elts=[
+                    ast.Name(id="float", ctx=ast.Load()),
+                    ast.Name(id="int", ctx=ast.Load()),
+                ],
                 ctx=ast.Load(),
             )
         else:
@@ -187,7 +191,11 @@ def _build_dump_expr(
                 keywords=[],
             ),
             body=ast.Call(
-                func=ast.Attribute(value=ast.Name(id="dumper", ctx=ast.Load()), attr=dump_meth, ctx=ast.Load()),
+                func=ast.Attribute(
+                    value=ast.Name(id="dumper", ctx=ast.Load()),
+                    attr=dump_meth,
+                    ctx=ast.Load(),
+                ),
                 args=[val_node],
                 keywords=[],
             ),
@@ -196,7 +204,11 @@ def _build_dump_expr(
                 args=[
                     val_node,
                     ast.Name(id="dumper", ctx=ast.Load()),
-                    ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                    ast.BinOp(
+                        left=ast.Name(id="depth", ctx=ast.Load()),
+                        op=ast.Add(),
+                        right=ast.Constant(value=1),
+                    ),
                     ast.Name(id="seen", ctx=ast.Load()),
                 ],
                 keywords=[],
@@ -210,9 +222,13 @@ def _build_dump_expr(
         # Inline comprehension if item_type is primitive
         if item_type in PRIMITIVE_TYPES:
             item_dump_meth = PRIMITIVE_TYPES[item_type]
+            item_type_test: ast.expr
             if item_type is float:
                 item_type_test = ast.Tuple(
-                    elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                    elts=[
+                        ast.Name(id="float", ctx=ast.Load()),
+                        ast.Name(id="int", ctx=ast.Load()),
+                    ],
                     ctx=ast.Load(),
                 )
             else:
@@ -225,7 +241,11 @@ def _build_dump_expr(
                     keywords=[],
                 ),
                 body=ast.Call(
-                    func=ast.Attribute(value=ast.Name(id="dumper", ctx=ast.Load()), attr=item_dump_meth, ctx=ast.Load()),
+                    func=ast.Attribute(
+                        value=ast.Name(id="dumper", ctx=ast.Load()),
+                        attr=item_dump_meth,
+                        ctx=ast.Load(),
+                    ),
                     args=[ast.Name(id="item", ctx=ast.Load())],
                     keywords=[],
                 ),
@@ -234,13 +254,17 @@ def _build_dump_expr(
                     args=[
                         ast.Name(id="item", ctx=ast.Load()),
                         ast.Name(id="dumper", ctx=ast.Load()),
-                        ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                        ast.BinOp(
+                            left=ast.Name(id="depth", ctx=ast.Load()),
+                            op=ast.Add(),
+                            right=ast.Constant(value=1),
+                        ),
                         ast.Name(id="seen", ctx=ast.Load()),
                     ],
                     keywords=[],
                 ),
             )
-            
+
             # Note: For set/tuple we still produce a list here because lodum dumpers expect list-like for sequences in JSON/MsgPack etc.
             comprehension = ast.ListComp(
                 elt=elt_dump_expr,
@@ -248,6 +272,7 @@ def _build_dump_expr(
                     ast.comprehension(
                         target=ast.Name(id="item", ctx=ast.Store()),
                         iter=val_node,
+                        ifs=[],
                         is_async=0,
                     )
                 ],
@@ -260,9 +285,13 @@ def _build_dump_expr(
             k_type, v_type = args
             if k_type is str and v_type in PRIMITIVE_TYPES:
                 v_dump_meth = PRIMITIVE_TYPES[v_type]
+                v_type_test: ast.expr
                 if v_type is float:
                     v_type_test = ast.Tuple(
-                        elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                        elts=[
+                            ast.Name(id="float", ctx=ast.Load()),
+                            ast.Name(id="int", ctx=ast.Load()),
+                        ],
                         ctx=ast.Load(),
                     )
                 else:
@@ -275,7 +304,11 @@ def _build_dump_expr(
                         keywords=[],
                     ),
                     body=ast.Call(
-                        func=ast.Attribute(value=ast.Name(id="dumper", ctx=ast.Load()), attr=v_dump_meth, ctx=ast.Load()),
+                        func=ast.Attribute(
+                            value=ast.Name(id="dumper", ctx=ast.Load()),
+                            attr=v_dump_meth,
+                            ctx=ast.Load(),
+                        ),
                         args=[ast.Name(id="v", ctx=ast.Load())],
                         keywords=[],
                     ),
@@ -284,7 +317,11 @@ def _build_dump_expr(
                         args=[
                             ast.Name(id="v", ctx=ast.Load()),
                             ast.Name(id="dumper", ctx=ast.Load()),
-                            ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                            ast.BinOp(
+                                left=ast.Name(id="depth", ctx=ast.Load()),
+                                op=ast.Add(),
+                                right=ast.Constant(value=1),
+                            ),
                             ast.Name(id="seen", ctx=ast.Load()),
                         ],
                         keywords=[],
@@ -293,12 +330,29 @@ def _build_dump_expr(
 
                 # {str(k): dumper.dump_X(v) for k, v in val_node.items()}
                 dict_comp = ast.DictComp(
-                    key=ast.Call(func=ast.Name(id="str", ctx=ast.Load()), args=[ast.Name(id="k", ctx=ast.Load())], keywords=[]),
+                    key=ast.Call(
+                        func=ast.Name(id="str", ctx=ast.Load()),
+                        args=[ast.Name(id="k", ctx=ast.Load())],
+                        keywords=[],
+                    ),
                     value=val_dump_expr,
                     generators=[
                         ast.comprehension(
-                            target=ast.Tuple(elts=[ast.Name(id="k", ctx=ast.Store()), ast.Name(id="v", ctx=ast.Store())], ctx=ast.Store()),
-                            iter=ast.Call(func=ast.Attribute(value=val_node, attr="items", ctx=ast.Load()), args=[], keywords=[]),
+                            target=ast.Tuple(
+                                elts=[
+                                    ast.Name(id="k", ctx=ast.Store()),
+                                    ast.Name(id="v", ctx=ast.Store()),
+                                ],
+                                ctx=ast.Store(),
+                            ),
+                            iter=ast.Call(
+                                func=ast.Attribute(
+                                    value=val_node, attr="items", ctx=ast.Load()
+                                ),
+                                args=[],
+                                keywords=[],
+                            ),
+                            ifs=[],
                             is_async=0,
                         )
                     ],
@@ -315,7 +369,11 @@ def _build_dump_expr(
             args=[
                 val_node,
                 ast.Name(id="dumper", ctx=ast.Load()),
-                ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                ast.BinOp(
+                    left=ast.Name(id="depth", ctx=ast.Load()),
+                    op=ast.Add(),
+                    right=ast.Constant(value=1),
+                ),
                 ast.Name(id="seen", ctx=ast.Load()),
             ],
             keywords=[],
@@ -327,7 +385,11 @@ def _build_dump_expr(
             args=[
                 val_node,
                 ast.Name(id="dumper", ctx=ast.Load()),
-                ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+                ast.BinOp(
+                    left=ast.Name(id="depth", ctx=ast.Load()),
+                    op=ast.Add(),
+                    right=ast.Constant(value=1),
+                ),
                 ast.Name(id="seen", ctx=ast.Load()),
             ],
             keywords=[],
@@ -369,14 +431,6 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
     )
 
     body: list[ast.stmt] = []
-
-    PRIMITIVE_TYPES = {
-        int: "dump_int",
-        str: "dump_str",
-        float: "dump_float",
-        bool: "dump_bool",
-        bytes: "dump_bytes",
-    }
 
     # _cls = cls
     body.append(
@@ -455,6 +509,7 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
             ctx=ast.Store(),
         )
 
+        dump_expr: ast.expr
         if field_info.serializer:
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer
@@ -465,7 +520,9 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                 keywords=[],
             )
         else:
-            dump_expr = _build_dump_expr(field_info.type, ast.Name(id="val", ctx=ast.Load()), context, cls, i)
+            dump_expr = _build_dump_expr(
+                field_info.type, ast.Name(id="val", ctx=ast.Load()), context, cls, i
+            )
 
         body.append(
             ast.Assign(
@@ -637,11 +694,11 @@ def _get_dump_handler(
 
 def _build_load_expr(
     ftype: Type[Any],
-    loader_node: ast.AST,
+    loader_node: ast.expr,
     context: Dict[str, Any],
     cls: Type[Any],
     i: int,
-    path_node: ast.AST,
+    path_node: ast.expr,
 ) -> ast.expr:
     """
     Builds an optimized AST expression to load a value of type 'ftype'.
@@ -667,69 +724,17 @@ def _build_load_expr(
         )
 
     origin = get_origin(ftype) or ftype
-    if origin in (list, tuple, set):
-        args = get_args(ftype)
-        item_type = args[0] if args else Any
-        if item_type in PRIMITIVE_LOADERS:
-            item_load_meth = PRIMITIVE_LOADERS[item_type]
-            # [item_l.load_X() for item_l in loader_node.load_list()]
-            comp = ast.ListComp(
-                elt=ast.Call(
-                    func=ast.Attribute(value=ast.Name(id="item_l", ctx=ast.Load()), attr=item_load_meth, ctx=ast.Load()),
-                    args=[],
-                    keywords=[],
-                ),
-                generators=[
-                    ast.comprehension(
-                        target=ast.Name(id="item_l", ctx=ast.Store()),
-                        iter=ast.Call(
-                            func=ast.Attribute(value=loader_node, attr="load_list", ctx=ast.Load()),
-                            args=[],
-                            keywords=[],
-                        ),
-                        is_async=0,
-                    )
-                ],
-            )
-            if origin is set:
-                return ast.Call(func=ast.Name(id="set", ctx=ast.Load()), args=[comp], keywords=[])
-            if origin is tuple:
-                return ast.Call(func=ast.Name(id="tuple", ctx=ast.Load()), args=[comp], keywords=[])
-            return comp
-
-    if origin is dict:
-        args = get_args(ftype)
-        if len(args) == 2:
-            k_type, v_type = args
-            if k_type is str and v_type in PRIMITIVE_LOADERS:
-                v_load_meth = PRIMITIVE_LOADERS[v_type]
-                # {k: v_l.load_X() for k, v_l in loader_node.load_dict()}
-                return ast.DictComp(
-                    key=ast.Name(id="k", ctx=ast.Load()),
-                    value=ast.Call(
-                        func=ast.Attribute(value=ast.Name(id="v_l", ctx=ast.Load()), attr=v_load_meth, ctx=ast.Load()),
-                        args=[],
-                        keywords=[],
-                    ),
-                    generators=[
-                        ast.comprehension(
-                            target=ast.Tuple(elts=[ast.Name(id="k", ctx=ast.Store()), ast.Name(id="v_l", ctx=ast.Store())], ctx=ast.Store()),
-                            iter=ast.Call(
-                                func=ast.Attribute(value=loader_node, attr="load_dict", ctx=ast.Load()),
-                                args=[],
-                                keywords=[],
-                            ),
-                            is_async=0,
-                        )
-                    ],
-                )
 
     # Pre-resolve handler
-    load_call_args = [
+    load_call_args: list[ast.expr] = [
         ast.Name(id=f"type_{i}", ctx=ast.Load()),
         loader_node,
         path_node,
-        ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
+        ast.BinOp(
+            left=ast.Name(id="depth", ctx=ast.Load()),
+            op=ast.Add(),
+            right=ast.Constant(value=1),
+        ),
     ]
     context[f"type_{i}"] = ftype
 
@@ -819,12 +824,21 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         ast.If(
             test=ast.Call(
                 func=ast.Name(id="isinstance", ctx=ast.Load()),
-                args=[ast.Name(id="raw_data", ctx=ast.Load()), ast.Name(id="dict", ctx=ast.Load())],
+                args=[
+                    ast.Name(id="raw_data", ctx=ast.Load()),
+                    ast.Name(id="dict", ctx=ast.Load()),
+                ],
                 keywords=[],
             ),
             body=[
-                ast.Assign(targets=[ast.Name(id="data", ctx=ast.Store())], value=ast.Name(id="raw_data", ctx=ast.Load())),
-                ast.Assign(targets=[ast.Name(id="is_raw", ctx=ast.Store())], value=ast.Constant(value=True)),
+                ast.Assign(
+                    targets=[ast.Name(id="data", ctx=ast.Store())],
+                    value=ast.Name(id="raw_data", ctx=ast.Load()),
+                ),
+                ast.Assign(
+                    targets=[ast.Name(id="is_raw", ctx=ast.Store())],
+                    value=ast.Constant(value=True),
+                ),
             ],
             orelse=[
                 ast.Try(
@@ -837,24 +851,33 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                 generators=[
                                     ast.comprehension(
                                         target=ast.Tuple(
-                                            elts=[ast.Name(id="k", ctx=ast.Store()), ast.Name(id="v", ctx=ast.Store())],
+                                            elts=[
+                                                ast.Name(id="k", ctx=ast.Store()),
+                                                ast.Name(id="v", ctx=ast.Store()),
+                                            ],
                                             ctx=ast.Store(),
                                         ),
                                         iter=ast.Call(
                                             func=ast.Attribute(
-                                                value=ast.Name(id="loader", ctx=ast.Load()),
+                                                value=ast.Name(
+                                                    id="loader", ctx=ast.Load()
+                                                ),
                                                 attr="load_dict",
                                                 ctx=ast.Load(),
                                             ),
                                             args=[],
                                             keywords=[],
                                         ),
+                                        ifs=[],
                                         is_async=0,
                                     )
                                 ],
                             ),
                         ),
-                        ast.Assign(targets=[ast.Name(id="is_raw", ctx=ast.Store())], value=ast.Constant(value=False)),
+                        ast.Assign(
+                            targets=[ast.Name(id="is_raw", ctx=ast.Store())],
+                            value=ast.Constant(value=False),
+                        ),
                     ],
                     handlers=[
                         ast.ExceptHandler(
@@ -863,13 +886,29 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                             body=[
                                 ast.Raise(
                                     exc=ast.Call(
-                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        func=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         args=[
                                             ast.JoinedStr(
                                                 values=[
-                                                    ast.Constant(value="Expected a dictionary to decode into class "),
-                                                    ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="_cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
-                                                    ast.Constant(value=", but received a different type."),
+                                                    ast.Constant(
+                                                        value="Expected a dictionary to decode into class "
+                                                    ),
+                                                    ast.FormattedValue(
+                                                        value=ast.Attribute(
+                                                            value=ast.Name(
+                                                                id="_cls",
+                                                                ctx=ast.Load(),
+                                                            ),
+                                                            attr="__name__",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        conversion=-1,
+                                                    ),
+                                                    ast.Constant(
+                                                        value=", but received a different type."
+                                                    ),
                                                 ]
                                             ),
                                             ast.Name(id="path", ctx=ast.Load()),
@@ -888,7 +927,12 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
     )
 
     # args = {}
-    body.append(ast.Assign(targets=[ast.Name(id="args_dict", ctx=ast.Store())], value=ast.Dict(keys=[], values=[])))
+    body.append(
+        ast.Assign(
+            targets=[ast.Name(id="args_dict", ctx=ast.Store())],
+            value=ast.Dict(keys=[], values=[]),
+        )
+    )
 
     tag = getattr(cls, "_lodum_tag", None)
     tag_value = getattr(cls, "_lodum_tag_value", None)
@@ -940,14 +984,28 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                         body=[
                             ast.Raise(
                                 exc=ast.Call(
-                                    func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                    func=ast.Name(
+                                        id="DeserializationError", ctx=ast.Load()
+                                    ),
                                     args=[
                                         ast.JoinedStr(
                                             values=[
-                                                ast.Constant(value="Invalid tag value: expected "),
-                                                ast.FormattedValue(value=ast.Name(id="tag_value", ctx=ast.Load()), conversion=-1),
+                                                ast.Constant(
+                                                    value="Invalid tag value: expected "
+                                                ),
+                                                ast.FormattedValue(
+                                                    value=ast.Name(
+                                                        id="tag_value", ctx=ast.Load()
+                                                    ),
+                                                    conversion=-1,
+                                                ),
                                                 ast.Constant(value=", got "),
-                                                ast.FormattedValue(value=ast.Name(id="actual_tag", ctx=ast.Load()), conversion=-1),
+                                                ast.FormattedValue(
+                                                    value=ast.Name(
+                                                        id="actual_tag", ctx=ast.Load()
+                                                    ),
+                                                    conversion=-1,
+                                                ),
                                             ]
                                         ),
                                         ast.Name(id="path", ctx=ast.Load()),
@@ -982,7 +1040,9 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     test=ast.Name(id="path", ctx=ast.Load()),
                     body=ast.JoinedStr(
                         values=[
-                            ast.FormattedValue(value=ast.Name(id="path", ctx=ast.Load()), conversion=-1),
+                            ast.FormattedValue(
+                                value=ast.Name(id="path", ctx=ast.Load()), conversion=-1
+                            ),
                             ast.Constant(value=f".{field_json_name}"),
                         ]
                     ),
@@ -1027,7 +1087,9 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                         body=ast.Name(id="val_loader", ctx=ast.Load()),
                                         orelse=ast.Call(
                                             func=ast.Attribute(
-                                                value=ast.Name(id="val_loader", ctx=ast.Load()),
+                                                value=ast.Name(
+                                                    id="val_loader", ctx=ast.Load()
+                                                ),
                                                 attr="load_any",
                                                 ctx=ast.Load(),
                                             ),
@@ -1047,15 +1109,29 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                             body=[
                                 ast.Raise(
                                     exc=ast.Call(
-                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        func=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         args=[
-                                            ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                            ast.Attribute(
+                                                value=ast.Name(id="e", ctx=ast.Load()),
+                                                attr="raw_message",
+                                                ctx=ast.Load(),
+                                            ),
                                             ast.BoolOp(
                                                 op=ast.Or(),
                                                 values=[
-                                                    ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
-                                                    ast.Name(id="field_path", ctx=ast.Load()),
-                                                ]
+                                                    ast.Attribute(
+                                                        value=ast.Name(
+                                                            id="e", ctx=ast.Load()
+                                                        ),
+                                                        attr="path",
+                                                        ctx=ast.Load(),
+                                                    ),
+                                                    ast.Name(
+                                                        id="field_path", ctx=ast.Load()
+                                                    ),
+                                                ],
                                             ),
                                         ],
                                         keywords=[],
@@ -1083,14 +1159,24 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                     ast.UnaryOp(
                                         op=ast.Not(),
                                         operand=ast.Call(
-                                            func=ast.Name(id="isinstance", ctx=ast.Load()),
-                                            args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())],
+                                            func=ast.Name(
+                                                id="isinstance", ctx=ast.Load()
+                                            ),
+                                            args=[
+                                                ast.Name(
+                                                    id="val_loader", ctx=ast.Load()
+                                                ),
+                                                ast.Name(id="int", ctx=ast.Load()),
+                                            ],
                                             keywords=[],
                                         ),
                                     ),
                                     ast.Call(
                                         func=ast.Name(id="isinstance", ctx=ast.Load()),
-                                        args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="bool", ctx=ast.Load())],
+                                        args=[
+                                            ast.Name(id="val_loader", ctx=ast.Load()),
+                                            ast.Name(id="bool", ctx=ast.Load()),
+                                        ],
                                         keywords=[],
                                     ),
                                 ],
@@ -1098,16 +1184,28 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                             body=[
                                 ast.Raise(
                                     exc=ast.Call(
-                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        func=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         args=[
                                             ast.JoinedStr(
                                                 values=[
-                                                    ast.Constant(value="Expected int, got "),
+                                                    ast.Constant(
+                                                        value="Expected int, got "
+                                                    ),
                                                     ast.FormattedValue(
                                                         value=ast.Attribute(
                                                             value=ast.Call(
-                                                                func=ast.Name(id="type", ctx=ast.Load()),
-                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                func=ast.Name(
+                                                                    id="type",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                                args=[
+                                                                    ast.Name(
+                                                                        id="val_loader",
+                                                                        ctx=ast.Load(),
+                                                                    )
+                                                                ],
                                                                 keywords=[],
                                                             ),
                                                             attr="__name__",
@@ -1145,23 +1243,38 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                 op=ast.Not(),
                                 operand=ast.Call(
                                     func=ast.Name(id="isinstance", ctx=ast.Load()),
-                                    args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="str", ctx=ast.Load())],
+                                    args=[
+                                        ast.Name(id="val_loader", ctx=ast.Load()),
+                                        ast.Name(id="str", ctx=ast.Load()),
+                                    ],
                                     keywords=[],
                                 ),
                             ),
                             body=[
                                 ast.Raise(
                                     exc=ast.Call(
-                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        func=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         args=[
                                             ast.JoinedStr(
                                                 values=[
-                                                    ast.Constant(value="Expected str, got "),
+                                                    ast.Constant(
+                                                        value="Expected str, got "
+                                                    ),
                                                     ast.FormattedValue(
                                                         value=ast.Attribute(
                                                             value=ast.Call(
-                                                                func=ast.Name(id="type", ctx=ast.Load()),
-                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                func=ast.Name(
+                                                                    id="type",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                                args=[
+                                                                    ast.Name(
+                                                                        id="val_loader",
+                                                                        ctx=ast.Load(),
+                                                                    )
+                                                                ],
                                                                 keywords=[],
                                                             ),
                                                             attr="__name__",
@@ -1201,7 +1314,13 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                     func=ast.Name(id="isinstance", ctx=ast.Load()),
                                     args=[
                                         ast.Name(id="val_loader", ctx=ast.Load()),
-                                        ast.Tuple(elts=[ast.Name(id="float", ctx=ast.Load()), ast.Name(id="int", ctx=ast.Load())], ctx=ast.Load()),
+                                        ast.Tuple(
+                                            elts=[
+                                                ast.Name(id="float", ctx=ast.Load()),
+                                                ast.Name(id="int", ctx=ast.Load()),
+                                            ],
+                                            ctx=ast.Load(),
+                                        ),
                                     ],
                                     keywords=[],
                                 ),
@@ -1209,16 +1328,28 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                             body=[
                                 ast.Raise(
                                     exc=ast.Call(
-                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        func=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         args=[
                                             ast.JoinedStr(
                                                 values=[
-                                                    ast.Constant(value="Expected float, got "),
+                                                    ast.Constant(
+                                                        value="Expected float, got "
+                                                    ),
                                                     ast.FormattedValue(
                                                         value=ast.Attribute(
                                                             value=ast.Call(
-                                                                func=ast.Name(id="type", ctx=ast.Load()),
-                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                func=ast.Name(
+                                                                    id="type",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                                args=[
+                                                                    ast.Name(
+                                                                        id="val_loader",
+                                                                        ctx=ast.Load(),
+                                                                    )
+                                                                ],
                                                                 keywords=[],
                                                             ),
                                                             attr="__name__",
@@ -1260,23 +1391,38 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                 op=ast.Not(),
                                 operand=ast.Call(
                                     func=ast.Name(id="isinstance", ctx=ast.Load()),
-                                    args=[ast.Name(id="val_loader", ctx=ast.Load()), ast.Name(id="bool", ctx=ast.Load())],
+                                    args=[
+                                        ast.Name(id="val_loader", ctx=ast.Load()),
+                                        ast.Name(id="bool", ctx=ast.Load()),
+                                    ],
                                     keywords=[],
                                 ),
                             ),
                             body=[
                                 ast.Raise(
                                     exc=ast.Call(
-                                        func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        func=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         args=[
                                             ast.JoinedStr(
                                                 values=[
-                                                    ast.Constant(value="Expected bool, got "),
+                                                    ast.Constant(
+                                                        value="Expected bool, got "
+                                                    ),
                                                     ast.FormattedValue(
                                                         value=ast.Attribute(
                                                             value=ast.Call(
-                                                                func=ast.Name(id="type", ctx=ast.Load()),
-                                                                args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                                                func=ast.Name(
+                                                                    id="type",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                                args=[
+                                                                    ast.Name(
+                                                                        id="val_loader",
+                                                                        ctx=ast.Load(),
+                                                                    )
+                                                                ],
                                                                 keywords=[],
                                                             ),
                                                             attr="__name__",
@@ -1314,7 +1460,9 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                 ast.Assign(
                                     targets=[
                                         ast.Subscript(
-                                            value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                            value=ast.Name(
+                                                id="args_dict", ctx=ast.Load()
+                                            ),
                                             slice=ast.Constant(value=field_name),
                                             ctx=ast.Store(),
                                         )
@@ -1325,27 +1473,50 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                             attr="load_bytes_value",
                                             ctx=ast.Load(),
                                         ),
-                                        args=[ast.Name(id="val_loader", ctx=ast.Load())],
+                                        args=[
+                                            ast.Name(id="val_loader", ctx=ast.Load())
+                                        ],
                                         keywords=[],
                                     ),
                                 )
                             ],
                             handlers=[
                                 ast.ExceptHandler(
-                                    type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                    type=ast.Name(
+                                        id="DeserializationError", ctx=ast.Load()
+                                    ),
                                     name="e",
                                     body=[
                                         ast.Raise(
                                             exc=ast.Call(
-                                                func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                func=ast.Name(
+                                                    id="DeserializationError",
+                                                    ctx=ast.Load(),
+                                                ),
                                                 args=[
-                                                    ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                    ast.Attribute(
+                                                        value=ast.Name(
+                                                            id="e", ctx=ast.Load()
+                                                        ),
+                                                        attr="raw_message",
+                                                        ctx=ast.Load(),
+                                                    ),
                                                     ast.BoolOp(
                                                         op=ast.Or(),
                                                         values=[
-                                                            ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
-                                                            ast.Name(id="field_path", ctx=ast.Load()),
-                                                        ]
+                                                            ast.Attribute(
+                                                                value=ast.Name(
+                                                                    id="e",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                                attr="path",
+                                                                ctx=ast.Load(),
+                                                            ),
+                                                            ast.Name(
+                                                                id="field_path",
+                                                                ctx=ast.Load(),
+                                                            ),
+                                                        ],
                                                     ),
                                                 ],
                                                 keywords=[],
@@ -1369,14 +1540,18 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                     ast.Assign(
                                         targets=[
                                             ast.Subscript(
-                                                value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                                value=ast.Name(
+                                                    id="args_dict", ctx=ast.Load()
+                                                ),
                                                 slice=ast.Constant(value=field_name),
                                                 ctx=ast.Store(),
                                             )
                                         ],
                                         value=ast.Call(
                                             func=ast.Attribute(
-                                                value=ast.Name(id="val_loader", ctx=ast.Load()),
+                                                value=ast.Name(
+                                                    id="val_loader", ctx=ast.Load()
+                                                ),
                                                 attr=load_meth,
                                                 ctx=ast.Load(),
                                             ),
@@ -1387,20 +1562,41 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                 ],
                                 handlers=[
                                     ast.ExceptHandler(
-                                        type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                        type=ast.Name(
+                                            id="DeserializationError", ctx=ast.Load()
+                                        ),
                                         name="e",
                                         body=[
                                             ast.Raise(
                                                 exc=ast.Call(
-                                                    func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                                    func=ast.Name(
+                                                        id="DeserializationError",
+                                                        ctx=ast.Load(),
+                                                    ),
                                                     args=[
-                                                        ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                        ast.Attribute(
+                                                            value=ast.Name(
+                                                                id="e", ctx=ast.Load()
+                                                            ),
+                                                            attr="raw_message",
+                                                            ctx=ast.Load(),
+                                                        ),
                                                         ast.BoolOp(
                                                             op=ast.Or(),
                                                             values=[
-                                                                ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
-                                                                ast.Name(id="field_path", ctx=ast.Load()),
-                                                            ]
+                                                                ast.Attribute(
+                                                                    value=ast.Name(
+                                                                        id="e",
+                                                                        ctx=ast.Load(),
+                                                                    ),
+                                                                    attr="path",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                                ast.Name(
+                                                                    id="field_path",
+                                                                    ctx=ast.Load(),
+                                                                ),
+                                                            ],
                                                         ),
                                                     ],
                                                     keywords=[],
@@ -1424,10 +1620,17 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     ast.Assign(
                         targets=[ast.Name(id="val_to_load", ctx=ast.Store())],
                         value=ast.IfExp(
-                            test=ast.UnaryOp(op=ast.Not(), operand=ast.Name(id="is_raw", ctx=ast.Load())),
+                            test=ast.UnaryOp(
+                                op=ast.Not(),
+                                operand=ast.Name(id="is_raw", ctx=ast.Load()),
+                            ),
                             body=ast.Name(id="val_loader", ctx=ast.Load()),
                             orelse=ast.Call(
-                                func=ast.Call(func=ast.Name(id="type", ctx=ast.Load()), args=[ast.Name(id="loader", ctx=ast.Load())], keywords=[]),
+                                func=ast.Call(
+                                    func=ast.Name(id="type", ctx=ast.Load()),
+                                    args=[ast.Name(id="loader", ctx=ast.Load())],
+                                    keywords=[],
+                                ),
                                 args=[ast.Name(id="val_loader", ctx=ast.Load())],
                                 keywords=[],
                             ),
@@ -1435,30 +1638,14 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     )
                 )
 
-                load_call_args = [
-                    ast.Name(id=type_name, ctx=ast.Load()),
+                load_expr = _build_load_expr(
+                    ftype,
                     ast.Name(id="val_to_load", ctx=ast.Load()),
+                    context,
+                    cls,
+                    i,
                     ast.Name(id="field_path", ctx=ast.Load()),
-                    ast.BinOp(left=ast.Name(id="depth", ctx=ast.Load()), op=ast.Add(), right=ast.Constant(value=1)),
-                ]
-
-                try:
-                    # Pre-resolve handler
-                    handler = _get_load_handler(ftype, excluding=cls)
-                    handler_name = f"h_{i}"
-                    context[handler_name] = handler
-                    load_call_val = ast.Call(
-                        func=ast.Name(id=handler_name, ctx=ast.Load()),
-                        args=load_call_args,
-                        keywords=[],
-                    )
-                except ValueError:
-                    # Recursive reference, fall back to global load_fn
-                    load_call_val = ast.Call(
-                        func=ast.Name(id="load_fn", ctx=ast.Load()),
-                        args=load_call_args,
-                        keywords=[],
-                    )
+                )
 
                 field_present_body.append(
                     ast.Try(
@@ -1471,25 +1658,45 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                         ctx=ast.Store(),
                                     )
                                 ],
-                                value=load_call_val,
+                                value=load_expr,
                             )
                         ],
                         handlers=[
                             ast.ExceptHandler(
-                                type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                type=ast.Name(
+                                    id="DeserializationError", ctx=ast.Load()
+                                ),
                                 name="e",
                                 body=[
                                     ast.Raise(
                                         exc=ast.Call(
-                                            func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                            func=ast.Name(
+                                                id="DeserializationError",
+                                                ctx=ast.Load(),
+                                            ),
                                             args=[
-                                                ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                ast.Attribute(
+                                                    value=ast.Name(
+                                                        id="e", ctx=ast.Load()
+                                                    ),
+                                                    attr="raw_message",
+                                                    ctx=ast.Load(),
+                                                ),
                                                 ast.BoolOp(
                                                     op=ast.Or(),
                                                     values=[
-                                                        ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
-                                                        ast.Name(id="field_path", ctx=ast.Load()),
-                                                    ]
+                                                        ast.Attribute(
+                                                            value=ast.Name(
+                                                                id="e", ctx=ast.Load()
+                                                            ),
+                                                            attr="path",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        ast.Name(
+                                                            id="field_path",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                    ],
                                                 ),
                                             ],
                                             keywords=[],
@@ -1516,7 +1723,11 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                             ctx=ast.Store(),
                         )
                     ],
-                    value=ast.Call(func=ast.Name(id=default_getter, ctx=ast.Load()), args=[], keywords=[]),
+                    value=ast.Call(
+                        func=ast.Name(id=default_getter, ctx=ast.Load()),
+                        args=[],
+                        keywords=[],
+                    ),
                 )
             )
         else:
@@ -1530,7 +1741,14 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                     ast.Constant(value="Missing required field '"),
                                     ast.Constant(value=field_json_name),
                                     ast.Constant(value="' for class "),
-                                    ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="_cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
+                                    ast.FormattedValue(
+                                        value=ast.Attribute(
+                                            value=ast.Name(id="_cls", ctx=ast.Load()),
+                                            attr="__name__",
+                                            ctx=ast.Load(),
+                                        ),
+                                        conversion=-1,
+                                    ),
                                 ]
                             ),
                             ast.Name(id="path", ctx=ast.Load()),
@@ -1553,7 +1771,11 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         )
 
         if field_info.validate:
-            validators = field_info.validate if isinstance(field_info.validate, list) else [field_info.validate]
+            validators = (
+                field_info.validate
+                if isinstance(field_info.validate, list)
+                else [field_info.validate]
+            )
             for j, v in enumerate(validators):
                 v_name = f"v_{i}_{j}"
                 context[v_name] = v
@@ -1565,7 +1787,9 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                                     func=ast.Name(id=v_name, ctx=ast.Load()),
                                     args=[
                                         ast.Subscript(
-                                            value=ast.Name(id="args_dict", ctx=ast.Load()),
+                                            value=ast.Name(
+                                                id="args_dict", ctx=ast.Load()
+                                            ),
                                             slice=ast.Constant(value=field_name),
                                             ctx=ast.Load(),
                                         )
@@ -1576,20 +1800,40 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                         ],
                         handlers=[
                             ast.ExceptHandler(
-                                type=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                type=ast.Name(
+                                    id="DeserializationError", ctx=ast.Load()
+                                ),
                                 name="e",
                                 body=[
                                     ast.Raise(
                                         exc=ast.Call(
-                                            func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                            func=ast.Name(
+                                                id="DeserializationError",
+                                                ctx=ast.Load(),
+                                            ),
                                             args=[
-                                                ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="raw_message", ctx=ast.Load()),
+                                                ast.Attribute(
+                                                    value=ast.Name(
+                                                        id="e", ctx=ast.Load()
+                                                    ),
+                                                    attr="raw_message",
+                                                    ctx=ast.Load(),
+                                                ),
                                                 ast.BoolOp(
                                                     op=ast.Or(),
                                                     values=[
-                                                        ast.Attribute(value=ast.Name(id="e", ctx=ast.Load()), attr="path", ctx=ast.Load()),
-                                                        ast.Name(id="field_path", ctx=ast.Load()),
-                                                    ]
+                                                        ast.Attribute(
+                                                            value=ast.Name(
+                                                                id="e", ctx=ast.Load()
+                                                            ),
+                                                            attr="path",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                        ast.Name(
+                                                            id="field_path",
+                                                            ctx=ast.Load(),
+                                                        ),
+                                                    ],
                                                 ),
                                             ],
                                             keywords=[],
@@ -1612,7 +1856,11 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     value=ast.Call(
                         func=ast.Name(id="_cls", ctx=ast.Load()),
                         args=[],
-                        keywords=[ast.keyword(arg=None, value=ast.Name(id="args_dict", ctx=ast.Load()))],
+                        keywords=[
+                            ast.keyword(
+                                arg=None, value=ast.Name(id="args_dict", ctx=ast.Load())
+                            )
+                        ],
                     )
                 )
             ],
@@ -1623,14 +1871,30 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
                     body=[
                         ast.Raise(
                             exc=ast.Call(
-                                func=ast.Name(id="DeserializationError", ctx=ast.Load()),
+                                func=ast.Name(
+                                    id="DeserializationError", ctx=ast.Load()
+                                ),
                                 args=[
                                     ast.JoinedStr(
                                         values=[
-                                            ast.Constant(value="Failed to instantiate "),
-                                            ast.FormattedValue(value=ast.Attribute(value=ast.Name(id="_cls", ctx=ast.Load()), attr="__name__", ctx=ast.Load()), conversion=-1),
+                                            ast.Constant(
+                                                value="Failed to instantiate "
+                                            ),
+                                            ast.FormattedValue(
+                                                value=ast.Attribute(
+                                                    value=ast.Name(
+                                                        id="_cls", ctx=ast.Load()
+                                                    ),
+                                                    attr="__name__",
+                                                    ctx=ast.Load(),
+                                                ),
+                                                conversion=-1,
+                                            ),
                                             ast.Constant(value=". Original error: "),
-                                            ast.FormattedValue(value=ast.Name(id="e", ctx=ast.Load()), conversion=-1),
+                                            ast.FormattedValue(
+                                                value=ast.Name(id="e", ctx=ast.Load()),
+                                                conversion=-1,
+                                            ),
                                         ]
                                     ),
                                     ast.Name(id="path", ctx=ast.Load()),
@@ -2413,9 +2677,7 @@ registry.register(
 )
 registry.register(
     Any,
-    TypeHandler(
-        dump, _load_any, _schema_any
-    ),  # Use global dump for Any
+    TypeHandler(dump, _load_any, _schema_any),  # Use global dump for Any
 )
 
 # Containers
@@ -2423,7 +2685,9 @@ registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
 registry.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
 registry.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
 registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
-registry.register(cast(Type[Any], Union), TypeHandler(dump, _load_union, _schema_union))  # Use global dump for Union
+registry.register(
+    cast(Type[Any], Union), TypeHandler(dump, _load_union, _schema_union)
+)  # Use global dump for Union
 
 # Library types
 registry.register(
