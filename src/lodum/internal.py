@@ -554,8 +554,6 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         args=args,
         body=body,
         decorator_list=[],
-        returns=None,
-        type_comment=None,
     )
     return func_def, context
 
@@ -1913,8 +1911,6 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         args=args,
         body=body,
         decorator_list=[],
-        returns=None,
-        type_comment=None,
     )
     return func_def, context
 
