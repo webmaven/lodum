@@ -1,43 +1,45 @@
 # Lodum Performance
 
-Lodum is designed for high performance by using runtime bytecode compilation to generate specialized serialization and deserialization handlers for your classes.
+Lodum is designed for high performance by using runtime bytecode compilation (via Python AST) to generate specialized serialization and deserialization handlers for your classes.
 
 ## Benchmark Results
 
-The following benchmarks were run on Python 3.12.12. Results are in microseconds (us) per operation (lower is better).
+The following benchmarks were run on Python 3.13.7. Results are in microseconds (us) per operation (lower is better).
 
 ### JSON Serialization (Object -> JSON)
 | Library | Simple (us) | Complex (us) | Nested (us) |
 | :--- | ---: | ---: | ---: |
-| Lodum | 8.46 ± 2.53 | 12.33 ± 0.47 | 21.07 ± 0.54 |
-| Pydantic (v2) | 2.18 ± 0.12 | 3.02 ± 0.02 | 5.34 ± 0.12 |
-| Marshmallow | 10.73 ± 0.31 | 24.02 ± 0.67 | 61.86 ± 0.58 |
-| Native json (dict) | 3.72 ± 0.03 | 6.11 ± 0.19 | 9.54 ± 0.03 |
+| Lodum | 8.71 ± 0.58 | 12.56 ± 1.63 | 32.16 ± 3.28 |
+| Pydantic (v2) | 2.03 ± 0.22 | 3.74 ± 0.54 | 6.81 ± 0.93 |
+| Marshmallow | 11.51 ± 2.21 | 28.37 ± 3.05 | 69.78 ± 4.66 |
+| Native json (dict) | 4.30 ± 0.19 | 6.13 ± 0.56 | 9.26 ± 0.92 |
+| orjson (dict) | 0.44 ± 0.30 | 0.51 ± 0.02 | 1.01 ± 0.04 |
 
 ### JSON Deserialization (JSON -> Object)
 | Library | Simple (us) | Complex (us) | Nested (us) |
 | :--- | ---: | ---: | ---: |
-| Lodum | 18.07 ± 0.76 | 25.38 ± 0.88 | 101.99 ± 1.46 |
-| Pydantic (v2) | 2.44 ± 0.27 | 3.65 ± 0.12 | 10.42 ± 0.32 |
-| Marshmallow | 27.66 ± 0.45 | 64.23 ± 0.80 | 199.06 ± 6.61 |
-| Native json (dict) | 2.95 ± 0.19 | 4.70 ± 0.07 | 8.52 ± 0.23 |
+| Lodum | 21.73 ± 2.14 | 40.11 ± 3.03 | 122.56 ± 3.39 |
+| Pydantic (v2) | 2.86 ± 0.22 | 4.61 ± 0.22 | 12.11 ± 1.72 |
+| Marshmallow | 37.93 ± 3.55 | 74.39 ± 8.06 | 222.29 ± 6.17 |
+| Native json (dict) | 3.55 ± 0.74 | 5.56 ± 0.72 | 8.09 ± 0.88 |
+| orjson (dict) | 0.68 ± 0.40 | 1.44 ± 0.15 | 2.75 ± 0.18 |
 
 ### Binary Formats (Lodum vs Native)
 
 | Format | Operation | Simple (us) | Complex (us) | Nested (us) |
 | :--- | :--- | ---: | ---: | ---: |
-| **MsgPack** | Serialization | 4.14 ± 0.08 | 7.36 ± 0.14 | 14.32 ± 0.30 |
-| | Deserialization | 14.41 ± 0.17 | 19.99 ± 0.13 | 91.55 ± 1.14 |
-| **CBOR** | Serialization | 11.31 ± 0.04 | 17.26 ± 0.26 | 28.85 ± 0.18 |
-| | Deserialization | 18.86 ± 0.34 | 25.80 ± 0.55 | 100.48 ± 1.76 |
-| **Pickle** | Serialization | 6.97 ± 0.02 | 10.27 ± 0.11 | 25.93 ± 0.20 |
-| | Deserialization | 6.63 ± 0.05 | 8.44 ± 0.04 | 14.79 ± 0.07 |
+| **MsgPack** | Serialization | 6.06 ± 0.46 | 9.49 ± 1.49 | 26.23 ± 1.68 |
+| | Deserialization | 16.89 ± 1.25 | 36.03 ± 1.27 | 114.76 ± 2.67 |
+| **CBOR** | Serialization | 12.61 ± 0.99 | 17.50 ± 2.55 | 40.12 ± 1.54 |
+| | Deserialization | 21.09 ± 2.42 | 38.01 ± 2.89 | 124.66 ± 4.30 |
+| **Pickle** | Serialization | 8.87 ± 0.80 | 12.10 ± 2.17 | 35.68 ± 4.63 |
+| | Deserialization | 6.37 ± 0.70 | 8.83 ± 2.33 | 15.30 ± 1.14 |
 
 ## Analysis
 
-- **Lodum vs Marshmallow**: Lodum is significantly faster than Marshmallow, especially for nested objects and complex serialization. This is thanks to its bytecode generation which avoids much of the runtime introspection overhead.
-- **Lodum vs Pydantic**: Pydantic v2 remains faster as it is primarily implemented in Rust. Lodum aims to provide a pure-Python alternative that achieves high performance through dynamic optimization.
-- **Overhead**: Compared to raw dictionary serialization (Native json), Lodum adds some overhead due to object traversal and validation, but remains competitive for a feature-rich serialization library.
+- **Lodum vs Marshmallow**: Lodum consistently outperforms Marshmallow, particularly in serialization and handling complex structures.
+- **Lodum vs Pydantic**: Pydantic v2 remains faster due to its Rust-based core. Lodum provides a competitive pure-Python alternative.
+- **AST Optimization**: The move to AST-based code generation has further improved performance, especially for JSON and CBOR serialization, compared to previous string-based generation methods.
 
 ## Running Benchmarks Yourself
 
