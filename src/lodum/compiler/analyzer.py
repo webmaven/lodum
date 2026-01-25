@@ -9,8 +9,6 @@ from typing import (
     Optional,
 )
 
-_NAME_TO_TYPE_CACHE: dict[str, Type[Any]] = {}
-
 
 def _sanitize_name(name: str) -> str:
     """Sanitizes a string to be a valid Python identifier part."""
@@ -23,6 +21,7 @@ def _resolve_forward_ref(
     t: ForwardRef,
     context_cache: dict[Type[Any], Any],
     registry_handlers: dict[Type[Any], Any],
+    name_to_type_cache: dict[str, Type[Any]],
 ) -> Optional[Type[Any]]:
     ref_name = t.__forward_arg__
     # Try registry first
@@ -40,4 +39,4 @@ def _resolve_forward_ref(
         except TypeError:
             continue
 
-    return _NAME_TO_TYPE_CACHE.get(ref_name)
+    return name_to_type_cache.get(ref_name)

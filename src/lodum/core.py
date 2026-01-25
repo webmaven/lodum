@@ -3,20 +3,25 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import functools
+import threading
 from typing import (
     Any,
     Dict,
-    List,
-    Protocol,
-    Type,
     Iterator,
-    TypeVar,
+    List,
     Optional,
+    Type,
+    TypeVar,
+    Protocol,
+    TYPE_CHECKING,
     Union as TypingUnion,
 )
 
-from .field import Field, _MISSING, register_type
+if TYPE_CHECKING:
+    from .registry import TypeRegistry, DumpHandler, LoadHandler
+
 from .exception import DeserializationError
+from .field import Field, _MISSING
 
 T = TypeVar("T", bound=Type[Any])
 
@@ -26,12 +31,50 @@ DEFAULT_MAX_DEPTH = 100
 DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
 
 
+class Context:
+    """
+    Holds the serialization/deserialization context, including registry and caches.
+    Encapsulating this allows for isolated serialization environments.
+    """
+
+    def __init__(self, registry: Optional["TypeRegistry"] = None) -> None:
+        from .registry import registry as global_registry
+
+        self.registry: "TypeRegistry" = (
+            registry.copy() if registry else global_registry.copy()
+        )
+        self.dump_cache: Dict[Type[Any], "DumpHandler"] = {}
+        self.load_cache: Dict[Type[Any], "LoadHandler"] = {}
+        self.cache_lock = threading.Lock()
+        self.name_to_type_cache: Dict[str, Type[Any]] = {}
+
+
+_active_context = threading.local()
+
+
+def get_context() -> Context:
+    """Returns the currently active context or creates a default one."""
+    if not hasattr(_active_context, "current"):
+        _active_context.current = Context()
+    return _active_context.current
+
+
+def set_context(context: Context) -> None:
+    """Sets the active context for the current thread."""
+    _active_context.current = context
+
+
+def register_type(cls: Type[Any]) -> None:
+    """Registers a class in the name-to-type cache of the active context."""
+    ctx = get_context()
+    ctx.name_to_type_cache[cls.__name__] = cls
+
+
 def lodum(
     cls: Optional[T] = None,
-    *,
     tag: Optional[str] = None,
     tag_value: Optional[str] = None,
-) -> TypingUnion[T, Any]:
+) -> Any:
     """
     A class decorator that marks a class as lodum-enabled and processes field metadata.
 

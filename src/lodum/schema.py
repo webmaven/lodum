@@ -13,8 +13,7 @@ from typing import (
 )
 
 from .field import Field
-from .registry import registry
-from .core import DEFAULT_MAX_DEPTH
+from .core import DEFAULT_MAX_DEPTH, get_context
 
 
 def _sanitize_name(name: str) -> str:
@@ -36,18 +35,20 @@ def generate_schema(
     if visited is None:
         visited = set()
 
+    ctx = get_context()
+
     # Direct registry lookup
-    if t in registry._handlers:
-        return registry._handlers[t].schema_fn(t, depth, visited)
+    if t in ctx.registry._handlers:
+        return ctx.registry._handlers[t].schema_fn(t, depth, visited)
 
     origin = get_origin(t) or t
 
     # Generic lookup (exact match)
-    if origin in registry._handlers:
-        return registry._handlers[origin].schema_fn(t, depth, visited)
+    if origin in ctx.registry._handlers:
+        return ctx.registry._handlers[origin].schema_fn(t, depth, visited)
 
     # Inheritance lookup
-    for super_t, h_obj in registry._handlers.items():
+    for super_t, h_obj in ctx.registry._handlers.items():
         try:
             if inspect.isclass(origin) and issubclass(origin, super_t):
                 return h_obj.schema_fn(t, depth, visited)
