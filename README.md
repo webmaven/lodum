@@ -269,7 +269,7 @@ This approach eliminates the overhead of generic introspection and `getattr` cal
 - **~64% faster dumping** (serialization) than the baseline.
 - **~35% faster loading** (deserialization) than the baseline.
 
-See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
 
 ## Binary Data
 
@@ -310,14 +310,15 @@ The library is designed to be extended with support for more formats and more co
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING.md) for more information.
+Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIBUTING.md) for more information.
 
 ## Internals & Roadmap
 
-* Migrating from another library? See our [Migration Guide](MIGRATION.md).
-* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](ARCHITECTURE.md).
-* See how Lodum performs in our [PERFORMANCE.md](PERFORMANCE.md) report.
-* Want to see where we are going? Read our [ROADMAP.md](ROADMAP.md).
+* Migrating from another library? See our [Migration Guide](docs/MIGRATION.md).
+* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](docs/ARCHITECTURE.md).
+* Adding support for a new data format? See [Implementing New Formats](docs/IMPLEMENTING_FORMATS.md).
+* See how Lodum performs in our [PERFORMANCE.md](docs/PERFORMANCE.md) report.
+* Want to see where we are going? Read our [ROADMAP.md](docs/ROADMAP.md).
 
 ## License
 
