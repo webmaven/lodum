@@ -91,37 +91,37 @@ class YamlLoader(BaseLoader):
 
     def load_int(self) -> int:
         if not isinstance(self._data, int):
-            raise TypeError(f"Expected int, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected int, got {type(self._data).__name__}")
         return self._data
 
     def load_str(self) -> str:
         if not isinstance(self._data, str):
-            raise TypeError(f"Expected str, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
         return self._data
 
     def load_float(self) -> float:
         if not isinstance(self._data, (float, int)):
-            raise TypeError(f"Expected float, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected float, got {type(self._data).__name__}")
         return float(self._data)
 
     def load_bool(self) -> bool:
         if not isinstance(self._data, bool):
-            raise TypeError(f"Expected bool, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected bool, got {type(self._data).__name__}")
         return self._data
 
     def load_list(self) -> Iterator["Loader"]:
         if not isinstance(self._data, list):
-            raise TypeError(f"Expected list, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected list, got {type(self._data).__name__}")
         return (YamlLoader(item) for item in self._data)
 
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
         if not isinstance(self._data, dict):
-            raise TypeError(f"Expected dict, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected dict, got {type(self._data).__name__}")
         return ((k, YamlLoader(v)) for k, v in self._data.items())
 
     def load_bytes(self) -> bytes:
         if not isinstance(self._data, bytes):
-            raise TypeError(f"Expected bytes, got {type(self._data).__name__}")
+            raise DeserializationError(f"Expected bytes, got {type(self._data).__name__}")
         return self._data
 
     def load_any(self) -> Any:
