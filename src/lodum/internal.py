@@ -1,4 +1,5 @@
 import inspect
+import sys
 import datetime
 import enum
 import uuid
@@ -549,12 +550,17 @@ def _build_dump_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
     # return data
     body.append(ast.Return(value=ast.Name(id="data", ctx=ast.Load())))
 
-    func_def = ast.FunctionDef(
-        name=func_name,
-        args=args,
-        body=body,
-        decorator_list=[],
-    )
+    func_def_kwargs: Dict[str, Any] = {
+        "name": func_name,
+        "args": args,
+        "body": body,
+        "decorator_list": [],
+        "returns": None,
+    }
+    if sys.version_info >= (3, 12):
+        func_def_kwargs["type_params"] = []
+
+    func_def = ast.FunctionDef(**func_def_kwargs)
     return func_def, context
 
 
@@ -1906,12 +1912,17 @@ def _build_load_function_ast(cls: Type[Any]) -> Tuple[ast.FunctionDef, Dict[str,
         )
     )
 
-    func_def = ast.FunctionDef(
-        name=func_name,
-        args=args,
-        body=body,
-        decorator_list=[],
-    )
+    func_def_kwargs: Dict[str, Any] = {
+        "name": func_name,
+        "args": args,
+        "body": body,
+        "decorator_list": [],
+        "returns": None,
+    }
+    if sys.version_info >= (3, 12):
+        func_def_kwargs["type_params"] = []
+
+    func_def = ast.FunctionDef(**func_def_kwargs)
     return func_def, context
 
 
