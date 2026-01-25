@@ -45,9 +45,9 @@ The heart of `lodum` is in `src/lodum/internal.py`.
 Unlike libraries that use generic introspection (looping over `__dict__` or using `getattr`) for every object, `lodum` inspects your class **once**.
 
 1. **Analysis**: When you first call `dumps` or `loads`, the engine analyzes the type hints of your fields.
-2. **Code Generation**: It constructs a Python string containing a highly optimized function specifically for that class.
-    * *Example*: If your class has a `List[int]`, the generated code will check `isinstance(val, list)` directly and call the `int` loader for each item, typically unrolling standard overheads.
-3. **Compilation**: `exec()` is used to compile this string into a real Python function object.
+2. **AST Construction**: It constructs a Python Abstract Syntax Tree (AST) representing a highly optimized function specifically for that class.
+    * *Example*: If your class has a `List[int]`, the generated AST will include nodes to check `isinstance(val, list)` directly and call the `int` loader for each item, typically unrolling standard overheads.
+3. **Compilation**: The AST is compiled into a code object using Python's built-in `compile()`, which is then loaded via `exec()`. This avoids the security and fragility issues of string-based code generation.
 4. **Binding**: This function is cached and reused for all future operations.
 
 **Why?** This approach gives us performance close to hand-written code or compiled extensions, while staying 100% pure Python.

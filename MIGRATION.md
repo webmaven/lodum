@@ -1,6 +1,32 @@
 # Migration Guide
 
-This guide helps you migrate from other popular Python serialization libraries to `lodum`.
+This guide helps you migrate from other popular Python serialization libraries to `lodum`, and documents changes between `lodum` versions.
+
+## Migrating from previous Lodum versions
+
+### Exception Standardization (v0.2.0)
+
+In versions prior to v0.2.0, the YAML and Pickle loaders raised `TypeError` when a field's type did not match the expected type during deserialization. This has been standardized to `lodum.exception.DeserializationError` to match the behavior of other formats like JSON and MsgPack.
+
+**Before:**
+```python
+try:
+    lodum.yaml.loads(MyClass, bad_data)
+except TypeError:
+    # handle error
+```
+
+**After:**
+```python
+from lodum.exception import DeserializationError
+
+try:
+    lodum.yaml.loads(MyClass, bad_data)
+except DeserializationError:
+    # handle error
+```
+
+---
 
 ## Key Differences
 

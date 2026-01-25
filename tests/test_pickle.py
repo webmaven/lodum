@@ -6,7 +6,7 @@ import pytest
 
 from typing import Any, Optional, Union
 from lodum import lodum, pickle as lodum_pickle
-from lodum.exception import SerializationError
+from lodum.exception import SerializationError, DeserializationError
 
 # --- Test Data ---
 
@@ -19,6 +19,20 @@ class Simple:
 
     def __eq__(self, other):
         return isinstance(other, Simple) and self.a == other.a and self.b == other.b
+
+
+def test_pickle_load_type_mismatch():
+    """Tests that DeserializationError is raised when loaded type doesn't match expected type."""
+    instance = Simple(a=1, b="b")
+    data = lodum_pickle.dumps(instance)
+
+    with pytest.raises(DeserializationError) as excinfo:
+        # Try to load a Simple object as a Nested object
+        lodum_pickle.loads(Nested, data)
+
+    assert "Deserialized object is of type Simple, but expected Nested" in str(
+        excinfo.value
+    )
 
 
 class NotSerializable:

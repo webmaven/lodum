@@ -108,7 +108,7 @@ def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
         obj = unpickler.load()
 
     if not isinstance(obj, cls):
-        raise TypeError(
+        raise DeserializationError(
             f"Deserialized object is of type {type(obj).__name__}, but expected {cls.__name__}"
         )
 

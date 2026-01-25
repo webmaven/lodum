@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import pytest
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional, Set, Union
 
 from lodum import lodum, field, yaml
+from lodum.exception import DeserializationError
 
 # --- Test Data ---
 
@@ -53,6 +55,14 @@ def test_yaml_enum():
     assert "admin" in yaml_str
     result = yaml.loads(UserRole, yaml_str)
     assert result == role
+
+
+def test_yaml_load_type_mismatch():
+    """Tests that DeserializationError is raised for type mismatches."""
+    yaml_str = "a: 'not an int'\nb: 'world'\n"
+    with pytest.raises(DeserializationError) as excinfo:
+        yaml.loads(Simple, yaml_str)
+    assert "Expected int" in str(excinfo.value)
 
 
 @lodum
