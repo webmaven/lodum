@@ -3,30 +3,88 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import functools
+import threading
 from typing import (
     Any,
     Dict,
-    List,
-    Protocol,
-    Type,
     Iterator,
-    TypeVar,
+    List,
     Optional,
+    Type,
+    TypeVar,
+    Protocol,
+    TYPE_CHECKING,
     Union as TypingUnion,
 )
 
-from .field import Field, _MISSING, register_type
+if TYPE_CHECKING:
+    from .registry import TypeRegistry, DumpHandler, LoadHandler
+
 from .exception import DeserializationError
+from .field import Field, _MISSING
 
 T = TypeVar("T", bound=Type[Any])
+
+# --- Security Limits ---
+
+DEFAULT_MAX_DEPTH = 100
+DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+
+
+class Context:
+    """
+    Holds the serialization/deserialization context, including registry and caches.
+    Encapsulating this allows for isolated serialization environments.
+    """
+
+    def __init__(self, registry: Optional["TypeRegistry"] = None) -> None:
+        from .registry import registry as global_registry
+
+        self.registry: "TypeRegistry" = (
+            registry.copy() if registry else global_registry.copy()
+        )
+        self.dump_cache: Dict[Type[Any], "DumpHandler"] = {}
+        self.load_cache: Dict[Type[Any], "LoadHandler"] = {}
+        self.cache_lock = threading.Lock()
+        self.name_to_type_cache: Dict[str, Type[Any]] = {}
+
+
+_active_context = threading.local()
+
+
+def get_context() -> Context:
+    """Returns the currently active context or creates a default one."""
+    if not hasattr(_active_context, "current"):
+        _active_context.current = Context()
+    return _active_context.current
+
+
+def set_context(context: Context) -> None:
+    """Sets the active context for the current thread."""
+    _active_context.current = context
+
+
+def reset_context() -> Context:
+    """Resets the active context to a fresh one and returns it."""
+    from .internal import _register_builtin_handlers
+
+    ctx = Context()
+    set_context(ctx)
+    _register_builtin_handlers(ctx)
+    return ctx
+
+
+def register_type(cls: Type[Any]) -> None:
+    """Registers a class in the name-to-type cache of the active context."""
+    ctx = get_context()
+    ctx.name_to_type_cache[cls.__name__] = cls
 
 
 def lodum(
     cls: Optional[T] = None,
-    *,
     tag: Optional[str] = None,
     tag_value: Optional[str] = None,
-) -> TypingUnion[T, Any]:
+) -> Any:
     """
     A class decorator that marks a class as lodum-enabled and processes field metadata.
 
@@ -179,22 +237,40 @@ class BaseLoader:
         pass
 
     def load_int(self) -> int:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, int) or isinstance(val, bool):
+            raise DeserializationError(f"Expected int, got {type(val).__name__}")
+        return val
 
     def load_str(self) -> str:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, str):
+            raise DeserializationError(f"Expected str, got {type(val).__name__}")
+        return val
 
     def load_float(self) -> float:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, (float, int)):
+            raise DeserializationError(f"Expected float, got {type(val).__name__}")
+        return float(val)
 
     def load_bool(self) -> bool:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, bool):
+            raise DeserializationError(f"Expected bool, got {type(val).__name__}")
+        return val
 
     def load_list(self) -> Iterator["Loader"]:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, list):
+            raise DeserializationError(f"Expected list, got {type(val).__name__}")
+        return (type(self)(item) for item in val)
 
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, dict):
+            raise DeserializationError(f"Expected dict, got {type(val).__name__}")
+        return ((str(k), type(self)(v)) for k, v in val.items())
 
     def get_dict(self) -> Optional[TypingUnion[Dict[str, Any], List[Any]]]:
         if isinstance(self._data, (dict, list)):

@@ -7,7 +7,10 @@ import io
 from typing import Any, Type, TypeVar
 
 from .core import Dumper
-from .internal import dump as validate_lodum_structure, DEFAULT_MAX_SIZE
+from .internal import (
+    dump as validate_lodum_structure,
+    DEFAULT_MAX_SIZE,
+)
 from .exception import DeserializationError
 
 T = TypeVar("T")

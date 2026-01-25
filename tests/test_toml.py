@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any
+from typing import Any, Dict
 import pytest
 from lodum import lodum, toml
 from lodum.exception import DeserializationError
@@ -117,3 +117,9 @@ def test_toml_load_bytes():
     toml_str = 'by = "aGVsbG8="'
     data = toml.loads(Dict[str, bytes], toml_str)
     assert data["by"] == b"hello"
+
+
+def test_toml_loads_max_size():
+    """Tests that max_size is enforced in loads."""
+    with pytest.raises(DeserializationError, match="exceeds maximum allowed"):
+        toml.loads(Dict[str, int], "a = 1", max_size=1)

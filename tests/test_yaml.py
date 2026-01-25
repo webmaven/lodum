@@ -182,3 +182,27 @@ def test_yaml_typing_support():
     assert result.optional_field == instance.optional_field
     assert result.union_field == instance.union_field
     assert dict(result.any_field) == instance.any_field
+
+
+def test_yaml_schema():
+    """Tests JSON Schema generation for YAML."""
+    s = yaml.schema(Complex)
+    assert s["type"] == "object"
+    assert "dt" in s["properties"]
+    assert "role" in s["properties"]
+    assert "items" in s["properties"]
+
+
+def test_yaml_top_level_primitives():
+    """Tests encoding/decoding of top-level primitives."""
+    assert yaml.loads(int, yaml.dumps(123)) == 123
+    assert yaml.loads(str, yaml.dumps("hello")) == "hello"
+    assert yaml.loads(float, yaml.dumps(3.14)) == 3.14
+    assert yaml.loads(bool, yaml.dumps(True)) is True
+    assert yaml.loads(type(None), yaml.dumps(None)) is None
+
+
+def test_yaml_loads_max_size():
+    """Tests that max_size is enforced in loads."""
+    with pytest.raises(DeserializationError, match="exceeds maximum allowed"):
+        yaml.loads(int, "123", max_size=2)

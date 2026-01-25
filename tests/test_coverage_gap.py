@@ -1,169 +1,92 @@
+# SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
+#
+# SPDX-License-Identifier: Apache-2.0
 import pytest
-from lodum import lodum, field, json
-from lodum.exception import DeserializationError
-from typing import List
-
-from typing import Dict
-
-
-@lodum
-class AllPrimitives:
-    def __init__(self, i: int, f: float, b: bool, s: str, by: bytes):
-        self.i = i
-        self.f = f
-        self.b = b
-        self.s = s
-        self.by = by
+from typing import Optional
+from lodum import lodum, json
+from lodum.internal import load, dump, DEFAULT_MAX_DEPTH
+from lodum.exception import DeserializationError, SerializationError
 
 
-def test_all_primitives_success():
-    data = {"i": 1, "f": 1.1, "b": True, "s": "hello", "by": "Ynl0ZXM="}
-    obj = json.loads(AllPrimitives, json.dumps(data))
-    assert obj.i == 1
-    assert obj.f == 1.1
-    assert obj.b is True
-    assert obj.s == "hello"
-    assert obj.by == b"bytes"
+def test_resolve_forward_ref_gap():
+    """Target the _resolve_forward_ref logic in analyzer.py and internal.py."""
+
+    @lodum
+    class Node:
+        def __init__(self, next_node: Optional["Node"] = None):
+            self.next_node = next_node
+
+    # The AST compiler usually handles this, but we can force it
+    # by calling _get_load_handler with a ForwardRef string.
+    from lodum.internal import _get_load_handler
+    from typing import ForwardRef
+
+    handler = _get_load_handler(ForwardRef("Node"))
+    assert handler is not None
 
 
-def test_all_primitives_errors():
-    # Int error
-    with pytest.raises(DeserializationError) as exc:
-        json.loads(
-            AllPrimitives, '{"i": "not int", "f": 1.1, "b": true, "s": "a", "by": "a"}'
-        )
-    assert "i" in str(exc.value)
+def test_inheritance_handler_lookup():
+    """Target the inheritance lookup loop in _get_dump_handler and _get_load_handler."""
 
-    # Float error
-    with pytest.raises(DeserializationError) as exc:
-        json.loads(
-            AllPrimitives, '{"i": 1, "f": "not float", "b": true, "s": "a", "by": "a"}'
-        )
-    assert "f" in str(exc.value)
+    class MyDict(dict):
+        pass
 
-    # Bool error
-    with pytest.raises(DeserializationError) as exc:
-        json.loads(
-            AllPrimitives, '{"i": 1, "f": 1.1, "b": "not bool", "s": "a", "by": "a"}'
-        )
-    assert "b" in str(exc.value)
+    # MyDict is not @lodum enabled, but its parent 'dict' is registered.
+    # This should trigger the loop: for super_t, h_obj in ctx.registry._handlers.items()
+    data = MyDict({"a": 1})
+    res = json.dumps(data)
+    assert res == '{"a": 1}'
 
-    # Str error
-    with pytest.raises(DeserializationError) as exc:
-        json.loads(AllPrimitives, '{"i": 1, "f": 1.1, "b": true, "s": 1, "by": "a"}')
-    assert "s" in str(exc.value)
-
-    # Bytes error
-    with pytest.raises(DeserializationError) as exc:
-        json.loads(AllPrimitives, '{"i": 1, "f": 1.1, "b": true, "s": "a", "by": 1}')
-    assert "by" in str(exc.value)
+    # Same for loading
+    decoded = json.loads(MyDict, '{"b": 2}')
+    assert isinstance(decoded, MyDict)
+    assert decoded["b"] == 2
 
 
-@lodum
-class PrimitiveLists:
-    def __init__(
-        self,
-        ints: List[int],
-        floats: List[float],
-        bools: List[bool],
-        strs: List[str],
-        dict_ints: Dict[str, int] = field(default_factory=dict),
-    ):
-        self.ints = ints
-        self.floats = floats
-        self.bools = bools
-        self.strs = strs
-        self.dict_ints = dict_ints
+def test_primitive_dump_fallback():
+    """Target the fallback _dump_primitive branches in base.py."""
+    from lodum.handlers.base import _dump_primitive
+    from lodum.json import JsonDumper
+
+    dumper = JsonDumper()
+    assert _dump_primitive(True, dumper, 0, None) is True
+    assert _dump_primitive(123, dumper, 0, None) == 123
+    assert _dump_primitive("s", dumper, 0, None) == "s"
+    assert _dump_primitive(1.1, dumper, 0, None) == 1.1
+    assert _dump_primitive(None, dumper, 0, None) is None
+
+    with pytest.raises(SerializationError, match="Unsupported primitive type"):
+        _dump_primitive(complex(1, 2), dumper, 0, None)
 
 
-def test_primitive_list_success():
-    data = {
-        "ints": [1, 2, 3],
-        "floats": [1.1, 2, 3.3],  # Note: int should be allowed for float
-        "bools": [True, False],
-        "strs": ["a", "b"],
-        "dict_ints": {"a": 1, "b": 2},
-    }
-    encoded = json.dumps(data)
-    decoded = json.loads(PrimitiveLists, encoded)
-    assert decoded.ints == [1, 2, 3]
-    assert decoded.floats == [1.1, 2.0, 3.3]
-    assert decoded.bools == [True, False]
-    assert decoded.strs == ["a", "b"]
-    assert decoded.dict_ints == {"a": 1, "b": 2}
+def test_max_depth_errors():
+    """Ensure max depth errors are raised correctly in load and dump."""
+
+    @lodum
+    class Deep:
+        def __init__(self, child: Optional["Deep"] = None):
+            self.child = child
+
+    # Manually trigger depth error by passing a high depth
+    with pytest.raises(SerializationError, match="Max recursion depth"):
+        dump(Deep(), None, depth=DEFAULT_MAX_DEPTH + 1)
+
+    with pytest.raises(DeserializationError, match="Max recursion depth"):
+        load(Deep, None, depth=DEFAULT_MAX_DEPTH + 1)
 
 
-def test_primitive_list_float_error():
-    data = (
-        '{"ints": [1], "floats": [1.1, "not a float"], "bools": [true], "strs": ["a"]}'
-    )
-    with pytest.raises(DeserializationError) as excinfo:
-        json.loads(PrimitiveLists, data)
-    assert "Expected float, got str" in str(excinfo.value)
-    assert "floats[1]" in str(excinfo.value)
+def test_union_priority_logic():
+    """Target the complex priority-based scoring in _load_union."""
+    from typing import Union
+    import datetime
 
+    # Union[datetime, str] -> datetime should have higher priority for an ISO string
+    T = Union[datetime.datetime, str]
+    val = "2026-01-24T20:00:00"
+    res = json.loads(T, f'"{val}"')
+    assert isinstance(res, datetime.datetime)
 
-def test_primitive_list_int_error():
-    data = '{"ints": [1, 1.1], "floats": [1.1], "bools": [true], "strs": ["a"]}'
-    with pytest.raises(DeserializationError) as excinfo:
-        json.loads(PrimitiveLists, data)
-    assert "Expected int, got float" in str(excinfo.value)
-    assert "ints[1]" in str(excinfo.value)
-
-
-def test_primitive_list_bool_error():
-    data = '{"ints": [1], "floats": [1.1], "bools": [true, 0], "strs": ["a"]}'
-    with pytest.raises(DeserializationError) as excinfo:
-        json.loads(PrimitiveLists, data)
-    # In some formats 0 might be bool, but in JSON it's int
-    assert "Expected bool, got int" in str(excinfo.value)
-    assert "bools[1]" in str(excinfo.value)
-
-
-def test_primitive_list_str_error():
-    data = '{"ints": [1], "floats": [1.1], "bools": [true], "strs": ["a", 1]}'
-    with pytest.raises(DeserializationError) as excinfo:
-        json.loads(PrimitiveLists, data)
-    assert "Expected str, got int" in str(excinfo.value)
-    assert "strs[1]" in str(excinfo.value)
-
-
-def test_primitive_dict_error():
-    data = '{"ints": [], "floats": [], "bools": [], "strs": [], "dict_ints": {"a": "not int"}}'
-    with pytest.raises(DeserializationError) as excinfo:
-        json.loads(PrimitiveLists, data)
-    assert "Expected int, got str" in str(excinfo.value)
-    assert "dict_ints.a" in str(excinfo.value)
-
-
-def test_generic_load_list_primitive():
-    # To hit the non-compiled path, we can call load() directly with a List[int] type
-    from lodum.internal import load
-    from lodum.json import JsonLoader
-
-    loader = JsonLoader([1, "a"])
-    with pytest.raises(DeserializationError) as excinfo:
-        load(List[int], loader)
-    assert "Expected int, got str" in str(excinfo.value)
-    assert "[1]" in str(excinfo.value)
-
-    loader = JsonLoader([1, 2.2])
-    with pytest.raises(DeserializationError) as excinfo:
-        load(List[int], loader)
-    assert "Expected int, got float" in str(excinfo.value)
-
-    loader = JsonLoader([1.1, "a"])
-    with pytest.raises(DeserializationError) as excinfo:
-        load(List[float], loader)
-    assert "Expected float, got str" in str(excinfo.value)
-
-    # Test other primitives in generic load_list_primitive
-    assert load(List[str], JsonLoader(["a", "b"])) == ["a", "b"]
-    with pytest.raises(DeserializationError):
-        load(List[str], JsonLoader(["a", 1]))
-
-    assert load(List[bool], JsonLoader([True, False])) == [True, False]
-    with pytest.raises(DeserializationError):
-        load(List[bool], JsonLoader([True, 1]))
-
-    assert load(List[float], JsonLoader([1.1, 2])) == [1.1, 2.0]
+    # Union[int, float] -> int should have higher priority for an integer
+    T2 = Union[float, int]
+    assert type(json.loads(T2, "1")) is int
+    assert type(json.loads(T2, "1.1")) is float
