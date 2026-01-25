@@ -29,17 +29,23 @@ def test_all_primitives_success():
 def test_all_primitives_errors():
     # Int error
     with pytest.raises(DeserializationError) as exc:
-        json.loads(AllPrimitives, '{"i": "not int", "f": 1.1, "b": true, "s": "a", "by": "a"}')
+        json.loads(
+            AllPrimitives, '{"i": "not int", "f": 1.1, "b": true, "s": "a", "by": "a"}'
+        )
     assert "i" in str(exc.value)
 
     # Float error
     with pytest.raises(DeserializationError) as exc:
-        json.loads(AllPrimitives, '{"i": 1, "f": "not float", "b": true, "s": "a", "by": "a"}')
+        json.loads(
+            AllPrimitives, '{"i": 1, "f": "not float", "b": true, "s": "a", "by": "a"}'
+        )
     assert "f" in str(exc.value)
 
     # Bool error
     with pytest.raises(DeserializationError) as exc:
-        json.loads(AllPrimitives, '{"i": 1, "f": 1.1, "b": "not bool", "s": "a", "by": "a"}')
+        json.loads(
+            AllPrimitives, '{"i": 1, "f": 1.1, "b": "not bool", "s": "a", "by": "a"}'
+        )
     assert "b" in str(exc.value)
 
     # Str error

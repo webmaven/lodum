@@ -723,8 +723,6 @@ def _build_load_expr(
             keywords=[],
         )
 
-    origin = get_origin(ftype) or ftype
-
     # Pre-resolve handler
     load_call_args: list[ast.expr] = [
         ast.Name(id=f"type_{i}", ctx=ast.Load()),
