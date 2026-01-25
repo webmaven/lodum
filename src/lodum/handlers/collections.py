@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import collections
 import array
+import inspect
 from typing import (
     Any,
     Dict,
@@ -70,13 +71,16 @@ def _load_dict(
     key_type, value_type = (args[0], args[1]) if len(args) == 2 else (Any, Any)
     if key_type is not str and key_type is not Any:
         raise DeserializationError("JSON/YAML object keys must be strings", path)
-    return cast(
-        T,
-        {
-            k: load(value_type, v_l, f"{path}.{k}" if path else k, depth + 1)
-            for k, v_l in loader.load_dict()
-        },
-    )
+
+    data = {
+        k: load(value_type, v_l, f"{path}.{k}" if path else k, depth + 1)
+        for k, v_l in loader.load_dict()
+    }
+
+    origin = get_origin(cls) or cls
+    if inspect.isclass(origin) and issubclass(origin, dict) and origin is not dict:
+        return cast(T, origin(data))
+    return cast(T, data)
 
 
 def _load_defaultdict(
@@ -89,10 +93,12 @@ def _load_defaultdict(
         factory = val_type if val_type is not Any and callable(val_type) else None
         return cast(T, collections.defaultdict(factory, data))
     except (TypeError, DeserializationError) as e:
-        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
-        raise DeserializationError(
-            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        msg = (
+            f"Failed to create defaultdict: {e}"
+            if isinstance(e, TypeError)
+            else f"Failed to create defaultdict: {e.raw_message}"
         )
+        raise DeserializationError(msg, path)
 
 
 def _load_ordered_dict(
@@ -102,10 +108,12 @@ def _load_ordered_dict(
         data = _load_dict(dict, loader, path, depth)
         return cast(T, collections.OrderedDict(data))
     except (TypeError, DeserializationError) as e:
-        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
-        raise DeserializationError(
-            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        msg = (
+            f"Failed to create OrderedDict: {e}"
+            if isinstance(e, TypeError)
+            else f"Failed to create OrderedDict: {e.raw_message}"
         )
+        raise DeserializationError(msg, path)
 
 
 def _load_counter(
@@ -117,10 +125,12 @@ def _load_counter(
         data = _load_dict(Dict[Any, int], loader, path, depth)
         return cast(T, collections.Counter(data))
     except (TypeError, DeserializationError) as e:
-        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
-        raise DeserializationError(
-            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        msg = (
+            f"Failed to create Counter: {e}"
+            if isinstance(e, TypeError)
+            else f"Failed to create Counter: {e.raw_message}"
         )
+        raise DeserializationError(msg, path)
 
 
 def _load_tuple(
@@ -130,6 +140,10 @@ def _load_tuple(
 
     try:
         item_types: tuple[Type[Any], ...] = get_args(cls)
+        raw_items = list(loader.load_list())
+        if len(raw_items) != len(item_types):
+            raise DeserializationError(f"Tuple length mismatch for {cls}")
+
         return cast(
             T,
             tuple(
@@ -139,14 +153,15 @@ def _load_tuple(
                     f"{path}[{i}]" if path else f"[{i}]",
                     depth + 1,
                 )
-                for i, item_l in enumerate(loader.load_list())
+                for i, item_l in enumerate(raw_items)
             ),
         )
     except (IndexError, DeserializationError) as e:
-        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
-        raise DeserializationError(
-            msg, e.path if isinstance(e, DeserializationError) and e.path else path
-        )
+        if isinstance(e, IndexError):
+            msg = f"Tuple length mismatch for {cls}"
+        else:
+            msg = e.raw_message
+        raise DeserializationError(msg, path)
 
 
 def _load_set(
@@ -164,10 +179,12 @@ def _load_set(
             },
         )
     except (TypeError, DeserializationError) as e:
-        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
-        raise DeserializationError(
-            msg, e.path if isinstance(e, DeserializationError) and e.path else path
+        msg = (
+            f"Failed to create set (elements must be hashable): {e}"
+            if isinstance(e, TypeError)
+            else e.raw_message
         )
+        raise DeserializationError(msg, path)
 
 
 def _load_union(
@@ -242,10 +259,10 @@ def _load_union(
         if isinstance(data, list):
             return 90 if origin in (list, tuple, set) else -1
         if isinstance(data, dict):
+            if inspect.isclass(origin) and getattr(origin, "_lodum_enabled", False):
+                return 95  # Higher than generic dict (90)
             if origin is dict:
                 return 90
-            if inspect.isclass(origin) and getattr(origin, "_lodum_enabled", False):
-                return 80
             return -1
         return 10
 
@@ -282,9 +299,9 @@ def _load_array(
         typecode = "i"
         if data and isinstance(data[0], float):
             typecode = "d"
-        return cast(T, array.array(typecode, data))
-    except (TypeError, DeserializationError, ValueError) as e:
-        msg = e.raw_message if isinstance(e, DeserializationError) else str(e)
-        raise DeserializationError(
-            msg, e.path if isinstance(e, DeserializationError) and e.path else path
-        )
+        try:
+            return cast(T, array.array(typecode, data))
+        except (TypeError, ValueError) as e:
+            raise DeserializationError(f"Failed to create array: {e}")
+    except DeserializationError as e:
+        raise DeserializationError(e.raw_message, path)

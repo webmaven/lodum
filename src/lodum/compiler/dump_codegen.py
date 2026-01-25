@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import ast
-import sys
 from typing import (
     Any,
     Dict,
@@ -15,6 +14,7 @@ from typing import (
 from ..field import Field
 from ..exception import DeserializationError, SerializationError
 from .analyzer import _sanitize_name
+from .dsl import b
 
 
 def _build_dump_expr(
@@ -42,43 +42,23 @@ def _build_dump_expr(
         type_test: ast.expr
         if ftype is float:
             type_test = ast.Tuple(
-                elts=[
-                    ast.Name(id="float", ctx=ast.Load()),
-                    ast.Name(id="int", ctx=ast.Load()),
-                ],
+                elts=[b.load("float"), b.load("int")],
                 ctx=ast.Load(),
             )
         else:
-            type_test = ast.Name(id=ftype.__name__, ctx=ast.Load())
+            type_test = b.load(ftype.__name__)
 
-        return ast.IfExp(
-            test=ast.Call(
-                func=ast.Name(id="isinstance", ctx=ast.Load()),
-                args=[val_node, type_test],
-                keywords=[],
-            ),
-            body=ast.Call(
-                func=ast.Attribute(
-                    value=ast.Name(id="dumper", ctx=ast.Load()),
-                    attr=dump_meth,
-                    ctx=ast.Load(),
-                ),
-                args=[val_node],
-                keywords=[],
-            ),
-            orelse=ast.Call(
-                func=ast.Name(id="dump_fn", ctx=ast.Load()),
-                args=[
+        return b.if_exp(
+            test=b.isinstance(val_node, type_test),
+            body=b.call(b.attr("dumper", dump_meth), [val_node]),
+            orelse=b.call(
+                "dump_fn",
+                [
                     val_node,
-                    ast.Name(id="dumper", ctx=ast.Load()),
-                    ast.BinOp(
-                        left=ast.Name(id="depth", ctx=ast.Load()),
-                        op=ast.Add(),
-                        right=ast.Constant(value=1),
-                    ),
-                    ast.Name(id="seen", ctx=ast.Load()),
+                    b.load("dumper"),
+                    b.add(b.load("depth"), b.const(1)),
+                    b.load("seen"),
                 ],
-                keywords=[],
             ),
         )
 
@@ -92,59 +72,27 @@ def _build_dump_expr(
             item_type_test: ast.expr
             if item_type is float:
                 item_type_test = ast.Tuple(
-                    elts=[
-                        ast.Name(id="float", ctx=ast.Load()),
-                        ast.Name(id="int", ctx=ast.Load()),
-                    ],
+                    elts=[b.load("float"), b.load("int")],
                     ctx=ast.Load(),
                 )
             else:
-                item_type_test = ast.Name(id=item_type.__name__, ctx=ast.Load())
+                item_type_test = b.load(item_type.__name__)
 
-            elt_dump_expr = ast.IfExp(
-                test=ast.Call(
-                    func=ast.Name(id="isinstance", ctx=ast.Load()),
-                    args=[ast.Name(id="item", ctx=ast.Load()), item_type_test],
-                    keywords=[],
-                ),
-                body=ast.Call(
-                    func=ast.Attribute(
-                        value=ast.Name(id="dumper", ctx=ast.Load()),
-                        attr=item_dump_meth,
-                        ctx=ast.Load(),
-                    ),
-                    args=[ast.Name(id="item", ctx=ast.Load())],
-                    keywords=[],
-                ),
-                orelse=ast.Call(
-                    func=ast.Name(id="dump_fn", ctx=ast.Load()),
-                    args=[
-                        ast.Name(id="item", ctx=ast.Load()),
-                        ast.Name(id="dumper", ctx=ast.Load()),
-                        ast.BinOp(
-                            left=ast.Name(id="depth", ctx=ast.Load()),
-                            op=ast.Add(),
-                            right=ast.Constant(value=1),
-                        ),
-                        ast.Name(id="seen", ctx=ast.Load()),
+            elt_dump_expr = b.if_exp(
+                test=b.isinstance("item", item_type_test),
+                body=b.call(b.attr("dumper", item_dump_meth), [b.load("item")]),
+                orelse=b.call(
+                    "dump_fn",
+                    [
+                        b.load("item"),
+                        b.load("dumper"),
+                        b.add(b.load("depth"), b.const(1)),
+                        b.load("seen"),
                     ],
-                    keywords=[],
                 ),
             )
 
-            # Note: For set/tuple we still produce a list here because lodum dumpers expect list-like for sequences in JSON/MsgPack etc.
-            comprehension = ast.ListComp(
-                elt=elt_dump_expr,
-                generators=[
-                    ast.comprehension(
-                        target=ast.Name(id="item", ctx=ast.Store()),
-                        iter=val_node,
-                        ifs=[],
-                        is_async=0,
-                    )
-                ],
-            )
-            return comprehension
+            return b.list_comp(elt_dump_expr, "item", val_node)
 
     if origin is dict:
         args = get_args(ftype)
@@ -155,111 +103,57 @@ def _build_dump_expr(
                 v_type_test: ast.expr
                 if v_type is float:
                     v_type_test = ast.Tuple(
-                        elts=[
-                            ast.Name(id="float", ctx=ast.Load()),
-                            ast.Name(id="int", ctx=ast.Load()),
-                        ],
+                        elts=[b.load("float"), b.load("int")],
                         ctx=ast.Load(),
                     )
                 else:
-                    v_type_test = ast.Name(id=v_type.__name__, ctx=ast.Load())
+                    v_type_test = b.load(v_type.__name__)
 
-                val_dump_expr = ast.IfExp(
-                    test=ast.Call(
-                        func=ast.Name(id="isinstance", ctx=ast.Load()),
-                        args=[ast.Name(id="v", ctx=ast.Load()), v_type_test],
-                        keywords=[],
-                    ),
-                    body=ast.Call(
-                        func=ast.Attribute(
-                            value=ast.Name(id="dumper", ctx=ast.Load()),
-                            attr=v_dump_meth,
-                            ctx=ast.Load(),
-                        ),
-                        args=[ast.Name(id="v", ctx=ast.Load())],
-                        keywords=[],
-                    ),
-                    orelse=ast.Call(
-                        func=ast.Name(id="dump_fn", ctx=ast.Load()),
-                        args=[
-                            ast.Name(id="v", ctx=ast.Load()),
-                            ast.Name(id="dumper", ctx=ast.Load()),
-                            ast.BinOp(
-                                left=ast.Name(id="depth", ctx=ast.Load()),
-                                op=ast.Add(),
-                                right=ast.Constant(value=1),
-                            ),
-                            ast.Name(id="seen", ctx=ast.Load()),
+                val_dump_expr = b.if_exp(
+                    test=b.isinstance("v", v_type_test),
+                    body=b.call(b.attr("dumper", v_dump_meth), [b.load("v")]),
+                    orelse=b.call(
+                        "dump_fn",
+                        [
+                            b.load("v"),
+                            b.load("dumper"),
+                            b.add(b.load("depth"), b.const(1)),
+                            b.load("seen"),
                         ],
-                        keywords=[],
                     ),
                 )
 
-                # {str(k): dumper.dump_X(v) for k, v in val_node.items()}
-                dict_comp = ast.DictComp(
-                    key=ast.Call(
-                        func=ast.Name(id="str", ctx=ast.Load()),
-                        args=[ast.Name(id="k", ctx=ast.Load())],
-                        keywords=[],
-                    ),
+                return b.dict_comp(
+                    key=b.call("str", [b.load("k")]),
                     value=val_dump_expr,
-                    generators=[
-                        ast.comprehension(
-                            target=ast.Tuple(
-                                elts=[
-                                    ast.Name(id="k", ctx=ast.Store()),
-                                    ast.Name(id="v", ctx=ast.Store()),
-                                ],
-                                ctx=ast.Store(),
-                            ),
-                            iter=ast.Call(
-                                func=ast.Attribute(
-                                    value=val_node, attr="items", ctx=ast.Load()
-                                ),
-                                args=[],
-                                keywords=[],
-                            ),
-                            ifs=[],
-                            is_async=0,
-                        )
-                    ],
+                    targets=["k", "v"],
+                    iter_node=b.call(b.attr(val_node, "items")),
                 )
-                return dict_comp
 
     # Pre-resolve handler
     try:
         handler = get_dump_handler_fn(ftype, excluding=cls)
         handler_name = f"h_{i}"
         context[handler_name] = handler
-        return ast.Call(
-            func=ast.Name(id=handler_name, ctx=ast.Load()),
-            args=[
+        return b.call(
+            handler_name,
+            [
                 val_node,
-                ast.Name(id="dumper", ctx=ast.Load()),
-                ast.BinOp(
-                    left=ast.Name(id="depth", ctx=ast.Load()),
-                    op=ast.Add(),
-                    right=ast.Constant(value=1),
-                ),
-                ast.Name(id="seen", ctx=ast.Load()),
+                b.load("dumper"),
+                b.add(b.load("depth"), b.const(1)),
+                b.load("seen"),
             ],
-            keywords=[],
         )
     except ValueError:
         # Recursive reference, fall back to global dump_fn
-        return ast.Call(
-            func=ast.Name(id="dump_fn", ctx=ast.Load()),
-            args=[
+        return b.call(
+            "dump_fn",
+            [
                 val_node,
-                ast.Name(id="dumper", ctx=ast.Load()),
-                ast.BinOp(
-                    left=ast.Name(id="depth", ctx=ast.Load()),
-                    op=ast.Add(),
-                    right=ast.Constant(value=1),
-                ),
-                ast.Name(id="seen", ctx=ast.Load()),
+                b.load("dumper"),
+                b.add(b.load("depth"), b.const(1)),
+                b.load("seen"),
             ],
-            keywords=[],
         )
 
 
@@ -283,46 +177,16 @@ def _build_dump_function_ast(
     }
 
     # Parameters: (obj, dumper, dump_fn, depth, seen)
-    args = ast.arguments(
-        args=[
-            ast.arg(arg="obj", annotation=None),
-            ast.arg(arg="dumper", annotation=None),
-            ast.arg(arg="dump_fn", annotation=None),
-            ast.arg(arg="depth", annotation=None),
-            ast.arg(arg="seen", annotation=None),
-        ],
-        posonlyargs=[],
-        kwonlyargs=[],
-        kw_defaults=[],
-        defaults=[],
-        vararg=None,
-        kwarg=None,
-    )
+    args = b.arguments(["obj", "dumper", "dump_fn", "depth", "seen"])
 
     body: list[ast.stmt] = []
 
     # _cls = cls
-    body.append(
-        ast.Assign(
-            targets=[ast.Name(id="_cls", ctx=ast.Store())],
-            value=ast.Name(id="cls", ctx=ast.Load()),
-        )
-    )
+    body.append(b.assign("_cls", b.load("cls")))
 
     # data = dumper.begin_struct(_cls)
     body.append(
-        ast.Assign(
-            targets=[ast.Name(id="data", ctx=ast.Store())],
-            value=ast.Call(
-                func=ast.Attribute(
-                    value=ast.Name(id="dumper", ctx=ast.Load()),
-                    attr="begin_struct",
-                    ctx=ast.Load(),
-                ),
-                args=[ast.Name(id="_cls", ctx=ast.Load())],
-                keywords=[],
-            ),
-        )
+        b.assign("data", b.call(b.attr("dumper", "begin_struct"), [b.load("_cls")]))
     )
 
     tag = getattr(cls, "_lodum_tag", None)
@@ -332,23 +196,9 @@ def _build_dump_function_ast(
         context["tag_value"] = tag_value
         # data[tag_name] = dumper.dump_str(tag_value)
         body.append(
-            ast.Assign(
-                targets=[
-                    ast.Subscript(
-                        value=ast.Name(id="data", ctx=ast.Load()),
-                        slice=ast.Constant(value=tag),
-                        ctx=ast.Store(),
-                    )
-                ],
-                value=ast.Call(
-                    func=ast.Attribute(
-                        value=ast.Name(id="dumper", ctx=ast.Load()),
-                        attr="dump_str",
-                        ctx=ast.Load(),
-                    ),
-                    args=[ast.Name(id="tag_value", ctx=ast.Load())],
-                    keywords=[],
-                ),
+            b.assign(
+                b.subscript("data", b.const(tag), load=False),
+                b.call(b.attr("dumper", "dump_str"), [b.load("tag_value")]),
             )
         )
 
@@ -361,77 +211,33 @@ def _build_dump_function_ast(
         context[safe_key] = key
 
         # val = obj.field_name
-        body.append(
-            ast.Assign(
-                targets=[ast.Name(id="val", ctx=ast.Store())],
-                value=ast.Attribute(
-                    value=ast.Name(id="obj", ctx=ast.Load()),
-                    attr=field_name,
-                    ctx=ast.Load(),
-                ),
-            )
-        )
+        body.append(b.assign("val", b.attr("obj", field_name)))
 
-        target_subscript = ast.Subscript(
-            value=ast.Name(id="data", ctx=ast.Load()),
-            slice=ast.Constant(value=key),
-            ctx=ast.Store(),
-        )
+        target_subscript = b.subscript("data", b.const(key), load=False)
 
         dump_expr: ast.expr
         if field_info.serializer:
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer
             # data[key] = ser_n(val)
-            dump_expr = ast.Call(
-                func=ast.Name(id=ser_name, ctx=ast.Load()),
-                args=[ast.Name(id="val", ctx=ast.Load())],
-                keywords=[],
-            )
+            dump_expr = b.call(ser_name, [b.load("val")])
         else:
             dump_expr = _build_dump_expr(
                 field_info.type,
-                ast.Name(id="val", ctx=ast.Load()),
+                b.load("val"),
                 context,
                 cls,
                 i,
                 get_dump_handler_fn,
             )
 
-        body.append(
-            ast.Assign(
-                targets=[target_subscript],
-                value=dump_expr,
-            )
-        )
+        body.append(b.assign(target_subscript, dump_expr))
 
     # dumper.end_struct()
-    body.append(
-        ast.Expr(
-            value=ast.Call(
-                func=ast.Attribute(
-                    value=ast.Name(id="dumper", ctx=ast.Load()),
-                    attr="end_struct",
-                    ctx=ast.Load(),
-                ),
-                args=[],
-                keywords=[],
-            )
-        )
-    )
+    body.append(ast.Expr(value=b.call(b.attr("dumper", "end_struct"))))
 
     # return data
-    body.append(ast.Return(value=ast.Name(id="data", ctx=ast.Load())))
+    body.append(b.return_stmt(b.load("data")))
 
-    func_def_kwargs: Dict[str, Any] = {
-        "name": func_name,
-        "args": args,
-        "body": body,
-        "decorator_list": [],
-        "returns": None,
-    }
-    if sys.version_info >= (3, 12):
-        func_def_kwargs["type_params"] = []
-
-    func_def = ast.FunctionDef(**func_def_kwargs)
+    func_def = b.function_def(func_name, args, body)
     return func_def, context

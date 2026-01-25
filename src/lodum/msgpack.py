@@ -57,30 +57,6 @@ class MsgPackDumper(BaseDumper):
 
 
 class MsgPackLoader(BaseLoader):
-    def load_int(self) -> int:
-        if not isinstance(self._data, int):
-            raise DeserializationError(f"Expected int, got {type(self._data).__name__}")
-        return self._data
-
-    def load_str(self) -> str:
-        if not isinstance(self._data, str):
-            raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
-        return self._data
-
-    def load_float(self) -> float:
-        if not isinstance(self._data, (float, int)):
-            raise DeserializationError(
-                f"Expected float, got {type(self._data).__name__}"
-            )
-        return float(self._data)
-
-    def load_bool(self) -> bool:
-        if not isinstance(self._data, bool):
-            raise DeserializationError(
-                f"Expected bool, got {type(self._data).__name__}"
-            )
-        return self._data
-
     def load_list(self) -> Iterator["Loader"]:
         if not isinstance(self._data, list):
             raise DeserializationError(
@@ -95,9 +71,7 @@ class MsgPackLoader(BaseLoader):
             )
         return ((k, MsgPackLoader(v)) for k, v in self._data.items())
 
-    def load_bytes(self) -> bytes:
-        if not isinstance(self._data, bytes):
-            raise DeserializationError(
-                f"Expected bytes, got {type(self._data).__name__}"
-            )
-        return self._data
+    def load_bytes_value(self, value: Any) -> bytes:
+        if not isinstance(value, bytes):
+            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
+        return value

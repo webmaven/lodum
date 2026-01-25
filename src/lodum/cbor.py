@@ -95,9 +95,7 @@ class CborLoader(BaseLoader):
             )
         return ((k, CborLoader(v)) for k, v in self._data.items())
 
-    def load_bytes(self) -> bytes:
-        if not isinstance(self._data, bytes):
-            raise DeserializationError(
-                f"Expected bytes, got {type(self._data).__name__}"
-            )
-        return self._data
+    def load_bytes_value(self, value: Any) -> bytes:
+        if not isinstance(value, bytes):
+            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
+        return value

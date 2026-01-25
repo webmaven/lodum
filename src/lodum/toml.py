@@ -13,11 +13,11 @@ try:
     import tomli_w
 except ImportError:
     tomli_w = None  # type: ignore
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import dump, load, DEFAULT_MAX_SIZE
+from .internal import dump, load, DEFAULT_MAX_SIZE, generate_schema
 
 T = TypeVar("T")
 
@@ -48,10 +48,19 @@ def loads(cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T
         )
     try:
         data = tomllib.loads(toml_string)
-    except tomllib.TOMLDecodeError as e:
+    except Exception as e:
+        # tomllib raises TOMLDecodeError, but since it might not be available,
+        # we catch a general exception and wrap it if it's not already DeserializationError
+        if isinstance(e, DeserializationError):
+            raise e
         raise DeserializationError(f"Failed to parse TOML: {e}")
     loader = TomlLoader(data)
     return load(cls, loader)
+
+
+def schema(cls: Type[Any]) -> Dict[str, Any]:
+    """Generates a JSON Schema for a given lodum-enabled class."""
+    return generate_schema(cls)
 
 
 # --- TOML Dumper Implementation ---
@@ -68,30 +77,6 @@ class TomlDumper(BaseDumper):
 
 
 class TomlLoader(BaseLoader):
-    def load_int(self) -> int:
-        if not isinstance(self._data, int):
-            raise DeserializationError(f"Expected int, got {type(self._data).__name__}")
-        return self._data
-
-    def load_str(self) -> str:
-        if not isinstance(self._data, str):
-            raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
-        return self._data
-
-    def load_float(self) -> float:
-        if not isinstance(self._data, (float, int)):
-            raise DeserializationError(
-                f"Expected float, got {type(self._data).__name__}"
-            )
-        return float(self._data)
-
-    def load_bool(self) -> bool:
-        if not isinstance(self._data, bool):
-            raise DeserializationError(
-                f"Expected bool, got {type(self._data).__name__}"
-            )
-        return self._data
-
     def load_list(self) -> Iterator["Loader"]:
         if not isinstance(self._data, list):
             raise DeserializationError(
@@ -106,12 +91,12 @@ class TomlLoader(BaseLoader):
             )
         return ((k, TomlLoader(v)) for k, v in self._data.items())
 
-    def load_bytes(self) -> bytes:
-        if not isinstance(self._data, str):
-            raise DeserializationError(f"Expected str, got {type(self._data).__name__}")
+    def load_bytes_value(self, value: Any) -> bytes:
+        if not isinstance(value, str):
+            raise DeserializationError(f"Expected str, got {type(value).__name__}")
         import base64
 
         try:
-            return base64.b64decode(self._data)
+            return base64.b64decode(value)
         except Exception as e:
             raise DeserializationError(f"Failed to decode base64: {e}")

@@ -64,6 +64,16 @@ def set_context(context: Context) -> None:
     _active_context.current = context
 
 
+def reset_context() -> Context:
+    """Resets the active context to a fresh one and returns it."""
+    from .internal import _register_builtin_handlers
+
+    ctx = Context()
+    set_context(ctx)
+    _register_builtin_handlers(ctx)
+    return ctx
+
+
 def register_type(cls: Type[Any]) -> None:
     """Registers a class in the name-to-type cache of the active context."""
     ctx = get_context()
@@ -227,22 +237,40 @@ class BaseLoader:
         pass
 
     def load_int(self) -> int:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, int) or isinstance(val, bool):
+            raise DeserializationError(f"Expected int, got {type(val).__name__}")
+        return val
 
     def load_str(self) -> str:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, str):
+            raise DeserializationError(f"Expected str, got {type(val).__name__}")
+        return val
 
     def load_float(self) -> float:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, (float, int)):
+            raise DeserializationError(f"Expected float, got {type(val).__name__}")
+        return float(val)
 
     def load_bool(self) -> bool:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, bool):
+            raise DeserializationError(f"Expected bool, got {type(val).__name__}")
+        return val
 
     def load_list(self) -> Iterator["Loader"]:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, list):
+            raise DeserializationError(f"Expected list, got {type(val).__name__}")
+        return (type(self)(item) for item in val)
 
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
-        raise NotImplementedError
+        val = self.load_any()
+        if not isinstance(val, dict):
+            raise DeserializationError(f"Expected dict, got {type(val).__name__}")
+        return ((str(k), type(self)(v)) for k, v in val.items())
 
     def get_dict(self) -> Optional[TypingUnion[Dict[str, Any], List[Any]]]:
         if isinstance(self._data, (dict, list)):

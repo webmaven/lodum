@@ -5,6 +5,7 @@ __version__ = "0.1.0"
 
 from .core import lodum
 from .field import field
+from .internal import generate_schema as schema
 from . import json, yaml, pickle, toml, msgpack, cbor, bson
 
 # Register extensions if available
@@ -32,6 +33,7 @@ except ImportError:
 __all__ = [
     "lodum",
     "field",
+    "schema",
     "json",
     "yaml",
     "pickle",
