@@ -40,9 +40,20 @@ def test_error_enum_empty():
         json.loads(RealEmpty, '"anything"')
 
 
-def test_error_enum_invalid_value():
-    from tests.test_generic_handlers import Color
+import enum
 
+class Color(enum.Enum):
+    RED = "red"
+    BLUE = "blue"
+
+
+@lodum
+@dataclass
+class Simple:
+    x: int
+
+
+def test_error_enum_invalid_value():
     with pytest.raises(DeserializationError, match="Invalid value for Enum"):
         json.loads(Color, '"not-a-color"')
 
@@ -128,8 +139,6 @@ def test_union_priority_matrix():
     assert json.loads(Union[str, datetime.datetime], f'"{dt.isoformat()}"') == dt
 
     # 6. str -> Enum
-    from tests.test_generic_handlers import Color
-
     assert json.loads(Union[str, Color], '"red"') == Color.RED
 
     # 7. list -> list/tuple/set
@@ -150,8 +159,6 @@ def test_union_priority_matrix():
 
 def test_union_priority_enum_int():
     # int -> Enum
-    import enum
-
     class IntEnum(enum.Enum):
         A = 1
 
@@ -174,6 +181,5 @@ def test_dump_array_fallback():
 def test_dump_enum_fallback():
     from lodum.handlers.stdlib import _dump_enum
     from lodum.json import JsonDumper
-    from tests.test_generic_handlers import Color
 
     assert _dump_enum(Color.RED, JsonDumper(), 0, None) == "red"
