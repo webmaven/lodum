@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-from typing import Dict, Any, Type, Optional, List
+from typing import Optional
 from lodum import lodum, json
 from lodum.internal import load, dump, DEFAULT_MAX_DEPTH
 from lodum.exception import DeserializationError, SerializationError
@@ -61,9 +61,6 @@ def test_primitive_dump_fallback():
 
 def test_max_depth_errors():
     """Ensure max depth errors are raised correctly in load and dump."""
-    from lodum.core import get_context
-
-    ctx = get_context()
 
     @lodum
     class Deep:

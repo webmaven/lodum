@@ -93,7 +93,11 @@ def _load_uuid(
     try:
         return cast(T, uuid.UUID(val))
     except (ValueError, DeserializationError) as e:
-        msg = f"Invalid UUID format: '{val}'" if isinstance(e, ValueError) else e.raw_message
+        msg = (
+            f"Invalid UUID format: '{val}'"
+            if isinstance(e, ValueError)
+            else e.raw_message
+        )
         raise DeserializationError(msg, path)
 
 

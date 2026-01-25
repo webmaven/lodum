@@ -6,12 +6,11 @@ import datetime
 import uuid
 import array
 import collections
-from decimal import Decimal
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Tuple, Set, Union, Optional, Any
 from lodum import json, lodum
-from lodum.exception import DeserializationError, SerializationError
+from lodum.exception import DeserializationError
 
 
 @lodum
@@ -61,7 +60,9 @@ def test_error_bytes_invalid():
     from lodum.handlers.stdlib import _load_bytes
     from lodum.core import BaseLoader
 
-    with pytest.raises(DeserializationError, match="Expected bytes or base64 string: Expected bytes"):
+    with pytest.raises(
+        DeserializationError, match="Expected bytes or base64 string: Expected bytes"
+    ):
         _load_bytes(bytes, BaseLoader(123))
 
 
@@ -69,7 +70,9 @@ def test_error_bytearray_invalid():
     from lodum.handlers.stdlib import _load_bytearray
     from lodum.core import BaseLoader
 
-    with pytest.raises(DeserializationError, match="Invalid bytearray data: Expected bytes"):
+    with pytest.raises(
+        DeserializationError, match="Invalid bytearray data: Expected bytes"
+    ):
         _load_bytearray(bytearray, BaseLoader(123))
 
 
