@@ -16,43 +16,60 @@ This document explains the internal design and performance strategies of `lodum`
 graph TD
     UserClass["User's Class (@lodum)"]
     
-    subgraph "Core Engine (internal.py)"
-        Analyzer["Type Analyzer"]
-        Compiler["Bytecode Compiler"]
-        Cache["Handler Cache"]
+    subgraph "Core Engine (src/lodum/)"
+        Context["Context (Thread-Safe Registry/Cache)"]
+        subgraph "Compiler (compiler/)"
+            Analyzer["Type Analyzer"]
+            Codegen["AST Codegen (DSL)"]
+            Compiler["Bytecode Compiler"]
+        end
+        subgraph "Handlers (handlers/)"
+            Base["Base Handlers"]
+            Col["Collection Handlers"]
+            Std["Stdlib Handlers"]
+        end
     end
     
     subgraph "Formats"
         JSON["lodum.json"]
         YAML["lodum.yaml"]
-        MsgPack["lodum.msgpack"]
         Others["..."]
     end
     
     UserClass --> Analyzer
-    Analyzer --> Compiler
-    Compiler --> Cache
+    Analyzer --> Codegen
+    Codegen --> Compiler
+    Compiler --> Context
     
-    JSON --> Cache
-    YAML --> Cache
-    MsgPack --> Cache
+    JSON --> Context
+    YAML --> Context
+    Context --> Handlers
 ```
 
-## 1. The Dynamic Bytecode Engine (`internal.py`)
+## 1. The Dynamic Bytecode Engine
 
-The heart of `lodum` is in `src/lodum/internal.py`.
+The heart of `lodum` is its specialized compiler that generates optimized Python functions for your specific data models.
 
-Unlike libraries that use generic introspection (looping over `__dict__` or using `getattr`) for every object, `lodum` inspects your class **once**.
+### AST Construction & DSL
 
-1. **Analysis**: When you first call `dumps` or `loads`, the engine analyzes the type hints of your fields.
-2. **AST Construction**: It constructs a Python Abstract Syntax Tree (AST) representing a highly optimized function specifically for that class.
-    * *Example*: If your class has a `List[int]`, the generated AST will include nodes to check `isinstance(val, list)` directly and call the `int` loader for each item, typically unrolling standard overheads.
-3. **Compilation**: The AST is compiled into a code object using Python's built-in `compile()`, which is then loaded via `exec()`. This avoids the security and fragility issues of string-based code generation.
-4. **Binding**: This function is cached and reused for all future operations.
+Unlike libraries that use generic introspection (looping over `__dict__` or using `getattr`) for every object, `lodum` inspects your class **once** and compiles specialized handlers.
+
+1. **Analysis**: When you first use a `@lodum` class, the `Analyzer` walks its type hints.
+2. **DSL-based Codegen**: We use a specialized `ASTBuilder` DSL (`src/lodum/compiler/dsl.py`) to construct a Python Abstract Syntax Tree (AST). This DSL makes the complex code-generation logic readable and maintainable.
+    * *Optimization*: If your class has a `List[int]`, the generated AST will include specialized nodes to check types and call primitive loaders directly, bypassing the overhead of generic dispatch.
+3. **Compilation**: The AST is compiled into a code object using Python's built-in `compile()`. This avoids the security and fragility issues of string-based code generation.
+4. **Binding & Caching**: The compiled function is stored in the `Context` and reused for all future operations.
 
 **Why?** This approach gives us performance close to hand-written code or compiled extensions, while staying 100% pure Python.
 
-## 2. The Abstract Protocols (`core.py`)
+## 2. Thread Safety & Context (`core.py`)
+
+`lodum` is designed to be thread-safe by encapsulating all mutable state (registries, compiled handler caches, and name-to-type mappings) into a `Context` object.
+
+* **Thread-Local Storage**: Each thread has its own active context, ensuring that compilation and registration in one thread doesn't interfere with another.
+* **Lock-Free Fast Path**: To maintain high performance, cache lookups use a lock-free fast path. A mutex is only acquired during a cache miss to safely compile and register new handlers.
+
+## 3. The Abstract Protocols
 
 `lodum` uses two main protocols to bridge the gap between "Python Objects" and "Bytes/Strings".
 
@@ -79,40 +96,29 @@ class Loader(Protocol):
     def load_list(self) -> Iterator['Loader']: ...
 ```
 
-**Extensibility**: Because `internal.py` only talks to these protocols, adding a new format (like we did with CBOR) is as simple as implementing these methods. The optimization engine automatically works for the new format without any changes.
+**Base Classes**: To reduce boilerplate, `core.py` provides `BaseDumper` and `BaseLoader` with standardized logic for type checking and error reporting (e.g., ensuring "Expected int, got str" across all formats).
 
-### Base Classes
-
-To reduce boilerplate when implementing new formats, `core.py` also provides `BaseDumper` and `BaseLoader`. These classes provide default implementations for many protocol methods (such as handling primitive types), allowing format authors to focus on the unique aspects of their format.
-
-## 3. Validation & Schemas
-
-### Validation Pipeline
-
-Validation is injected directly into the generated `loads` handler.
-
-1. **Decode**: The value is read from the wire (e.g., JSON string -> Python `str`).
-2. **Validate**: The value is passed to any validators defined in `field(validate=...)`.
-3. **Instantiate**: Only if validation passes is the actual object created.
+## 4. Validation, Schemas & Error Paths
 
 ### Error Path Tracking
 
-One of the key features of `lodum` is precise error reporting. During deserialization, the generated loaders maintain a `path` string that tracks the current position in the data structure.
+One of the key features of `lodum` is precise error reporting. During deserialization, the generated loaders maintain a `path` string.
 
 * When entering a dictionary/struct, the path is appended with `.field_name`.
 * When entering a list, the path is appended with `[index]`.
 
-This path is passed down through recursive calls to `load()`. If a `DeserializationError` occurs (e.g., a type mismatch or a validation failure), the error captures the current `path`. This allows `lodum` to provide helpful error messages like `Error at users[2].address.city: Expected str, got int`.
+This allows `lodum` to provide helpful error messages like `Error at users[2].address.city: Expected str, got int`.
 
 ### Schema Generation
 
-`json.schema()` uses a recursive visitor pattern to walk the type hints of a `@lodum` class and construct a standard JSON Schema dictionary. This is separate from the serialization engine but shares the same type analysis logic.
+`lodum.schema(MyClass)` is the centralized entry point for generating JSON Schema definitions. It uses a recursive visitor pattern to walk type hints and construct a standard schema dictionary, which is then reused by formats like `json` and `yaml`.
 
 ## Directory Structure
 
 * `src/lodum/`
-  * `core.py`: Abstract Base Classes / Protocols.
-  * `internal.py`: The Compiler and Execution Engine.
-  * `field.py`: The `Field` definition and configuration logic.
-  * `validators.py`: Built-in validation classes.
+  * `core.py`: Abstract Base Classes, Protocols, and `Context`.
+  * `compiler/`: Analyzer, AST DSL, and Dump/Load codegen engines.
+  * `handlers/`: Generic fallback handlers for Primitives, Collections, and Stdlib types.
+  * `registry.py`: Registry logic for type handlers.
+  * `field.py`: Field configuration and metadata logic.
   * `json.py`, `yaml.py`, etc.: Format-specific implementations.
