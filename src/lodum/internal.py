@@ -586,7 +586,12 @@ def _get_dump_handler(
     if isinstance(t, str):
         t = ForwardRef(t)
 
+    # Lock-free fast path for cache hits
+    if t in _DUMP_HANDLER_CACHE:
+        return _DUMP_HANDLER_CACHE[t]
+
     with _CACHE_LOCK:
+        # Double-check inside lock
         if t in _DUMP_HANDLER_CACHE:
             return _DUMP_HANDLER_CACHE[t]
 
@@ -1949,7 +1954,12 @@ def _get_load_handler(
     if isinstance(t, str):
         t = ForwardRef(t)
 
+    # Lock-free fast path for cache hits
+    if t in _LOAD_HANDLER_CACHE:
+        return _LOAD_HANDLER_CACHE[t]
+
     with _CACHE_LOCK:
+        # Double-check inside lock
         if t in _LOAD_HANDLER_CACHE:
             return _LOAD_HANDLER_CACHE[t]
 
