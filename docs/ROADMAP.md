@@ -2,7 +2,7 @@
 
 This document outlines the planned future enhancements for `lodum`. Our goal is to maintain the library's high performance while expanding its utility in the Python ecosystem.
 
-## 0. Completed Milestones
+## 0. Completed Milestones (First release v0.2.0 - ?)
 
 - **AST Bytecode Compiler**: Replaced string-based `exec` with a robust and maintainable AST generation engine using a specialized DSL.
 - **Modular Architecture**: Refactored the core engine into decoupled `compiler/` and `handlers/` subpackages.
@@ -34,7 +34,7 @@ This document outlines the planned future enhancements for `lodum`. Our goal is 
 
 * **Schema-to-Code** ([Plan](../plans/schema_to_code_cli_tool.md)): A CLI tool to generate `@lodum` classes from an existing JSON Schema.
 
-## 3. Long-Term Vision (v1.0.0)
+## 3. Longer-Term Vision (v1.0.0?)
 
 ### Compiler Enhancements
 
