@@ -3,8 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 import collections
-from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 import lodum
 
 
@@ -17,7 +16,9 @@ class Child:
 @lodum.lodum
 class Parent:
     def __init__(
-        self, id: int = lodum.field(rename="pk"), children: List[Child] = lodum.field(default_factory=list)
+        self,
+        id: int = lodum.field(rename="pk"),
+        children: List[Child] = lodum.field(default_factory=list),
     ):
         self.id = id
         self.children = children

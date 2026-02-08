@@ -129,7 +129,13 @@ def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
         unpickler = SafeUnpickler(f)
         try:
             obj = unpickler.load()
-        except (pickle.UnpicklingError, AttributeError, ImportError, IndexError, TypeError) as e:
+        except (
+            pickle.UnpicklingError,
+            AttributeError,
+            ImportError,
+            IndexError,
+            TypeError,
+        ) as e:
             raise DeserializationError(f"Failed to unpickle data: {e}")
 
     if not isinstance(obj, cls):
