@@ -70,8 +70,27 @@ class SafeUnpickler(pickle.Unpickler):
         if "os" in module_name or "sys" in module_name or "subprocess" in module_name:
             raise pickle.UnpicklingError(f"Unsafe module '{module_name}' is forbidden.")
 
-        if module_name == "builtins" and hasattr(builtins, class_name):
-            return getattr(builtins, class_name)
+        SAFE_BUILTINS = {
+            "int",
+            "float",
+            "str",
+            "bool",
+            "bytes",
+            "bytearray",
+            "list",
+            "tuple",
+            "dict",
+            "set",
+            "frozenset",
+            "complex",
+            "NoneType",
+            "type",
+        }
+
+        if module_name == "builtins":
+            if class_name in SAFE_BUILTINS and hasattr(builtins, class_name):
+                return getattr(builtins, class_name)
+            raise pickle.UnpicklingError(f"Unsafe builtin '{class_name}' is forbidden.")
 
         if module_name == "collections" and class_name in (
             "defaultdict",
@@ -108,7 +127,10 @@ def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
 
     with io.BytesIO(data) as f:
         unpickler = SafeUnpickler(f)
-        obj = unpickler.load()
+        try:
+            obj = unpickler.load()
+        except (pickle.UnpicklingError, AttributeError, ImportError, IndexError, TypeError) as e:
+            raise DeserializationError(f"Failed to unpickle data: {e}")
 
     if not isinstance(obj, cls):
         raise DeserializationError(

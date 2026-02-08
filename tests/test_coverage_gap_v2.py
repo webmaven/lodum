@@ -383,6 +383,22 @@ def test_base_loader_successful_ops():
     assert list(BaseLoader({"a": 1}).load_dict())[0][0] == "a"
     with pytest.raises(DeserializationError): BaseLoader(1).load_list()
 
+def test_pickle_security_vulnerability():
+    """Verify that dangerous builtins are blocked by SafeUnpickler."""
+    import pickle
+    from lodum import pickle as lodum_pickle
+    
+    # Payload that attempts to call eval
+    payload = pickle.dumps(eval)
+    with pytest.raises(DeserializationError, match="Unsafe builtin 'eval' is forbidden"):
+        lodum_pickle.loads(Any, payload)
+        
+    # Payload that attempts to use os.system (module might be 'os' or 'posix'/'nt')
+    import os
+    payload_os = pickle.dumps(os.system)
+    with pytest.raises(DeserializationError, match="Unsafe module '.*' is forbidden"):
+        lodum_pickle.loads(Any, payload_os)
+
 def test_mock_missing_deps_full():
     from unittest.mock import patch
     with patch("lodum.toml.tomli_w", None):
