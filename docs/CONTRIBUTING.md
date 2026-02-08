@@ -58,6 +58,7 @@ You can view the overall project status and progress on our [GitHub Project Boar
 
 - Open a new GitHub pull request with the patch.
 - Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
+- **Link to Issues**: All Pull Requests must be explicitly linked to one or more GitHub Issues they resolve or implement. Use closing keywords (e.g., `Closes #<issue_number>`, `Fixes #<issue_number>`, `Resolves #<issue_number>`) in your PR description. This automatically closes the associated issue upon merging the PR and ensures proper traceability.
 - Before submitting, please ensure that your code follows the existing style of the project, and that all tests pass.
 
 ### Submitting Implementation Plans
@@ -127,7 +128,7 @@ Before submitting a pull request, please run the following checks to ensure code
 ## Styleguides
 
 - We use [Ruff](https://github.com/astral-sh/ruff) for code formatting and linting. Please run it on your code before submitting a pull request.
-- We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for all Python code.
+- We follow [PEP 8](https://www.python.org/dev/psps/pep-0008/) for all Python code.
 
 ## Core Development Guidelines
 
