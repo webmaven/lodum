@@ -121,4 +121,6 @@ This allows `lodum` to provide helpful error messages like `Error at users[2].ad
   * `handlers/`: Generic fallback handlers for Primitives, Collections, and Stdlib types.
   * `registry.py`: Registry logic for type handlers.
   * `field.py`: Field configuration and metadata logic.
+  * `schema.py`: JSON Schema generation engine.
+  * `internal.py`: Core dispatch logic and handler compilation.
   * `json.py`, `yaml.py`, etc.: Format-specific implementations.
