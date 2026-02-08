@@ -6,9 +6,12 @@ from lodum.exception import SerializationError
 import pytest
 
 
+from typing import Optional
+
+
 @lodum
 class Node:
-    def __init__(self, value: int, next: "Node" = None):
+    def __init__(self, value: int, next: Optional["Node"] = None):
         self.value = value
         self.next = next
 
