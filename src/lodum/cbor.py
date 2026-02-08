@@ -17,7 +17,18 @@ T = TypeVar("T")
 
 
 def dumps(obj: Any) -> bytes:
-    """Encodes a Python object to CBOR bytes (dumps)."""
+    """
+    Encodes a Python object to CBOR bytes.
+
+    Args:
+        obj: The object to encode. Must be lodum-enabled or a supported type.
+
+    Returns:
+        The CBOR-encoded bytes.
+
+    Raises:
+        ImportError: If cbor2 is not installed.
+    """
     if cbor2 is None:
         raise ImportError(
             "cbor2 is required for CBOR serialization. Install it with 'pip install lodum[cbor]'."
@@ -28,7 +39,21 @@ def dumps(obj: Any) -> bytes:
 
 
 def loads(cls: Type[T], cbor_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
-    """Decodes CBOR bytes to a Python object (loads)."""
+    """
+    Decodes CBOR bytes into a Python object of the specified type.
+
+    Args:
+        cls: The class to instantiate.
+        cbor_bytes: The CBOR data to decode.
+        max_size: Maximum allowed size of the input bytes.
+
+    Returns:
+        An instance of cls populated with the decoded data.
+
+    Raises:
+        DeserializationError: If the input is invalid or exceeds max_size.
+        ImportError: If cbor2 is not installed.
+    """
     if len(cbor_bytes) > max_size:
         raise DeserializationError(
             f"Input size ({len(cbor_bytes)}) exceeds maximum allowed ({max_size})"

@@ -17,7 +17,18 @@ T = TypeVar("T")
 
 
 def dumps(obj: Any) -> bytes:
-    """Encodes a Python object to MsgPack bytes (dumps)."""
+    """
+    Encodes a Python object to MsgPack bytes.
+
+    Args:
+        obj: The object to encode. Must be lodum-enabled or a supported type.
+
+    Returns:
+        The MsgPack-encoded bytes.
+
+    Raises:
+        ImportError: If msgpack is not installed.
+    """
     if msgpack is None:
         raise ImportError(
             "msgpack is required for MsgPack serialization. Install it with 'pip install lodum[msgpack]'."
@@ -28,7 +39,21 @@ def dumps(obj: Any) -> bytes:
 
 
 def loads(cls: Type[T], packed_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
-    """Decodes MsgPack bytes to a Python object (loads)."""
+    """
+    Decodes MsgPack bytes into a Python object of the specified type.
+
+    Args:
+        cls: The class to instantiate.
+        packed_bytes: The MsgPack data to decode.
+        max_size: Maximum allowed size of the input bytes.
+
+    Returns:
+        An instance of cls populated with the decoded data.
+
+    Raises:
+        DeserializationError: If the input is invalid or exceeds max_size.
+        ImportError: If msgpack is not installed.
+    """
     if len(packed_bytes) > max_size:
         raise DeserializationError(
             f"Input size ({len(packed_bytes)}) exceeds maximum allowed ({max_size})"
