@@ -35,6 +35,25 @@ There are many ways to contribute, from writing tutorials or blog posts, improvi
 
 - Open a new issue and provide a clear description of the enhancement you'd like to see, why it's useful, and if possible, a suggestion for how it could be implemented.
 
+### Tracking Project Progress
+
+`lodum` uses GitHub Issues and a Project Board to manage its development roadmap, features, and bugs. This system helps ensure clarity, accountability, and efficient progress.
+
+**Issue Labels:**
+We categorize issues using `type:` and `status:` labels:
+*   `type: epic`: Major roadmap items or significant features.
+*   `type: story`: Smaller, actionable tasks contributing to an epic.
+*   `type: bug`: Issues identifying defects.
+*   `type: chore`: Maintenance tasks, refactoring, or non-feature work.
+*   `status: backlog`: Tasks awaiting prioritization.
+*   `status: ready`: Tasks ready to be picked up by a developer.
+*   `status: in-progress`: Tasks actively being worked on.
+*   `status: in-review`: Tasks with an open Pull Request awaiting review.
+*   `status: done`: Completed tasks (typically auto-closed by PR merges).
+
+**Project Board:**
+You can view the overall project status and progress on our [GitHub Project Board](https://github.com/users/webmaven/projects/1). This Kanban board visualizes the flow of tasks through various stages.
+
 ### Pull Requests
 
 - Open a new GitHub pull request with the patch.
