@@ -45,6 +45,9 @@ all = [
     "polars",
 ]
 
+[project.scripts]
+lodum-gen = "lodum.cli:main"
+
 [project.urls]
 "Homepage" = "https://github.com/webmaven/lodum"
 "Bug Tracker" = "https://github.com/webmaven/lodum/issues"
