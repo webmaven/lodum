@@ -38,6 +38,14 @@ Leverage Python's `memoryview` and NumPy's `frombuffer` extensively to ensure th
 - **Edge Computing**: Analyzing high-frequency sensor streams on resource-constrained hardware.
 - **Dequantize-on-Access**: Providing a NumPy-compatible interface that only performs floating-point math on the specific slice being accessed.
 
+## Relationship to Streaming Support
+While both this plan and the [Streaming Support Plan](./streaming_support.md) address memory constraints, they solve different problems:
+
+- **Streaming (`load_stream`)**: Focuses on **horizontal scale** (iterating over millions of objects). It works on sequential, non-seekable streams (like network sockets).
+- **Memory-Aware (`lazy=True`)**: Focuses on **vertical depth** (handling massive fields within a single object). It requires a **seekable source** (like a local file or `BytesIO`) to allow the proxy to "jump back" and read data on-demand.
+
+**Synergy**: When combined, `lodum` can stream a large list of objects where each individual object is also lazily loaded, providing maximum memory efficiency for complex data science pipelines.
+
 ## Milestones
 1. **Phase 1**: Prototype lazy field skipping in the AST compiler.
 2. **Phase 2**: Implement basic `QuantizedArray` proxy for 8-bit data.
