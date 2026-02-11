@@ -28,6 +28,15 @@ if yaml_available:
 def dumps(obj: Any) -> str:
     """
     Encodes a Python object to a YAML string.
+
+    Args:
+        obj: The object to encode. Must be lodum-enabled or a supported type.
+
+    Returns:
+        A YAML string representation of the object.
+
+    Raises:
+        ImportError: If ruamel.yaml is not installed.
     """
     if not yaml_available:
         raise ImportError(
@@ -35,7 +44,6 @@ def dumps(obj: Any) -> str:
         )
 
     dumper = YamlDumper()
-    # The core `dump` logic is format-agnostic and can be reused.
     dumped_data = dump(obj, dumper)
 
     with io.StringIO() as string_stream:
@@ -45,7 +53,19 @@ def dumps(obj: Any) -> str:
 
 def loads(cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """
-    Decodes a YAML string to a Python object.
+    Decodes a YAML string into a Python object of the specified type.
+
+    Args:
+        cls: The class to instantiate.
+        yaml_string: The YAML data to decode.
+        max_size: Maximum allowed size of the input string in bytes.
+
+    Returns:
+        An instance of cls populated with the decoded data.
+
+    Raises:
+        DeserializationError: If the input is invalid or exceeds max_size.
+        ImportError: If ruamel.yaml is not installed.
     """
     if len(yaml_string) > max_size:
         raise DeserializationError(
@@ -59,7 +79,6 @@ def loads(cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T
 
     data = yaml.load(yaml_string)
     loader = YamlLoader(data)
-    # The core `load` logic is format-agnostic and can be reused.
     return load(cls, loader)
 
 

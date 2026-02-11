@@ -25,7 +25,18 @@ T = TypeVar("T")
 
 
 def dumps(obj: Any) -> str:
-    """Encodes a Python object to a TOML string (dumps)."""
+    """
+    Encodes a Python object to a TOML string.
+
+    Args:
+        obj: The object to encode. Must be lodum-enabled or a supported type.
+
+    Returns:
+        A TOML string representation of the object.
+
+    Raises:
+        ImportError: If tomli-w is not installed.
+    """
     if tomli_w is None:
         raise ImportError(
             "tomli-w is required for TOML serialization. Install it with 'pip install lodum[toml]'."
@@ -36,7 +47,21 @@ def dumps(obj: Any) -> str:
 
 
 def loads(cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
-    """Decodes a TOML string to a Python object (loads)."""
+    """
+    Decodes a TOML string into a Python object of the specified type.
+
+    Args:
+        cls: The class to instantiate.
+        toml_string: The TOML data to decode.
+        max_size: Maximum allowed size of the input string in bytes.
+
+    Returns:
+        An instance of cls populated with the decoded data.
+
+    Raises:
+        DeserializationError: If the input is invalid or exceeds max_size.
+        ImportError: If tomllib (or tomli) is not installed.
+    """
     if len(toml_string) > max_size:
         raise DeserializationError(
             f"Input size ({len(toml_string)}) exceeds maximum allowed ({max_size})"
@@ -49,8 +74,6 @@ def loads(cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T
     try:
         data = tomllib.loads(toml_string)
     except Exception as e:
-        # tomllib raises TOMLDecodeError, but since it might not be available,
-        # we catch a general exception and wrap it if it's not already DeserializationError
         if isinstance(e, DeserializationError):
             raise e
         raise DeserializationError(f"Failed to parse TOML: {e}")

@@ -114,7 +114,7 @@ def test_loads_pickle_fails_on_non_lodum_object():
     instance = NotSerializable("this is a dangerous pickle")
     malicious_data = pickle.dumps(instance)
 
-    with pytest.raises(pickle.UnpicklingError) as excinfo:
+    with pytest.raises(DeserializationError) as excinfo:
         lodum_pickle.loads(NotSerializable, malicious_data)
 
     assert "Attempted to unpickle a non-lodum type" in str(excinfo.value)
@@ -125,7 +125,7 @@ def test_loads_pickle_blocks_malicious_payload():
     Tests that the SafeUnpickler correctly blocks a known-malicious pickle
     payload that attempts to execute arbitrary code.
     """
-    with pytest.raises(pickle.UnpicklingError) as excinfo:
+    with pytest.raises(DeserializationError) as excinfo:
         lodum_pickle.loads(dict, MALICIOUS_PAYLOAD)  # The class doesn't matter here
 
     assert "Unsafe module 'os' is forbidden" in str(excinfo.value)
