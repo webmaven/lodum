@@ -53,9 +53,11 @@ all = [
 dependencies = [
   "pytest",
   "pytest-cov",
-  "pdoc",
+  "mkdocs-material",
+  "mkdocstrings[python]",
 ]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest"
-docs-build = "PYTHONPATH=src pdoc lodum -o docs/api"
+docs-build = "mkdocs build"
+docs-serve = "mkdocs serve"

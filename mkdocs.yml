@@ -1,0 +1,84 @@
+site_name: lodum
+site_url: https://webmaven.github.io/lodum/
+site_description: High-performance Python serialization (AKA serde for Python).
+
+theme:
+  name: material
+  logo: assets/dumptruck-icon.png
+  favicon: assets/dumptruck-icon.png
+  palette:
+    # Primary: Construction Yellow (#fbc929)
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: yellow
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark: Industrial Gray (#505256)
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+repo_url: https://github.com/webmaven/lodum
+repo_name: webmaven/lodum
+
+nav:
+  - Home: index.md
+  - User Guide:
+    - Getting Started: GETTING_STARTED.md
+    - Field Customization: FIELD_CUSTOMIZATION.md
+    - Validation: VALIDATION.md
+    - Performance: PERFORMANCE.md
+    - Migration: MIGRATION.md
+  - API Reference: api_reference.md
+  - Technical Specs:
+    - Architecture: ARCHITECTURE.md
+    - Implementing Formats: IMPLEMENTING_FORMATS.md
+    - Benchmark Results: BENCHMARK_RESULTS.md
+    - Performance Analysis: PERFORMANCE_ANALYSIS.md
+  - Project:
+    - Roadmap: ROADMAP.md
+    - Implementation Plans:
+      - Streaming Support: plans/streaming_support.md
+      - Partial Serialization: plans/partial_serialization.md
+      - FastAPI Integration: plans/fastapi_integration.md
+      - OpenAPI Support: plans/openapi_support.md
+      - Schema-to-Code: plans/schema_to_code_cli_tool.md
+      - Compiler Enhancements: plans/compiler_enhancements_cython_mypyc.md
+      - Protocol Buffers: plans/protocol_buffers_support.md
+      - IDE Plugin: plans/ide_plugin.md
+    - Contributing: CONTRIBUTING.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            show_category_heading: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
