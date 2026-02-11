@@ -9,7 +9,6 @@
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg?style=flat-square&logo=python&logoColor=white" alt="Python versions"></a>
   <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg?style=flat-square&color=green" alt="License"></a>
   <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/github/actions/workflow/status/webmaven/lodum/ci.yml?branch=main&style=flat-square&logo=github" alt="CI Status"></a>
-  <a href="https://codecov.io/gh/webmaven/lodum"><img src="https://img.shields.io/codecov/c/github/webmaven/lodum?style=flat-square&logo=codecov" alt="Coverage"></a>
 </p>
 
 `lodum` is a high-performance framework for **lo**ading and **dum**ping Python data structures efficiently and ergonomically. 

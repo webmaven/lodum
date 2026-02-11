@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dumptruck-header-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/dumptruck-header.png">
-  <img alt="lodum: A high-performance Python serialization framework" src="docs/assets/dumptruck-header.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/webmaven/lodum/main/docs/assets/dumptruck-header-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/webmaven/lodum/main/docs/assets/dumptruck-header.png">
+  <img alt="lodum: A high-performance Python serialization framework" src="https://raw.githubusercontent.com/webmaven/lodum/main/docs/assets/dumptruck-header.png">
 </picture>
 
 <p align="center">
@@ -9,7 +9,6 @@
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg?style=flat-square&logo=python&logoColor=white" alt="Python versions"></a>
   <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg?style=flat-square&color=green" alt="License"></a>
   <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/github/actions/workflow/status/webmaven/lodum/ci.yml?branch=main&style=flat-square&logo=github" alt="CI Status"></a>
-  <a href="https://codecov.io/gh/webmaven/lodum"><img src="https://img.shields.io/codecov/c/github/webmaven/lodum?style=flat-square&logo=codecov" alt="Coverage"></a>
 </p>
 
 `lodum` is a high-performance framework for **lo**ading and **dum**ping Python data structures efficiently and ergonomically. 
@@ -368,12 +367,12 @@ Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIB
 
 ## Internals & Roadmap
 
-* Looking for the [API Reference](docs/api/index.html)?
-* Migrating from another library? See our [Migration Guide](docs/MIGRATION.md).
-* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](docs/ARCHITECTURE.md).
-* Adding support for a new data format? See [Implementing New Formats](docs/IMPLEMENTING_FORMATS.md).
-* See how Lodum performs in our [PERFORMANCE.md](docs/PERFORMANCE.md) report.
-* Want to see where we are going? Read our [ROADMAP.md](docs/ROADMAP.md).
+* Looking for the [API Reference](https://webmaven.github.io/lodum/api_reference)?
+* Migrating from another library? See our [Migration Guide](https://webmaven.github.io/lodum/Migration).
+* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE](https://webmaven.github.io/lodum/Technical%20Specs/Architecture).
+* Adding support for a new data format? See [Implementing New Formats](https://webmaven.github.io/lodum/Technical%20Specs/Implementing%20Formats).
+* See how Lodum performs in our [PERFORMANCE](https://webmaven.github.io/lodum/User%20Guide/Performance) report.
+* Want to see where we are going? Read our [ROADMAP](https://webmaven.github.io/lodum/Project/Roadmap).
 
 ## License
 
