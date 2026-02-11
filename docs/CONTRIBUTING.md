@@ -143,6 +143,30 @@ When modifying the compiler, use the `ASTBuilder` DSL found in `src/lodum/compil
 ### Thread Safety
 Lodum uses a `Context` object to manage global state. All handlers must be stateless or use the provided `Context` for caching. Avoid global variables that could cause race conditions during concurrent serialization.
 
+## Release Process
+
+When a new version of `lodum` is ready for release, follow these steps:
+
+1.  **Prepare the Release Branch**:
+    - Create a new branch `feature/issue-XX-release-prep` (replacing XX with the release tracking issue number).
+2.  **Update Version**:
+    - Update `__version__` in `src/lodum/__init__.py`.
+    - Update the `version` field in `pyproject.toml`.
+3.  **Update Changelog**:
+    - Add a new section to `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
+    - Set the release date.
+4.  **Final Checks**:
+    - Run the full test suite: `PYTHONPATH=src pytest`.
+    - Build the documentation: `hatch run docs-build`.
+    - Ensure all branding assets (headers, social previews) are correct.
+5.  **Merge and Tag**:
+    - Merge the release branch into `main`.
+    - Create a signed Git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
+    - Push the tag: `git push origin vX.Y.Z`.
+6.  **Publish to PyPI**:
+    - Build the distribution: `python3 -m build`.
+    - Upload to PyPI: `twine upload dist/*`.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the Apache License 2.0.

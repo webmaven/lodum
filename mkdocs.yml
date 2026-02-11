@@ -38,6 +38,7 @@ repo_name: webmaven/lodum
 
 nav:
   - Home: index.md
+  - News: NEWS.md
   - User Guide:
     - Getting Started: GETTING_STARTED.md
     - Field Customization: FIELD_CUSTOMIZATION.md
