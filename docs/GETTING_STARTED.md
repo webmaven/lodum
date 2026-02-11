@@ -90,6 +90,6 @@ new_user = lodum.fromdict(User, data)
 
 ## Next Steps
 
-- Check out the [API Reference](API_REFERENCE.md) (coming soon) for full details on all functions.
+- Check out the [API Reference](api/index.html) for full details on all functions.
 - See [Field Customization](FIELD_CUSTOMIZATION.md) for advanced field options.
 - Read about [Validation](VALIDATION.md) to ensure your data is always correct.

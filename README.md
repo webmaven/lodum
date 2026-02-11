@@ -368,6 +368,7 @@ Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIB
 
 ## Internals & Roadmap
 
+* Looking for the [API Reference](docs/api/index.html)?
 * Migrating from another library? See our [Migration Guide](docs/MIGRATION.md).
 * Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 * Adding support for a new data format? See [Implementing New Formats](docs/IMPLEMENTING_FORMATS.md).
