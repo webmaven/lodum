@@ -369,10 +369,10 @@ Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING
 
 * Looking for the [API Reference](api_reference.md)?
 * Migrating from another library? See our [Migration Guide](MIGRATION.md).
-* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](ARCHITECTURE.md).
+* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE](ARCHITECTURE.md).
 * Adding support for a new data format? See [Implementing New Formats](IMPLEMENTING_FORMATS.md).
-* See how Lodum performs in our [PERFORMANCE.md](PERFORMANCE.md) report.
-* Want to see where we are going? Read our [ROADMAP.md](ROADMAP.md).
+* See how Lodum performs in our [PERFORMANCE](PERFORMANCE.md) report.
+* Want to see where we are going? Read our [ROADMAP](ROADMAP.md).
 
 ## License
 

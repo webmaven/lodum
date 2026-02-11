@@ -27,13 +27,13 @@ The following benchmarks were run on Python 3.13.7 (win32). Results are in micro
 ### Binary Formats (Lodum vs Native)
 
 | Format | Operation | Simple (us) | Complex (us) | Nested (us) |
-| :--- | :--- | ---: | ---: | ---: |
+| :--- | :--- | :--- | :--- | :--- |
 | **MsgPack** | Serialization | 4.60 ± 1.37 | 10.15 ± 0.40 | 31.31 ± 3.03 |
-| | Deserialization | 18.22 ± 2.12 | 35.90 ± 2.62 | 119.92 ± 7.01 |
+| **MsgPack** | Deserialization | 18.22 ± 2.12 | 35.90 ± 2.62 | 119.92 ± 7.01 |
 | **CBOR** | Serialization | 11.61 ± 0.88 | 18.84 ± 0.70 | 43.67 ± 2.76 |
-| | Deserialization | 21.61 ± 2.00 | 39.39 ± 3.38 | 132.37 ± 4.49 |
+| **CBOR** | Deserialization | 21.61 ± 2.00 | 39.39 ± 3.38 | 132.37 ± 4.49 |
 | **Pickle** | Serialization | 8.91 ± 0.73 | 13.26 ± 0.95 | 39.72 ± 2.00 |
-| | Deserialization | 6.75 ± 0.42 | 9.87 ± 1.75 | 16.21 ± 1.22 |
+| **Pickle** | Deserialization | 6.75 ± 0.42 | 9.87 ± 1.75 | 16.21 ± 1.22 |
 
 ## Analysis
 
