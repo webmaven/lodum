@@ -1,13 +1,8 @@
-# lodum
-
-```text
-  _           _                 
- | | ___   __| |_   _ _ __ ___  
- | |/ _ \ / _` | | | | '_ ` _ \ 
- | | (_) | (_| | |_| | | | | | |
- |_|\___/ \__,_|\__,_|_| |_| |_|
-                                
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dumptruck-header-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/dumptruck-header.png">
+  <img alt="lodum: A high-performance Python serialization framework" src="docs/assets/dumptruck-header.png">
+</picture>
 
 <p align="center">
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg?style=flat-square&color=blue" alt="PyPI"></a>
