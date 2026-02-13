@@ -60,10 +60,23 @@ ignore_args = [
     "--ignore=tests/test_polars.py",
     "--ignore=tests/test_yaml.py",  # ruamel.yaml has C extensions
     "--ignore=tests/test_bson.py",  # pymongo has C extensions
-    "-k not thread_safety and not bson and not test_format_parity_bytes", # Pyodide doesn't support threading.Thread and we don't have pymongo
+    "-k not bson and not test_format_parity_bytes", # we don't have pymongo and parity bytes check is problematic
 ]
 
 try:
+    # Mock threading.Thread for Pyodide to allow thread_safety tests to run sequentially
+    import threading
+    class MockThread:
+        def __init__(self, target, args=(), kwargs=None):
+            self.target = target
+            self.args = args
+            self.kwargs = kwargs or {}
+        def start(self):
+            self.target(*self.args, **self.kwargs)
+        def join(self, timeout=None):
+            pass
+    threading.Thread = MockThread
+
     retcode = pytest.main(["tests"] + ignore_args)
 except SystemExit as e:
     retcode = e.code
