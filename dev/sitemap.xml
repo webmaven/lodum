@@ -33,10 +33,6 @@
          <lastmod>2026-02-13</lastmod>
     </url>
     <url>
-         <loc>https://webmaven.github.io/lodum/dev/NEWS/</loc>
-         <lastmod>2026-02-13</lastmod>
-    </url>
-    <url>
          <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE/</loc>
          <lastmod>2026-02-13</lastmod>
     </url>
@@ -61,10 +57,6 @@
          <lastmod>2026-02-13</lastmod>
     </url>
     <url>
-         <loc>https://webmaven.github.io/lodum/dev/demo/</loc>
-         <lastmod>2026-02-13</lastmod>
-    </url>
-    <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/compiler_enhancements_cython_mypyc/</loc>
          <lastmod>2026-02-13</lastmod>
     </url>
@@ -74,10 +66,6 @@
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/ide_plugin/</loc>
-         <lastmod>2026-02-13</lastmod>
-    </url>
-    <url>
-         <loc>https://webmaven.github.io/lodum/dev/plans/memory_aware_serialization/</loc>
          <lastmod>2026-02-13</lastmod>
     </url>
     <url>
