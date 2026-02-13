@@ -53,6 +53,16 @@ This document outlines the planned future enhancements for `lodum`. Our goal is 
 
 * **IDE Plugin** ([Plan](plans/ide_plugin.md)): A VS Code / PyCharm plugin to auto-generate `field()` definitions and validate schema compliance in real-time.
 
+## 4. Strategic Initiative: Memory-Aware Serialization
+
+### Data Science & ML Optimization ([Plan](../plans/memory_aware_serialization.md))
+
+* **Goal**: Enable efficient handling of multi-gigabyte quantized datasets in memory-constrained environments (Pyodide/WASM).
+* **Key Components**:
+    * **Lazy Loading**: On-demand materialization of large tensor fields.
+    * **Quantization Handlers**: Native AST-generated loaders for 4-bit, 8-bit, and bit-packed data.
+    * **Zero-Copy Architecture**: Buffering and views to prevent memory expansion during serialization.
+
 ## Contributing
 
 We welcome contributions on any of these items! Please open an issue to discuss your implementation plan before submitting a PR.
