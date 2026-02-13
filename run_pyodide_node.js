@@ -55,6 +55,10 @@ import pytest
 import sys
 import os
 
+# Propagate host environment variable to Python
+if "${process.env.PYODIDE_SHARED_MEMORY || ''}" == "1":
+    os.environ["PYODIDE_SHARED_MEMORY"] = "1"
+
 # Ignore tests with heavy/missing dependencies in Pyodide
 ignore_args = [
     "--ignore=tests/test_polars.py",
@@ -64,19 +68,6 @@ ignore_args = [
 ]
 
 try:
-    # Mock threading.Thread for Pyodide to allow thread_safety tests to run sequentially
-    import threading
-    class MockThread:
-        def __init__(self, target, args=(), kwargs=None):
-            self.target = target
-            self.args = args
-            self.kwargs = kwargs or {}
-        def start(self):
-            self.target(*self.args, **self.kwargs)
-        def join(self, timeout=None):
-            pass
-    threading.Thread = MockThread
-
     retcode = pytest.main(["tests"] + ignore_args)
 except SystemExit as e:
     retcode = e.code

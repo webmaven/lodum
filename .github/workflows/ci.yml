@@ -54,8 +54,10 @@ jobs:
         npm install
     - name: Build wheel
       run: python -m build
-    - name: Run Pyodide tests
+    - name: Run Pyodide tests (Standard)
       run: node run_pyodide_node.js
+    - name: Run Pyodide tests (Shared Memory)
+      run: PYODIDE_SHARED_MEMORY=1 node run_pyodide_node.js
 
   build:
     runs-on: ubuntu-latest
