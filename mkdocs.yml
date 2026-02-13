@@ -33,6 +33,10 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+extra:
+  version:
+    provider: mike
+
 repo_url: https://github.com/webmaven/lodum
 repo_name: webmaven/lodum
 
