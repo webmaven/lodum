@@ -48,4 +48,4 @@ For a detailed analysis of performance improvements over time, see [PERFORMANCE_
 
 
 
-See the [benchmarks/](../benchmarks/) directory for instructions on how to run these benchmarks on your own machine.
+See the [benchmarks/](https://github.com/webmaven/lodum/tree/main/benchmarks) directory for instructions on how to run these benchmarks on your own machine.
