@@ -126,6 +126,9 @@ dmypy.json
 # ruff
 .ruff_cache/
 
+# node
+node_modules/
+
 # gemini
 .gemini-clipboard/
 

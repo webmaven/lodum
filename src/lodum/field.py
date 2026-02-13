@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import threading
+from .concurrency import RLock
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 
 # Global registry for lodum-enabled classes to support ForwardRef resolution
 _NAME_TO_TYPE_CACHE: Dict[str, Type[Any]] = {}
-_REGISTRY_LOCK = threading.RLock()
+_REGISTRY_LOCK = RLock()
 
 
 def register_type(cls: Type[Any]) -> None:

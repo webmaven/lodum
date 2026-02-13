@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-import threading
+from lodum.concurrency import WorkerThread as Thread
 from typing import Optional, List, Any
 from lodum import lodum, json
 from lodum.exception import SerializationError, DeserializationError
@@ -73,7 +73,7 @@ def test_thread_safety_compilation():
             res = json.loads(ThreadSafeTest, s)
             assert res.a == 1
 
-    threads = [threading.Thread(target=worker) for _ in range(10)]
+    threads = [Thread(target=worker) for _ in range(10)]
     for t in threads:
         t.start()
     for t in threads:

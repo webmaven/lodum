@@ -62,12 +62,21 @@ Unlike libraries that use generic introspection (looping over `__dict__` or usin
 
 **Why?** This approach gives us performance close to hand-written code or compiled extensions, while staying 100% pure Python.
 
-## 2. Thread Safety & Context (`core.py`)
+## 2. Thread Safety & Context (`core.py`, `concurrency.py`)
 
 `lodum` is designed to be thread-safe by encapsulating all mutable state (registries, compiled handler caches, and name-to-type mappings) into a `Context` object.
 
 * **Thread-Local Storage**: Each thread has its own active context, ensuring that compilation and registration in one thread doesn't interfere with another.
 * **Lock-Free Fast Path**: To maintain high performance, cache lookups use a lock-free fast path. A mutex is only acquired during a cache miss to safely compile and register new handlers.
+
+### WASM & Restricted Environments
+
+In environments where native threading is limited or unavailable (e.g., Pyodide/WASM without `SharedArrayBuffer`), `lodum` uses the `lodum.concurrency` module to maintain compatibility:
+
+* **Detection**: The library automatically detects if `threading.Thread.start()` is functional.
+* **Shims**: If native threading is restricted, `lodum` employs `SequentialThread` (which executes tasks immediately) and `DummyLock` objects.
+* **Transparency**: When running in sequential mode, `lodum` issues a `RuntimeWarning` to alert developers that background tasks are being serialized.
+* **Portability**: This abstraction allows the same core logic to run on high-concurrency servers and in single-threaded web browsers.
 
 ## 3. The Abstract Protocols
 
