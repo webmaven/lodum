@@ -21,19 +21,15 @@ user = User(name="Alex", age=30, is_active=True)
 
 # Serialize to JSON
 json_data = json.dumps(user)
-print(f"JSON Output:
-{json_data}
-")
+print(f"JSON Output:\n{json_data}\n")
 
 # Serialize to YAML
 yaml_data = yaml.dumps(user)
-print(f"YAML Output:
-{yaml_data}")
+print(f"YAML Output:\n{yaml_data}")
 
 # Deserialize back
 new_user = json.loads(User, json_data)
-print(f"
-Deserialized: {new_user}")
+print(f"\nDeserialized: {new_user}")
         </textarea>
     </div>
     <button id="run-button" style="padding: 10px 20px; background: #fbc929; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #1e1e1e;">
@@ -67,7 +63,6 @@ Deserialized: {new_user}")
             
             // Install lodum and its common dependencies
             // We use the version currently on PyPI. 
-            // In a real setup, we might point to a specific wheel.
             await micropip.install(["lodum[all]"]);
             
             statusElement.textContent = "Ready!";
@@ -87,17 +82,14 @@ Deserialized: {new_user}")
             // Redirect stdout to our output element
             pyodide.setStdout({
                 batched: (str) => {
-                    outputElement.textContent += str + "
-";
+                    outputElement.textContent += str + "\n";
                 }
             });
             
             await pyodide.runPythonAsync(code);
             statusElement.textContent = "Success!";
         } catch (err) {
-            outputElement.textContent += "
-Error:
-" + err.message;
+            outputElement.textContent += "\nError:\n" + err.message;
             statusElement.textContent = "Failed.";
         }
     }
