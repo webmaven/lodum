@@ -6,30 +6,27 @@ Try `lodum` directly in your browser! This demo uses [Pyodide](https://pyodide.o
     <div style="margin-bottom: 10px;">
         <strong>Python Code:</strong>
         <textarea id="python-code" style="width: 100%; height: 250px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-from lodum import lodum, json, yaml
+from lodum import lodum, json
 from dataclasses import dataclass
+import numpy as np
 
 @lodum
 @dataclass
-class User:
+class Point:
     name: str
-    age: int
-    is_active: bool
+    coords: np.ndarray
 
-# Create an object
-user = User(name="Alex", age=30, is_active=True)
+# Create an object with a NumPy array
+p = Point(name="Origin", coords=np.array([0.0, 0.0, 0.0]))
 
-# Serialize to JSON
-json_data = json.dumps(user)
+# Serialize to JSON (NumPy handled natively!)
+json_data = json.dumps(p)
 print(f"JSON Output:\n{json_data}\n")
 
-# Serialize to YAML
-yaml_data = yaml.dumps(user)
-print(f"YAML Output:\n{yaml_data}")
-
 # Deserialize back
-new_user = json.loads(User, json_data)
-print(f"\nDeserialized: {new_user}")
+new_point = json.loads(Point, json_data)
+print(f"Deserialized Coords: {new_point.coords}")
+print(f"Type: {type(new_point.coords)}")
         </textarea>
     </div>
     <button id="run-button" style="padding: 10px 20px; background: #fbc929; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #1e1e1e;">
@@ -56,14 +53,16 @@ print(f"\nDeserialized: {new_user}")
     async function init() {
         runButton.disabled = true;
         try {
-            pyodide = await loadPyodide();
+            statusElement.textContent = "Loading Pyodide...";
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/"
+            });
             statusElement.textContent = "Loading dependencies (micropip, lodum)...";
             await pyodide.loadPackage("micropip");
             const micropip = pyodide.pyimport("micropip");
             
-            // Install lodum and its common dependencies
-            // We use the version currently on PyPI. 
-            await micropip.install(["lodum[all]"]);
+            // Install lodum and WASM-safe dependencies.
+            await micropip.install(["lodum", "cbor2", "msgpack", "tomli", "tomli-w", "numpy", "pandas"]);
             
             statusElement.textContent = "Ready!";
             runButton.disabled = false;
@@ -82,14 +81,14 @@ print(f"\nDeserialized: {new_user}")
             // Redirect stdout to our output element
             pyodide.setStdout({
                 batched: (str) => {
-                    outputElement.textContent += str + "\n";
+                    outputElement.textContent += `${str}\n`;
                 }
             });
             
             await pyodide.runPythonAsync(code);
             statusElement.textContent = "Success!";
         } catch (err) {
-            outputElement.textContent += "\nError:\n" + err.message;
+            outputElement.textContent += `\nError:\n${err.message}`;
             statusElement.textContent = "Failed.";
         }
     }
