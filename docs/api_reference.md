@@ -4,25 +4,37 @@ This page contains the technical documentation for all core modules in `lodum`.
 
 ## Core API
 
-::: lodum.core
+::: lodum
     options:
+      show_category_heading: false
       members:
         - lodum
+        - asdict
+        - fromdict
+        - schema
+
+::: lodum.core
+    options:
+      show_category_heading: false
+      members:
         - Context
         - Dumper
         - Loader
 
 ::: lodum.field
     options:
+      show_category_heading: false
       members:
         - field
 
-::: lodum.internal
+::: lodum.concurrency
     options:
+      show_category_heading: false
       members:
-        - asdict
-        - fromdict
-        - schema
+        - WorkerThread
+        - Lock
+        - RLock
+        - local
 
 ## Data Formats
 

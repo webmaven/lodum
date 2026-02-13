@@ -368,6 +368,7 @@ Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIB
 
 ## Internals & Roadmap
 
+* Try it out now in our **[Interactive Demo](https://webmaven.github.io/lodum/demo)**!
 * Looking for the [API Reference](https://webmaven.github.io/lodum/api_reference)?
 * Migrating from another library? See our [Migration Guide](https://webmaven.github.io/lodum/User%20Guide/Migration).
 * Interested in how `lodum` works under the hood? Check out [ARCHITECTURE](https://webmaven.github.io/lodum/Technical%20Specs/Architecture).

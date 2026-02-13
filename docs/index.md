@@ -367,6 +367,7 @@ Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING
 
 ## Internals & Roadmap
 
+* Try it out now in our **[Interactive Demo](demo.md)**!
 * Looking for the [API Reference](api_reference.md)?
 * Migrating from another library? See our [Migration Guide](MIGRATION.md).
 * Interested in how `lodum` works under the hood? Check out [ARCHITECTURE](ARCHITECTURE.md).
