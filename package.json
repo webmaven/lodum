@@ -1,0 +1,11 @@
+{
+  "name": "lodum-pyodide-tests",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node run_pyodide_node.js"
+  },
+  "dependencies": {
+    "pyodide": "^0.29.3"
+  }
+}
