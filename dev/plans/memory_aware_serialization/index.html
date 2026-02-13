@@ -10,31 +10,27 @@
       
       
       
-        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/PERFORMANCE_ANALYSIS/">
+        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/plans/memory_aware_serialization/">
       
       
-        <link rel="prev" href="../BENCHMARK_RESULTS/">
-      
-      
-        <link rel="next" href="../ROADMAP/">
       
       
         
       
       
-      <link rel="icon" href="../assets/dumptruck-icon.png">
+      <link rel="icon" href="../../assets/dumptruck-icon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>Performance Analysis - lodum</title>
+        <title>Memory-Aware Serialization (Lazy Loading & Quantization) - lodum</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,11 +49,11 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#performance-analysis-evolution-from-baseline-to-modular-refactor" class="md-skip">
+        <a href="#memory-aware-serialization-lazy-loading-quantization" class="md-skip">
           Skip to content
         </a>
       
@@ -102,9 +98,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href="../.." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../assets/dumptruck-icon.png" alt="logo">
+  <img src="../../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -121,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Performance Analysis
+              Memory-Aware Serialization (Lazy Loading &amp; Quantization)
             
           </span>
         </div>
@@ -239,9 +235,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href="../.." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../assets/dumptruck-icon.png" alt="logo">
+  <img src="../../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     lodum
@@ -268,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -295,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../NEWS/" class="md-nav__link">
+      <a href="../../NEWS/" class="md-nav__link">
         
   
   
@@ -374,7 +370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GETTING_STARTED/" class="md-nav__link">
+      <a href="../../GETTING_STARTED/" class="md-nav__link">
         
   
   
@@ -402,7 +398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../demo/" class="md-nav__link">
+      <a href="../../demo/" class="md-nav__link">
         
   
   
@@ -430,7 +426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FIELD_CUSTOMIZATION/" class="md-nav__link">
+      <a href="../../FIELD_CUSTOMIZATION/" class="md-nav__link">
         
   
   
@@ -458,7 +454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../VALIDATION/" class="md-nav__link">
+      <a href="../../VALIDATION/" class="md-nav__link">
         
   
   
@@ -486,7 +482,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PERFORMANCE/" class="md-nav__link">
+      <a href="../../PERFORMANCE/" class="md-nav__link">
         
   
   
@@ -514,7 +510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MIGRATION/" class="md-nav__link">
+      <a href="../../MIGRATION/" class="md-nav__link">
         
   
   
@@ -549,7 +545,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api_reference/" class="md-nav__link">
+      <a href="../../api_reference/" class="md-nav__link">
         
   
   
@@ -573,8 +569,6 @@
       
   
   
-    
-  
   
   
     
@@ -587,11 +581,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -612,7 +606,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -630,7 +624,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ARCHITECTURE/" class="md-nav__link">
+      <a href="../../ARCHITECTURE/" class="md-nav__link">
         
   
   
@@ -658,7 +652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../IMPLEMENTING_FORMATS/" class="md-nav__link">
+      <a href="../../IMPLEMENTING_FORMATS/" class="md-nav__link">
         
   
   
@@ -686,7 +680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../BENCHMARK_RESULTS/" class="md-nav__link">
+      <a href="../../BENCHMARK_RESULTS/" class="md-nav__link">
         
   
   
@@ -711,37 +705,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Performance Analysis
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE_ANALYSIS/" class="md-nav__link">
         
   
   
@@ -757,115 +724,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#executive-summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Executive Summary
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Executive Summary">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#key-highlights" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Highlights:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#detailed-metrics-comparison-win32" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Detailed Metrics Comparison (Win32)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Detailed Metrics Comparison (Win32)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-json-text-based" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. JSON (Text-based)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-msgpack-binary-based" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. MsgPack (Binary-based)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-cbor-binary-based" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. CBOR (Binary-based)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#conclusion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Conclusion
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -937,7 +795,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ROADMAP/" class="md-nav__link">
+      <a href="../../ROADMAP/" class="md-nav__link">
         
   
   
@@ -1014,7 +872,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/streaming_support/" class="md-nav__link">
+      <a href="../streaming_support/" class="md-nav__link">
         
   
   
@@ -1042,7 +900,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/partial_serialization/" class="md-nav__link">
+      <a href="../partial_serialization/" class="md-nav__link">
         
   
   
@@ -1070,7 +928,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/fastapi_integration/" class="md-nav__link">
+      <a href="../fastapi_integration/" class="md-nav__link">
         
   
   
@@ -1098,7 +956,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/openapi_support/" class="md-nav__link">
+      <a href="../openapi_support/" class="md-nav__link">
         
   
   
@@ -1126,7 +984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/schema_to_code_cli_tool/" class="md-nav__link">
+      <a href="../schema_to_code_cli_tool/" class="md-nav__link">
         
   
   
@@ -1154,7 +1012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/compiler_enhancements_cython_mypyc/" class="md-nav__link">
+      <a href="../compiler_enhancements_cython_mypyc/" class="md-nav__link">
         
   
   
@@ -1182,7 +1040,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/protocol_buffers_support/" class="md-nav__link">
+      <a href="../protocol_buffers_support/" class="md-nav__link">
         
   
   
@@ -1210,7 +1068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/ide_plugin/" class="md-nav__link">
+      <a href="../ide_plugin/" class="md-nav__link">
         
   
   
@@ -1246,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CONTRIBUTING/" class="md-nav__link">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -1301,22 +1159,66 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#executive-summary" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Executive Summary
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Executive Summary">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Approach">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#key-highlights" class="md-nav__link">
+  <a href="#1-lazy-field-partial-object-loading" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Highlights:
+        1. Lazy Field &amp; Partial Object Loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-quantization-aware-handlers-lodumextml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Quantization-Aware Handlers (lodum.ext.ml)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-zero-copy-architecture-memory-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Zero-Copy Architecture &amp; Memory Mapping
       
     </span>
   </a>
@@ -1329,60 +1231,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detailed-metrics-comparison-win32" class="md-nav__link">
+  <a href="#use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detailed Metrics Comparison (Win32)
+        Use Cases
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Detailed Metrics Comparison (Win32)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-json-text-based" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. JSON (Text-based)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-msgpack-binary-based" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. MsgPack (Binary-based)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-cbor-binary-based" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. CBOR (Binary-based)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#conclusion" class="md-nav__link">
+  <a href="#relationship-to-streaming-support" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Conclusion
+        Relationship to Streaming Support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestones
       
     </span>
   </a>
@@ -1409,209 +1283,62 @@
   
 
 
-<h1 id="performance-analysis-evolution-from-baseline-to-modular-refactor">Performance Analysis: Evolution from Baseline to Modular Refactor</h1>
-<p>This document analyzes the performance impact of the engine overhaul and the subsequent modular refactor completed on January 25th, 2026.</p>
-<h2 id="executive-summary">Executive Summary</h2>
-<p>The optimizations implemented during the AST engine transition and the modular refactor have yielded massive performance gains. By comparing the latest results against previous Win32-specific metrics, we can see that the modular architecture (Experiment 9) not only maintained but in several cases improved upon the performance of the optimized AST handlers.</p>
-<h3 id="key-highlights">Key Highlights:</h3>
+<h1 id="memory-aware-serialization-lazy-loading-quantization">Memory-Aware Serialization (Lazy Loading &amp; Quantization)</h1>
+<h2 id="overview">Overview</h2>
+<p>This plan details the implementation of "Memory-Aware" serialization in <code>lodum</code>. The goal is to allow Data Analysts to work with large, quantized datasets (e.g., ML weights, high-frequency sensor data) in memory-constrained environments like Pyodide/WASM without triggering Out-Of-Memory (OOM) errors.</p>
+<h2 id="problem-statement">Problem Statement</h2>
+<p>Standard Python serialization (and many modern alternatives) expands data upon loading. For example, 1GB of 4-bit quantized data often expands to 8GB or more when converted to standard Python floats or NumPy arrays. In environments like WASM with a 4GB memory ceiling, this makes many data science tasks impossible.</p>
+<h2 id="implementation-approach">Implementation Approach</h2>
+<h3 id="1-lazy-field-partial-object-loading">1. Lazy Field &amp; Partial Object Loading</h3>
+<p>Introduce a <code>lazy=True</code> option to <code>field()</code>. This provides two tiers of memory optimization:</p>
 <ul>
-<li><strong>Simple Object Handling</strong>: ~30% faster serialization and deserialization compared to the 1/20 optimized version on the same platform.</li>
-<li><strong>Maintainability</strong>: The engine is now modularized into <code>compiler/</code> and <code>handlers/</code> with thread-safe <code>Context</code> management and zero regression on complex paths.</li>
-<li><strong>Robustness</strong>: Performance gains were maintained despite adding significantly more validation and error-reporting logic.</li>
+<li><strong>Lazy Tensor/Array Access</strong>: For large arrays (NumPy/Tensors), the loader captures the byte-offset and length, returning a proxy. Materialization occurs only when slices are accessed.</li>
+<li><strong>Lazy Field Access (Complex Objects)</strong>: For nested <code>@lodum</code> objects or large dictionaries, the field is skipped during initial parse. Accessing the attribute triggers a targeted "sub-parse" of only that section of the buffer.</li>
 </ul>
-<h2 id="detailed-metrics-comparison-win32">Detailed Metrics Comparison (Win32)</h2>
-<p>All values are in microseconds (us) per operation (lower is better).</p>
-<h3 id="1-json-text-based">1. JSON (Text-based)</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Operation</th>
-<th style="text-align: left;">Model</th>
-<th style="text-align: center;">1/19 Baseline</th>
-<th style="text-align: center;">1/20 Optimized (Win32)</th>
-<th style="text-align: center;">1/25 Modular (Win32)</th>
-<th style="text-align: center;">Improvement (vs Baseline)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>Serialization</strong></td>
-<td style="text-align: left;">Simple</td>
-<td style="text-align: center;">8.24</td>
-<td style="text-align: center;">11.45</td>
-<td style="text-align: center;">7.62</td>
-<td style="text-align: center;"><strong>7.5%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Complex</td>
-<td style="text-align: center;">31.47</td>
-<td style="text-align: center;">16.01</td>
-<td style="text-align: center;">15.45</td>
-<td style="text-align: center;"><strong>50.9%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Nested</td>
-<td style="text-align: center;">33.58</td>
-<td style="text-align: center;">33.43</td>
-<td style="text-align: center;">36.51</td>
-<td style="text-align: center;">-8.7%</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Deserialization</strong></td>
-<td style="text-align: left;">Simple</td>
-<td style="text-align: center;">22.06</td>
-<td style="text-align: center;">31.24</td>
-<td style="text-align: center;">21.75</td>
-<td style="text-align: center;"><strong>1.4%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Complex</td>
-<td style="text-align: center;">45.39</td>
-<td style="text-align: center;">40.06</td>
-<td style="text-align: center;">42.52</td>
-<td style="text-align: center;"><strong>6.3%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Nested</td>
-<td style="text-align: center;">131.68</td>
-<td style="text-align: center;">145.26</td>
-<td style="text-align: center;">131.67</td>
-<td style="text-align: center;"><strong>0.0%</strong></td>
-</tr>
-</tbody>
-</table>
-<h3 id="2-msgpack-binary-based">2. MsgPack (Binary-based)</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Operation</th>
-<th style="text-align: left;">Model</th>
-<th style="text-align: center;">1/19 Baseline</th>
-<th style="text-align: center;">1/20 Optimized (Win32)</th>
-<th style="text-align: center;">1/25 Modular (Win32)</th>
-<th style="text-align: center;">Improvement (vs Baseline)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>Serialization</strong></td>
-<td style="text-align: left;">Simple</td>
-<td style="text-align: center;">4.89</td>
-<td style="text-align: center;">6.80</td>
-<td style="text-align: center;">4.60</td>
-<td style="text-align: center;"><strong>5.9%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Complex</td>
-<td style="text-align: center;">25.56</td>
-<td style="text-align: center;">10.76</td>
-<td style="text-align: center;">10.15</td>
-<td style="text-align: center;"><strong>60.3%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Nested</td>
-<td style="text-align: center;">25.97</td>
-<td style="text-align: center;">24.77</td>
-<td style="text-align: center;">31.31</td>
-<td style="text-align: center;">-20.5%</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Deserialization</strong></td>
-<td style="text-align: left;">Simple</td>
-<td style="text-align: center;">17.84</td>
-<td style="text-align: center;">21.88</td>
-<td style="text-align: center;">18.22</td>
-<td style="text-align: center;">-2.1%</td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Complex</td>
-<td style="text-align: center;">38.71</td>
-<td style="text-align: center;">29.45</td>
-<td style="text-align: center;">35.90</td>
-<td style="text-align: center;"><strong>7.3%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Nested</td>
-<td style="text-align: center;">124.40</td>
-<td style="text-align: center;">142.09</td>
-<td style="text-align: center;">119.92</td>
-<td style="text-align: center;"><strong>3.6%</strong></td>
-</tr>
-</tbody>
-</table>
-<h3 id="3-cbor-binary-based">3. CBOR (Binary-based)</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Operation</th>
-<th style="text-align: left;">Model</th>
-<th style="text-align: center;">1/19 Baseline</th>
-<th style="text-align: center;">1/20 Optimized (Win32)</th>
-<th style="text-align: center;">1/25 Modular (Win32)</th>
-<th style="text-align: center;">Improvement (vs Baseline)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>Serialization</strong></td>
-<td style="text-align: left;">Simple</td>
-<td style="text-align: center;">12.51</td>
-<td style="text-align: center;">25.09</td>
-<td style="text-align: center;">11.61</td>
-<td style="text-align: center;"><strong>7.2%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Complex</td>
-<td style="text-align: center;">37.00</td>
-<td style="text-align: center;">24.50</td>
-<td style="text-align: center;">18.84</td>
-<td style="text-align: center;"><strong>49.1%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Nested</td>
-<td style="text-align: center;">41.75</td>
-<td style="text-align: center;">48.42</td>
-<td style="text-align: center;">43.67</td>
-<td style="text-align: center;">-4.6%</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Deserialization</strong></td>
-<td style="text-align: left;">Simple</td>
-<td style="text-align: center;">22.41</td>
-<td style="text-align: center;">25.61</td>
-<td style="text-align: center;">21.61</td>
-<td style="text-align: center;"><strong>3.6%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Complex</td>
-<td style="text-align: center;">44.90</td>
-<td style="text-align: center;">34.33</td>
-<td style="text-align: center;">39.39</td>
-<td style="text-align: center;"><strong>12.3%</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Nested</td>
-<td style="text-align: center;">132.87</td>
-<td style="text-align: center;">146.51</td>
-<td style="text-align: center;">132.37</td>
-<td style="text-align: center;"><strong>0.4%</strong></td>
-</tr>
-</tbody>
-</table>
-<h2 id="conclusion">Conclusion</h2>
-<p>The engine overhaul is a resounding success. By moving safety checks (circular references, recursion depth) and type validation into compiled bytecode, Lodum achieves high speed without sacrificing the robustness inspired by Rust's <code>serde</code>. The improvements are format-agnostic, providing immediate benefits to JSON, MsgPack, CBOR, and even YAML (which saw proportional gains despite high parser overhead).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@lodum</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">LargeModel</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Tensor proxy</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">extra_data</span><span class="p">:</span> <span class="n">ComplexInfo</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Object proxy</span>
+</code></pre></div>
+<ul>
+<li><strong>Generated Bytecode</strong>: The compiler generates a "skip-and-record" instruction that stores the buffer reference and bounds for the lazy field.</li>
+<li><strong>Seekable Requirements</strong>: This feature requires a seekable data source (e.g., <code>BytesIO</code> or <code>mmap</code>) to allow random access to lazy segments.</li>
+</ul>
+<h3 id="2-quantization-aware-handlers-lodumextml">2. Quantization-Aware Handlers (lodum.ext.ml)</h3>
+<p>To maintain a lean core, advanced ML-specific logic (bit-packing, quantization scales) will reside in the <code>lodum.ext.ml</code> namespace. This will be an optional "extra" (<code>pip install "lodum[ml]"</code>).</p>
+<ul>
+<li><strong>Bit-Packed Dtypes</strong>: Support for <code>q4_0</code>, <code>q4_k</code>, <code>int8</code>, etc.</li>
+<li><strong>AST Generation</strong>: The <code>load_codegen</code> engine will generate specialized bit-shifting loops (<code>(val &gt;&gt; 4) &amp; 0x0F</code>) to unpack data directly into the target representation.</li>
+<li><strong>Metadata Coupling</strong>: Support for block-level quantization parameters (scales and zero-points) that are read and applied during access.</li>
+</ul>
+<h3 id="3-zero-copy-architecture-memory-mapping">3. Zero-Copy Architecture &amp; Memory Mapping</h3>
+<p>Leverage Python's <code>memoryview</code> and <code>mmap</code> to avoid memory expansion.</p>
+<ul>
+<li><strong>Buffer Management</strong>: Use <code>memoryview</code> to slice the input buffer without copying.</li>
+<li><strong>mmap Integration</strong>: When loading from a file, <code>lodum</code> can automatically use <code>mmap</code> to map the file into address space, allowing the OS to handle paging and keeping the Python heap footprint minimal.</li>
+<li><strong>Interleaved Data</strong>: Support formats like GGUF and Safetensors, allowing the parser to jump between descriptors and large data blocks.</li>
+</ul>
+<h2 id="use-cases">Use Cases</h2>
+<ul>
+<li><strong>Browser-based LLMs</strong>: Managing model metadata and weights in Pyodide without crashing the tab.</li>
+<li><strong>Edge Computing</strong>: Analyzing high-frequency sensor streams on resource-constrained hardware.</li>
+<li><strong>Dequantize-on-Access</strong>: Providing a NumPy-compatible interface that only performs floating-point math on the specific slice being accessed.</li>
+</ul>
+<h2 id="relationship-to-streaming-support">Relationship to Streaming Support</h2>
+<p>While both this plan and the <a href="../streaming_support/">Streaming Support Plan</a> address memory constraints, they solve different problems:</p>
+<ul>
+<li><strong>Streaming (<code>load_stream</code>)</strong>: Focuses on <strong>horizontal scale</strong> (iterating over millions of objects). It works on sequential, non-seekable streams (like network sockets).</li>
+<li><strong>Memory-Aware (<code>lazy=True</code>)</strong>: Focuses on <strong>vertical depth</strong> (handling massive fields within a single object). It requires a <strong>seekable source</strong> (like a local file or <code>BytesIO</code>) to allow the proxy to "jump back" and read data on-demand.</li>
+</ul>
+<p><strong>Synergy</strong>: When combined, <code>lodum</code> can stream a large list of objects where each individual object is also lazily loaded, providing maximum memory efficiency for complex data science pipelines.</p>
+<h2 id="milestones">Milestones</h2>
+<ol>
+<li><strong>Phase 1</strong>: Prototype lazy field skipping in the AST compiler.</li>
+<li><strong>Phase 2</strong>: Implement basic <code>QuantizedArray</code> proxy for 8-bit data.</li>
+<li><strong>Phase 3</strong>: Add bit-packed (4-bit) AST generation logic.</li>
+<li><strong>Phase 4</strong>: Full integration with NumPy/Polars for zero-copy views.</li>
+</ol>
 
 
 
@@ -1667,10 +1394,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
