@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import polars as pl
+import pytest
+pl = pytest.importorskip("polars")
 from lodum import lodum, json
 
 
