@@ -1839,7 +1839,7 @@ You can view the overall project status and progress on our <a href="https://git
 <p>When a new version of <code>lodum</code> is ready for release, follow these steps:</p>
 <ol>
 <li><strong>Prepare the Release Branch</strong>:<ul>
-<li>Create a new branch <code>feature/issue-XX-release-prep</code> (replacing XX with the release tracking issue number).</li>
+<li>Create a new branch <code>release/vX.Y.Z</code>.</li>
 </ul>
 </li>
 <li><strong>Update Version</strong>:<ul>
@@ -1853,23 +1853,24 @@ You can view the overall project status and progress on our <a href="https://git
 </ul>
 </li>
 <li><strong>Final Checks</strong>:<ul>
-<li>Run the full test suite: <code>PYTHONPATH=src pytest</code>.</li>
-<li>Run Pyodide tests: <code>node run_pyodide_node.js</code> and <code>PYODIDE_SHARED_MEMORY=1 node run_pyodide_node.js</code>.</li>
-<li>Build and preview the documentation: <code>mkdocs serve</code>.</li>
-<li>Ensure all branding assets (headers, social previews) are correct.</li>
+<li>Ensure CI is passing on the release branch (includes native and Pyodide tests).</li>
+<li>Ensure all branding assets are correct.</li>
 </ul>
 </li>
 <li><strong>Merge and Tag</strong>:<ul>
-<li>Merge the release branch into <code>main</code>.</li>
-<li>Create a signed Git tag: <code>git tag -a vX.Y.Z -m "Release vX.Y.Z"</code>.</li>
-<li>Push the tag: <code>git push origin vX.Y.Z</code>.</li>
+<li>Merge the release branch into <code>main</code> via Pull Request.</li>
+<li>Create and push a signed Git tag:
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>vX.Y.Z<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Release vX.Y.Z&quot;</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>vX.Y.Z
+</code></pre></div></li>
 </ul>
 </li>
-<li><strong>Deploy and Publish</strong>:<ul>
-<li>Build the distribution: <code>python3 -m build</code>.</li>
-<li>Upload to PyPI: <code>twine upload dist/*</code>.</li>
-<li>Deploy versioned documentation: <code>mike deploy --push --update-aliases vX.Y.Z latest</code>.</li>
-<li>Set the new version as default (if applicable): <code>mike set-default --push latest</code>.</li>
+<li><strong>Automated Deployment</strong>:<ul>
+<li>Pushing the tag triggers the <strong>Release Workflow</strong>, which automatically:<ul>
+<li>Builds and uploads the package to <strong>PyPI</strong>.</li>
+<li>Deploys versioned documentation and updates the <strong>latest</strong> alias.</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
