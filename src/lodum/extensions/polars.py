@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any, Dict, List, Optional, Type
-import polars as pl
+import polars as pl  # type: ignore[import-not-found]
 from ..core import Dumper, Loader
 from ..registry import TypeHandler
 

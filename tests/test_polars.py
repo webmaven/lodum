@@ -2,9 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
+from typing import TYPE_CHECKING
 from lodum import lodum, json
 
-pl = pytest.importorskip("polars")
+if TYPE_CHECKING:
+    import polars as pl  # type: ignore[import-not-found]
+else:
+    pl = pytest.importorskip("polars")
 
 
 @lodum
