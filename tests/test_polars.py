@@ -1,8 +1,14 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import polars as pl
+import pytest
+from typing import TYPE_CHECKING
 from lodum import lodum, json
+
+if TYPE_CHECKING:
+    import polars as pl  # type: ignore[import-not-found]
+else:
+    pl = pytest.importorskip("polars")
 
 
 @lodum
