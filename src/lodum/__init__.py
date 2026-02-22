@@ -6,7 +6,7 @@ __version__ = "0.3.0"
 from .core import lodum
 from .field import field
 from .internal import generate_schema as schema
-from . import json, yaml, pickle, toml, msgpack, cbor, bson
+from . import json, yaml, pickle, toml, msgpack, cbor, bson, concurrency
 from typing import Any, Type, TypeVar
 
 T = TypeVar("T")
@@ -69,4 +69,5 @@ __all__ = [
     "msgpack",
     "cbor",
     "bson",
+    "concurrency",
 ]
