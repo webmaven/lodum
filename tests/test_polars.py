@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-pl = pytest.importorskip("polars")
 from lodum import lodum, json
+
+pl = pytest.importorskip("polars")
 
 
 @lodum
