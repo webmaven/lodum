@@ -55,15 +55,16 @@ nav:
     - Interactive Demo: demo.md
     - Field Customization: FIELD_CUSTOMIZATION.md
     - Validation: VALIDATION.md
-    - Performance: PERFORMANCE.md
+    - Performance:
+      - Overview: PERFORMANCE.md
+      - Performance Evolution: PERFORMANCE_EVOLUTION.md
+      - Benchmark Methodology: BENCHMARK_METHODOLOGY.md
+      - Benchmark History: BENCHMARK_HISTORY.md
     - Migration: MIGRATION.md
   - API Reference: api_reference.md
   - Technical Specs:
     - Architecture: ARCHITECTURE.md
     - Implementing Formats: IMPLEMENTING_FORMATS.md
-    - Benchmark History: BENCHMARK_RESULTS.md
-    - Performance Evolution: PERFORMANCE_ANALYSIS.md
-    - Benchmark Methodology: BENCHMARK_METHODOLOGY.md
   - Project:
     - Roadmap: ROADMAP.md
     - Implementation Plans:
