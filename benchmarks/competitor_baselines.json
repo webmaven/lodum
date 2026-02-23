@@ -1,0 +1,132 @@
+{
+  "JSON Serialization Pydantic (v2) simple": {
+    "mean": 1.423879861111664,
+    "stdev": 0.21213374294567222,
+    "count": 18
+  },
+  "JSON Serialization Pydantic (v2) complex": {
+    "mean": 1.9072649055562607,
+    "stdev": 0.10903064829048521,
+    "count": 18
+  },
+  "JSON Serialization Pydantic (v2) nested": {
+    "mean": 3.5567207111111228,
+    "stdev": 0.22990219431337702,
+    "count": 18
+  },
+  "JSON Serialization Marshmallow simple": {
+    "mean": 7.2870557833333685,
+    "stdev": 0.5454414227548336,
+    "count": 18
+  },
+  "JSON Serialization Marshmallow complex": {
+    "mean": 15.705288399999873,
+    "stdev": 1.2743898806639526,
+    "count": 18
+  },
+  "JSON Serialization Marshmallow nested": {
+    "mean": 42.84389975555657,
+    "stdev": 2.9616764525250523,
+    "count": 18
+  },
+  "JSON Deserialization Pydantic (v2) simple": {
+    "mean": 1.469039444443412,
+    "stdev": 0.11180373512894057,
+    "count": 18
+  },
+  "JSON Deserialization Pydantic (v2) complex": {
+    "mean": 2.3911850444443576,
+    "stdev": 0.22078221345858526,
+    "count": 18
+  },
+  "JSON Deserialization Pydantic (v2) nested": {
+    "mean": 6.360317577780192,
+    "stdev": 1.4090408322973442,
+    "count": 18
+  },
+  "JSON Deserialization Marshmallow simple": {
+    "mean": 17.80687678888968,
+    "stdev": 1.1758954684306817,
+    "count": 18
+  },
+  "JSON Deserialization Marshmallow complex": {
+    "mean": 40.72305930000044,
+    "stdev": 3.076847803044082,
+    "count": 18
+  },
+  "JSON Deserialization Marshmallow nested": {
+    "mean": 127.04332092777398,
+    "stdev": 9.629280527101177,
+    "count": 18
+  },
+  "MsgPack Serialization Native msgpack (dict) simple": {
+    "mean": 0.711815029411323,
+    "stdev": 0.10404123675479239,
+    "count": 17
+  },
+  "MsgPack Serialization Native msgpack (dict) complex": {
+    "mean": 1.163070329413074,
+    "stdev": 0.2216200348041607,
+    "count": 17
+  },
+  "MsgPack Serialization Native msgpack (dict) nested": {
+    "mean": 1.9935557235300356,
+    "stdev": 0.3769179111845893,
+    "count": 17
+  },
+  "MsgPack Deserialization Native msgpack (dict) simple": {
+    "mean": 0.48290518823522427,
+    "stdev": 0.02943791303427,
+    "count": 17
+  },
+  "MsgPack Deserialization Native msgpack (dict) complex": {
+    "mean": 1.0041882000007178,
+    "stdev": 0.036490094101692,
+    "count": 17
+  },
+  "MsgPack Deserialization Native msgpack (dict) nested": {
+    "mean": 2.1774501764719605,
+    "stdev": 0.09897043631397004,
+    "count": 17
+  },
+  "CBOR Serialization Native cbor2 (dict) simple": {
+    "mean": 4.186143758823679,
+    "stdev": 0.10091340018602085,
+    "count": 17
+  },
+  "CBOR Serialization Native cbor2 (dict) complex": {
+    "mean": 5.562398770588489,
+    "stdev": 0.15423184853850533,
+    "count": 17
+  },
+  "CBOR Serialization Native cbor2 (dict) nested": {
+    "mean": 8.424710111763373,
+    "stdev": 0.2009480364284489,
+    "count": 17
+  },
+  "CBOR Deserialization Native cbor2 (dict) simple": {
+    "mean": 1.6832919882363024,
+    "stdev": 0.1030281969543116,
+    "count": 17
+  },
+  "CBOR Deserialization Native cbor2 (dict) complex": {
+    "mean": 2.4755538647070807,
+    "stdev": 0.11068189797884515,
+    "count": 17
+  },
+  "CBOR Deserialization Native cbor2 (dict) nested": {
+    "mean": 4.27499937058893,
+    "stdev": 0.16348170271282841,
+    "count": 17
+  },
+  "Pydantic v2 (validate_json) Time": {
+    "mean": 4.069754642437497,
+    "stdev": 0.38794771172200726,
+    "count": 16
+  },
+  "Pydantic v2 (validate_json) Memory": {
+    "mean": 358.4476375579834,
+    "stdev": 0.0,
+    "count": 16
+  }
+}

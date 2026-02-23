@@ -4,7 +4,8 @@ import sys
 import statistics
 import pickle
 import io
-from typing import Callable, Dict, Optional
+import os
+from typing import Callable, Dict, Optional, Any, List
 
 # Optional dependencies
 try:
@@ -172,6 +173,13 @@ nested_pickle = pickle.dumps(lodum_nested)
 
 ITERATIONS = 2000
 
+# Baselines Loading
+BASELINES_FILE = os.path.join(os.path.dirname(__file__), "competitor_baselines.json")
+competitor_baselines = {}
+if os.path.exists(BASELINES_FILE):
+    with open(BASELINES_FILE, "r") as f:
+        competitor_baselines = json.load(f)
+
 
 def bench(func):
     if func is None:
@@ -193,12 +201,19 @@ def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable
     print("| Library | Simple (us) | Complex (us) | Nested (us) |")
     print("| :--- | ---: | ---: | ---: |")
 
-    for lib_name, funcs in benchmarks.items():
-        simple_res = bench(funcs.get("simple"))
-        complex_res = bench(funcs.get("complex"))
-        nested_res = bench(funcs.get("nested"))
+    use_baselines = "--use-baselines" in sys.argv
 
-        if simple_res is None and complex_res is None and nested_res is None:
+    for lib_name, funcs in benchmarks.items():
+        results = {}
+        for scenario in ["simple", "complex", "nested"]:
+            # Check if we should use baseline
+            baseline_key = f"{group_name} {lib_name} {scenario}"
+            if use_baselines and baseline_key in competitor_baselines:
+                results[scenario] = competitor_baselines[baseline_key]
+            else:
+                results[scenario] = bench(funcs.get(scenario))
+
+        if not any(results.values()):
             continue
 
         def fmt(res):
@@ -207,20 +222,26 @@ def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable
             return f"{res['mean']:.2f} ± {res['stdev']:.2f}"
 
         print(
-            f"| {lib_name} | {fmt(simple_res)} | {fmt(complex_res)} | {fmt(nested_res)} |"
+            f"| {lib_name} | {fmt(results.get('simple'))} | {fmt(results.get('complex'))} | {fmt(results.get('nested'))} |"
         )
     print()
 
 
 def run_all():
     is_json = "--json" in sys.argv
+    use_baselines = "--use-baselines" in sys.argv
     all_results = []
 
     def collect_group(group_name, benchmarks):
         if is_json:
             for lib, funcs in benchmarks.items():
                 for name, fn in funcs.items():
-                    res = bench(fn)
+                    baseline_key = f"{group_name} {lib} {name}"
+                    if use_baselines and baseline_key in competitor_baselines:
+                        res = competitor_baselines[baseline_key]
+                    else:
+                        res = bench(fn)
+                    
                     if res:
                         all_results.append(
                             {
@@ -236,6 +257,8 @@ def run_all():
         print("# Lodum Performance Benchmarks\n")
         print(f"Iterations: {ITERATIONS}\n")
         print(f"Python version: {sys.version}\n")
+        if use_baselines:
+            print("Note: Using stored competitor baselines for comparison.\n")
 
     # JSON Serialization
     collect_group(

@@ -52,7 +52,7 @@ jobs:
       shell: bash
     - name: Run Standard Benchmarks
       run: |
-        python benchmarks/run.py --json > standard_bench.json
+        python benchmarks/run.py --json --use-baselines > standard_bench.json
       shell: bash
       env:
         PYTHONPATH: ${{ matrix.os == 'windows-latest' && 'src;.' || 'src:.' }}
@@ -115,7 +115,7 @@ jobs:
         pip install pydantic ijson marshmallow orjson
     - name: Run Benchmarks (using current scripts on old code)
       run: |
-        python lodum-current/benchmarks/run.py --json > standard_bench.json
+        python lodum-current/benchmarks/run.py --json --use-baselines > standard_bench.json
       env:
         PYTHONPATH: ${{ format('{0}/src:{0}/lodum-current', github.workspace) }}
     - name: Aggregate
