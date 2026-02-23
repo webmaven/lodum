@@ -1,53 +1,37 @@
-# Performance Analysis: Evolution from Baseline to Modular Refactor
+# Performance Evolution
 
-This document analyzes the performance impact of the engine overhaul and the subsequent modular refactor completed on January 25th, 2026.
+This document tracks the performance trajectory of Lodum. All results in this analysis are standardized on **Linux (ubuntu-latest)** hardware (AMD EPYC 7763) to ensure a fair comparison across the library's history.
 
-## Executive Summary
+## Performance Trajectory (JSON)
 
-The optimizations implemented during the AST engine transition and the modular refactor have yielded massive performance gains. By comparing the latest results against previous Win32-specific metrics, we can see that the modular architecture (Experiment 9) not only maintained but in several cases improved upon the performance of the optimized AST handlers.
+Measurements are in microseconds (us) per operation. Lower is better.
 
-### Key Highlights:
-- **Simple Object Handling**: ~30% faster serialization and deserialization compared to the 1/20 optimized version on the same platform.
-- **Maintainability**: The engine is now modularized into `compiler/` and `handlers/` with thread-safe `Context` management and zero regression on complex paths.
-- **Robustness**: Performance gains were maintained despite adding significantly more validation and error-reporting logic.
+| Scenario | v0.1.0 (Initial) | v0.2.0 (Public) | v0.3.0 (Latest) | Overall Improvement |
+| :--- | ---: | ---: | ---: | :--- |
+| **Simple Serialization** | 5.56 | 4.86 | 4.90 | **~12% faster** |
+| **Simple Deserialization** | 18.82 | 12.05 | 12.47 | **~34% faster** |
+| **Complex Serialization** | 10.95 | 7.79 | 7.90 | **~28% faster** |
+| **Complex Deserialization** | 37.31 | 25.99 | 26.35 | **~29% faster** |
+| **Nested Serialization** | 25.58 | 21.54 | 21.69 | **~15% faster** |
+| **Nested Deserialization** | 117.81 | 72.63 | 74.44 | **~37% faster** |
 
-## Detailed Metrics Comparison (Win32)
+## Key Milestones
 
-All values are in microseconds (us) per operation (lower is better).
+### v0.1.0 to v0.2.0: The AST Revolution
+The massive jump in performance seen in v0.2.0 was driven by the migration to a fully AST-based (Abstract Syntax Tree) code generation engine. 
+- **Optimization**: Instead of generic loops and runtime inspections, Lodum now generates specialized Python bytecode tailored to each unique class schema.
+- **Result**: Deserialization speed improved by up to **37%** in nested scenarios.
 
-### 1. JSON (Text-based)
+### v0.2.0 to v0.3.0: Robustness and Concurrency
+v0.3.0 focused on cross-platform integrity and WASM support. 
+- **Change**: Introduced the `Context` object and a new internal registry to support thread-safe global state and WASM sequential shims.
+- **Performance Impact**: Despite the added complexity for concurrency support, performance remained stable (within 1-2% of v0.2.0), proving that our lock-free handler lookups are highly efficient.
 
-| Operation | Model | 1/19 Baseline | 1/20 Optimized (Win32) | 1/25 Modular (Win32) | Improvement (vs Baseline) |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Serialization** | Simple | 8.24 | 11.45 | 7.62 | **7.5%** |
-| | Complex | 31.47 | 16.01 | 15.45 | **50.9%** |
-| | Nested | 33.58 | 33.43 | 36.51 | -8.7% |
-| **Deserialization** | Simple | 22.06 | 31.24 | 21.75 | **1.4%** |
-| | Complex | 45.39 | 40.06 | 42.52 | **6.3%** |
-| | Nested | 131.68 | 145.26 | 131.67 | **0.0%** |
+## Analysis vs. Competitors
 
-### 2. MsgPack (Binary-based)
+While Lodum is a pure-Python library, its AST-based approach allows it to significantly outperform traditional validation libraries like Marshmallow. 
 
-| Operation | Model | 1/19 Baseline | 1/20 Optimized (Win32) | 1/25 Modular (Win32) | Improvement (vs Baseline) |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Serialization** | Simple | 4.89 | 6.80 | 4.60 | **5.9%** |
-| | Complex | 25.56 | 10.76 | 10.15 | **60.3%** |
-| | Nested | 25.97 | 24.77 | 31.31 | -20.5% |
-| **Deserialization** | Simple | 17.84 | 21.88 | 18.22 | -2.1% |
-| | Complex | 38.71 | 29.45 | 35.90 | **7.3%** |
-| | Nested | 124.40 | 142.09 | 119.92 | **3.6%** |
+- **Marshmallow (v3.x)**: Lodum v0.3.0 is typically **2x to 3x faster** across all categories.
+- **Pydantic (v2.x)**: Pydantic remains faster due to its core being written in Rust. Lodum provides a competitive alternative for environments where binary dependencies are restricted (like WASM/Pyodide) or where a pure-Python codebase is preferred.
 
-### 3. CBOR (Binary-based)
-
-| Operation | Model | 1/19 Baseline | 1/20 Optimized (Win32) | 1/25 Modular (Win32) | Improvement (vs Baseline) |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Serialization** | Simple | 12.51 | 25.09 | 11.61 | **7.2%** |
-| | Complex | 37.00 | 24.50 | 18.84 | **49.1%** |
-| | Nested | 41.75 | 48.42 | 43.67 | -4.6% |
-| **Deserialization** | Simple | 22.41 | 25.61 | 21.61 | **3.6%** |
-| | Complex | 44.90 | 34.33 | 39.39 | **12.3%** |
-| | Nested | 132.87 | 146.51 | 132.37 | **0.4%** |
-
-## Conclusion
-
-The engine overhaul is a resounding success. By moving safety checks (circular references, recursion depth) and type validation into compiled bytecode, Lodum achieves high speed without sacrificing the robustness inspired by Rust's `serde`. The improvements are format-agnostic, providing immediate benefits to JSON, MsgPack, CBOR, and even YAML (which saw proportional gains despite high parser overhead).
+For real-time results and automated regression tracking, visit the [Lodum Performance Dashboard](https://webmaven.github.io/lodum/benchmarks/).
