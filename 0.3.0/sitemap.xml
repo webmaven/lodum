@@ -9,7 +9,11 @@
          <lastmod>2026-02-23</lastmod>
     </url>
     <url>
-         <loc>https://webmaven.github.io/lodum/0.3.0/BENCHMARK_RESULTS/</loc>
+         <loc>https://webmaven.github.io/lodum/0.3.0/BENCHMARK_HISTORY/</loc>
+         <lastmod>2026-02-23</lastmod>
+    </url>
+    <url>
+         <loc>https://webmaven.github.io/lodum/0.3.0/BENCHMARK_METHODOLOGY/</loc>
          <lastmod>2026-02-23</lastmod>
     </url>
     <url>
@@ -41,11 +45,7 @@
          <lastmod>2026-02-23</lastmod>
     </url>
     <url>
-         <loc>https://webmaven.github.io/lodum/0.3.0/PERFORMANCE_ANALYSIS/</loc>
-         <lastmod>2026-02-23</lastmod>
-    </url>
-    <url>
-         <loc>https://webmaven.github.io/lodum/0.3.0/PERFORMANCE_LOG/</loc>
+         <loc>https://webmaven.github.io/lodum/0.3.0/PERFORMANCE_EVOLUTION/</loc>
          <lastmod>2026-02-23</lastmod>
     </url>
     <url>

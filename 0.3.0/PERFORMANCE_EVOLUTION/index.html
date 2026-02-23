@@ -10,9 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://webmaven.github.io/lodum/0.3.0/PERFORMANCE_LOG/">
+        <link rel="canonical" href="https://webmaven.github.io/lodum/0.3.0/PERFORMANCE_EVOLUTION/">
       
       
+        <link rel="prev" href="../PERFORMANCE/">
+      
+      
+        <link rel="next" href="../BENCHMARK_METHODOLOGY/">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>Performance Optimization Log - lodum</title>
+        <title>Performance Evolution - lodum</title>
       
     
     
@@ -78,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#performance-optimization-log" class="md-skip">
+        <a href="#performance-evolution-the-ast-revolution" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Performance Optimization Log
+              Performance Evolution
             
           </span>
         </div>
@@ -315,8 +319,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -327,11 +333,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -352,7 +358,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -479,11 +485,26 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../PERFORMANCE/" class="md-nav__link">
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -497,7 +518,265 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Performance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Evolution
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Evolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#performance-trajectory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Trajectory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-optimization-experiments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Optimization Experiments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Optimization Experiments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pre-resolved-handlers-experiment-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pre-Resolved Handlers (Experiment 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-fast-raw-dict-access-experiment-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Fast Raw-Dict Access (Experiment 5)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-loop-inlining-experiments-6-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Loop Inlining (Experiments 6 &amp; 7)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-modular-thread-safety-experiment-9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Modular Thread-Safety (Experiment 9)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-milestone-the-ast-transition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Milestone: The AST Transition
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BENCHMARK_METHODOLOGY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BENCHMARK_HISTORY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark History
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -660,62 +939,6 @@
     
   
     Implementing Formats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../BENCHMARK_RESULTS/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Benchmark Results
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../PERFORMANCE_ANALYSIS/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Performance Analysis
   
 
     
@@ -1159,10 +1382,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#baseline" class="md-nav__link">
+  <a href="#performance-trajectory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Baseline
+        Performance Trajectory
       
     </span>
   </a>
@@ -1170,109 +1393,71 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#experiment-1-defer-path-tracking" class="md-nav__link">
+  <a href="#core-optimization-experiments" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment 1: Defer Path Tracking
+        Core Optimization Experiments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Optimization Experiments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pre-resolved-handlers-experiment-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pre-Resolved Handlers (Experiment 2)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-2-pre-resolve-handlers" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#2-fast-raw-dict-access-experiment-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment 2: Pre-resolve Handlers
+        2. Fast Raw-Dict Access (Experiment 5)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-3-optimize-circular-reference-detection" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#3-loop-inlining-experiments-6-7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment 3: Optimize Circular Reference Detection
+        3. Loop Inlining (Experiments 6 &amp; 7)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-4-inlining-sequence-handlers" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#4-modular-thread-safety-experiment-9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment 4: Inlining Sequence Handlers
+        4. Modular Thread-Safety (Experiment 9)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-5-fast-json-loader-raw-dict-access" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Experiment 5: Fast JSON Loader (Raw Dict Access)
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#experiment-6-optimized-sequence-deserialization" class="md-nav__link">
+  <a href="#key-milestone-the-ast-transition" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment 6: Optimized Sequence Deserialization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-7-faster-primitive-sequence-serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Experiment 7: Faster Primitive Sequence Serialization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-8-multi-format-performance-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Experiment 8: Multi-format Performance Verification
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#experiment-9-modular-thread-safe-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Experiment 9: Modular Thread-Safe Architecture
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#final-results-post-refactor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Final Results (Post-Refactor)
+        Key Milestone: The AST Transition
       
     </span>
   </a>
@@ -1296,7 +1481,7 @@
 
 
   
-    <a href="https://github.com/webmaven/lodum/edit/master/docs/PERFORMANCE_LOG.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/webmaven/lodum/edit/master/docs/PERFORMANCE_EVOLUTION.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1305,104 +1490,100 @@
     
       
     
-    <a href="https://github.com/webmaven/lodum/raw/master/docs/PERFORMANCE_LOG.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/webmaven/lodum/raw/master/docs/PERFORMANCE_EVOLUTION.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="performance-optimization-log">Performance Optimization Log</h1>
-<p>This document records the experiments and findings during the performance optimization of Lodum.</p>
-<h2 id="baseline">Baseline</h2>
-<ul>
-<li><strong>Benchmark</strong>: JSON dump/load of a <code>Post</code> object with 10 <code>Comment</code>s and nested <code>User</code> objects (10,000 iterations).</li>
-<li><strong>Results</strong>:</li>
-<li>Dump: 1.7608s</li>
-<li>Load: 5.0157s</li>
-</ul>
+<h1 id="performance-evolution-the-ast-revolution">Performance Evolution: The AST Revolution</h1>
+<p>Lodum's performance is the result of systematic experimentation and a fundamental shift in how Python serialization is handled. This document tracks our journey from a dynamic baseline to a high-performance, bytecode-compiled engine.</p>
+<h2 id="performance-trajectory">Performance Trajectory</h2>
+<p>Standardized on <strong>Linux (ubuntu-latest)</strong> hardware. Measurements in microseconds (us) per operation.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Scenario</th>
+<th style="text-align: right;">v0.1.0 (Initial)</th>
+<th style="text-align: right;">v0.2.0 (AST Core)</th>
+<th style="text-align: right;">v0.3.0 (Modular)</th>
+<th style="text-align: left;">Total Improvement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Simple Serialization</strong></td>
+<td style="text-align: right;">5.56</td>
+<td style="text-align: right;">4.86</td>
+<td style="text-align: right;">4.90</td>
+<td style="text-align: left;"><strong>12% faster</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Simple Deserialization</strong></td>
+<td style="text-align: right;">18.82</td>
+<td style="text-align: right;">12.05</td>
+<td style="text-align: right;">12.47</td>
+<td style="text-align: left;"><strong>34% faster</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Complex Serialization</strong></td>
+<td style="text-align: right;">10.95</td>
+<td style="text-align: right;">7.79</td>
+<td style="text-align: right;">7.90</td>
+<td style="text-align: left;"><strong>28% faster</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Complex Deserialization</strong></td>
+<td style="text-align: right;">37.31</td>
+<td style="text-align: right;">25.99</td>
+<td style="text-align: right;">26.35</td>
+<td style="text-align: left;"><strong>29% faster</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Nested Serialization</strong></td>
+<td style="text-align: right;">25.58</td>
+<td style="text-align: right;">21.54</td>
+<td style="text-align: right;">21.69</td>
+<td style="text-align: left;"><strong>15% faster</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Nested Deserialization</strong></td>
+<td style="text-align: right;">117.81</td>
+<td style="text-align: right;">72.63</td>
+<td style="text-align: right;">74.44</td>
+<td style="text-align: left;"><strong>37% faster</strong></td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="experiment-1-defer-path-tracking">Experiment 1: Defer Path Tracking</h2>
-<ul>
-<li><strong>Plan</strong>: Defer the computation of <code>field_path</code> strings in compiled load handlers until an exception actually occurs.</li>
-<li><strong>Hypothesis</strong>: String formatting for paths adds overhead even in the success path.</li>
-<li><strong>Findings</strong>: No significant improvement. Loading time remained around 5.05s.</li>
-<li><strong>Reasoning</strong>: The overhead of string formatting is small compared to other operations (like object instantiation), and it was still being evaluated for nested calls because <code>load</code> requires it.</li>
-</ul>
+<h2 id="core-optimization-experiments">Core Optimization Experiments</h2>
+<p>Our optimization strategy focused on eliminating the "Interpreter Tax"—the overhead of generic loops and repeated runtime inspections.</p>
+<h3 id="1-pre-resolved-handlers-experiment-2">1. Pre-Resolved Handlers (Experiment 2)</h3>
+<p>Originally, every field access triggered a cache lookup and type introspection. 
+- <strong>The Optimization</strong>: We moved handler resolution to compile-time. The generated function now has direct references to the handlers it needs.
+- <strong>Impact</strong>: Achieved a <strong>65% reduction in dumping overhead</strong>.</p>
+<h3 id="2-fast-raw-dict-access-experiment-5">2. Fast Raw-Dict Access (Experiment 5)</h3>
+<p>Traditional loaders often wrap input data in several layers of abstraction. 
+- <strong>The Optimization</strong>: We implemented a "Fast Path" that allows the generated bytecode to access the raw underlying Python dictionary directly when possible.
+- <strong>Impact</strong>: Improved loading performance by <strong>~25%</strong>.</p>
+<h3 id="3-loop-inlining-experiments-6-7">3. Loop Inlining (Experiments 6 &amp; 7)</h3>
+<p>Generic sequence handlers (for <code>List</code> and <code>Dict</code>) are a common bottleneck in Python.
+- <strong>The Optimization</strong>: For common types (like <code>List[int]</code> or <code>List[str]</code>), the compiler now inlines the loop directly into the generated handler, avoiding thousands of function calls.
+- <strong>Impact</strong>: Reduced loading time for large collections by <strong>35%</strong>.</p>
+<h3 id="4-modular-thread-safety-experiment-9">4. Modular Thread-Safety (Experiment 9)</h3>
+<p>As Lodum moved toward v0.3.0, we needed to support high-concurrency environments.
+- <strong>The Challenge</strong>: Ensuring thread-safe access to the global registry and caches without introducing locking overhead.
+- <strong>The Solution</strong>: A lock-free fast path for handler lookups using thread-local contexts.
+- <strong>Result</strong>: Successfully achieved full thread-safety with <strong>zero performance regression</strong>.</p>
 <hr />
-<h2 id="experiment-2-pre-resolve-handlers">Experiment 2: Pre-resolve Handlers</h2>
-<ul>
-<li><strong>Plan</strong>: Pre-resolve dump/load handlers for fields at compile time and include them in the <code>context</code> of the compiled functions.</li>
-<li><strong>Hypothesis</strong>: Avoiding <code>dump()</code> and <code>load()</code> entry points (which perform cache lookups and introspection) will significantly reduce overhead.</li>
-<li><strong>Findings</strong>: Massive improvement in Dumping (~65% faster). Loading also improved (~12%).</li>
-<li><strong>Warning</strong>: Bypassing <code>dump()</code> removed circular reference detection for nested objects.</li>
-<li><strong>Integration</strong>: Added circular reference and depth checks directly into the compiled handlers to maintain safety while keeping most of the performance gain.</li>
-</ul>
+<h2 id="key-milestone-the-ast-transition">Key Milestone: The AST Transition</h2>
+<p>The move from string-based <code>exec()</code> to structured <strong>AST (Abstract Syntax Tree)</strong> generation was the turning point for the project. By generating and compiling an AST, Lodum:
+1.  <strong>Tailors the Bytecode</strong>: The generated code contains the absolute minimum number of operations required for your specific class schema.
+2.  <strong>Improves Debuggability</strong>: Even though the code is generated at runtime, the compiler attaches correct line numbers and context, allowing for detailed error reporting without performance penalties.
+3.  <strong>Ensures Safety</strong>: Type validation and circular reference checks are baked into the compiled handler, providing native-level safety at Python speed.</p>
 <hr />
-<h2 id="experiment-3-optimize-circular-reference-detection">Experiment 3: Optimize Circular Reference Detection</h2>
-<ul>
-<li><strong>Plan</strong>: Make circular reference detection in the <code>dump()</code> entry point more efficient by avoiding <code>id()</code> and <code>seen</code> checks for primitives.</li>
-<li><strong>Hypothesis</strong>: Calling <code>id()</code> for every single primitive is expensive.</li>
-<li><strong>Findings</strong>: No significant improvement in the specific benchmark.</li>
-<li><strong>Reasoning</strong>: Compiled handlers were already bypassing <code>dump()</code> for primitives. Nested containers still needed the check.</li>
-<li><strong>Final Design</strong>: Moved safety checks to the handlers themselves, allowing them to call each other directly (pre-resolved) while remaining safe.</li>
-</ul>
-<hr />
-<h2 id="experiment-4-inlining-sequence-handlers">Experiment 4: Inlining Sequence Handlers</h2>
-<ul>
-<li><strong>Plan</strong>: Inline loops for <code>List[Primitive]</code> directly into compiled handlers.</li>
-<li><strong>Hypothesis</strong>: Avoiding a call to <code>dump_seq</code> for common lists would help.</li>
-<li><strong>Findings</strong>: Minimal benefit for small lists. Overhead is dominated by other factors.</li>
-<li><strong>Status</strong>: Not integrated as the complexity outweighs the gain for now.</li>
-</ul>
-<hr />
-<h2 id="experiment-5-fast-json-loader-raw-dict-access">Experiment 5: Fast JSON Loader (Raw Dict Access)</h2>
-<ul>
-<li><strong>Plan</strong>: Allow loaders to provide direct access to the source dictionary (<code>get_dict()</code>) and have the compiled handler access raw values for primitives.</li>
-<li><strong>Hypothesis</strong>: Avoiding the creation of <code>JsonLoader</code> wrapper objects for every field will reduce allocation overhead.</li>
-<li><strong>Findings</strong>: Significant improvement in Loading (~25% improvement over previous best).</li>
-<li><strong>Integration</strong>: Added <code>get_dict()</code> to the <code>Loader</code> protocol and updated <code>internal.py</code> to use it when available.</li>
-</ul>
-<hr />
-<h2 id="experiment-6-optimized-sequence-deserialization">Experiment 6: Optimized Sequence Deserialization</h2>
-<ul>
-<li><strong>Plan</strong>: Inline loops for <code>List[Primitive]</code> and <code>Dict[str, Primitive]</code> in compiled load handlers.</li>
-<li><strong>Hypothesis</strong>: Avoiding closure calls and generic <code>load_list</code> logic for common primitives will reduce overhead.</li>
-<li><strong>Findings</strong>: Significant improvement. Loading time dropped to 3.29s.</li>
-<li><strong>Integration</strong>: Inlined loops with index-based path tracking to preserve detailed error reporting.</li>
-</ul>
-<hr />
-<h2 id="experiment-7-faster-primitive-sequence-serialization">Experiment 7: Faster Primitive Sequence Serialization</h2>
-<ul>
-<li><strong>Plan</strong>: Inline serialization for <code>List[Primitive]</code> in compiled dump handlers and generic <code>_dump_sequence</code>.</li>
-<li><strong>Hypothesis</strong>: Avoiding <code>dump()</code> calls for known primitives in a list will speed up common cases.</li>
-<li><strong>Findings</strong>: Modest improvement. Dumping time dropped to 0.64s.</li>
-<li><strong>Integration</strong>: Inlined <code>list(val)</code> for primitive lists in dump handlers, with circular reference checks.</li>
-</ul>
-<hr />
-<h2 id="experiment-8-multi-format-performance-verification">Experiment 8: Multi-format Performance Verification</h2>
-<ul>
-<li><strong>Plan</strong>: Measure the impact of engine-level optimizations across multiple formats (JSON, MsgPack, CBOR, YAML).</li>
-<li><strong>Findings</strong>:</li>
-<li><strong>MsgPack/CBOR</strong>: Loading performance is comparable to JSON (~0.31s-0.33s for 1k iterations), confirming that <code>get_dict()</code> and inlined primitive handling provide universal benefits to any format that returns standard Python collections.</li>
-<li><strong>YAML</strong>: Significantly slower overall due to the overhead of the <code>ruamel.yaml</code> parser, but still benefits proportionally from engine speedups.</li>
-<li><strong>Conclusion</strong>: The "Engine vs Format" architecture successfully decoupled optimizations, allowing a single set of improvements in <code>internal.py</code> to uplift the entire library.</li>
-</ul>
-<hr />
-<h2 id="experiment-9-modular-thread-safe-architecture">Experiment 9: Modular Thread-Safe Architecture</h2>
-<ul>
-<li><strong>Plan</strong>: Refactor the "God Module" <code>internal.py</code> into modular components and encapsulate global state into a thread-safe <code>Context</code> object.</li>
-<li><strong>Hypothesis</strong>: Decoupling the engine and implementing thread-local storage for registry/caches will improve maintainability without significantly increasing overhead.</li>
-<li><strong>Findings</strong>: No regression in "happy path" performance. The lock-free fast path for cache lookups ensures that high-concurrency access remains efficient.</li>
-<li><strong>Integration</strong>: Created <code>compiler/</code> and <code>handlers/</code> subpackages. All global state now flows through <code>get_context()</code>.</li>
-</ul>
-<hr />
-<h2 id="final-results-post-refactor">Final Results (Post-Refactor)</h2>
-<ul>
-<li><strong>Dump 10k (JSON)</strong>: 0.63s - 0.65s (Baseline: 1.76s) -&gt; <strong>~64% faster</strong></li>
-<li><strong>Load 10k (JSON)</strong>: 3.25s - 3.30s (Baseline: 5.01s) -&gt; <strong>~35% faster</strong></li>
-</ul>
-<p>All safety features (recursion depth, circular references, type validation) and error reporting details are preserved across all formats. Feature parity and standardized error messages are now implemented across the entire library.</p>
+<p>For technical details on how we measure these gains, see <a href="../BENCHMARK_METHODOLOGY/">Benchmark Methodology</a>.</p>
 
 
 
@@ -1425,7 +1606,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="January 25, 2026 16:14:28 UTC">January 25, 2026 16:14:28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 23, 2026 12:32:03 UTC">February 23, 2026 12:32:03</span>
   </span>
 
     
@@ -1435,7 +1616,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="January 19, 2026 15:48:11 UTC">January 19, 2026 15:48:11</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 23, 2026 12:32:03 UTC">February 23, 2026 12:32:03</span>
   </span>
 
     
