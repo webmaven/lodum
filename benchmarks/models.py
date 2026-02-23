@@ -1,5 +1,9 @@
 from typing import List, Dict
-from lodum import lodum
+try:
+    from lodum import lodum
+except ImportError:
+    # Support for v0.1.0 where it was named 'serializable'
+    from lodum.core import serializable as lodum
 from pydantic import BaseModel
 from marshmallow import Schema, fields, post_load
 

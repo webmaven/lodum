@@ -47,11 +47,26 @@ from benchmarks.models import (
     MarshmallowNestedSchema,
 )
 from lodum import json as lodum_json
-from lodum import msgpack as lodum_msgpack
-from lodum import cbor as lodum_cbor
-from lodum import pickle as lodum_pickle
-from lodum import yaml as lodum_yaml
-from lodum import toml as lodum_toml
+try:
+    from lodum import msgpack as lodum_msgpack
+except ImportError:
+    lodum_msgpack = None
+try:
+    from lodum import cbor as lodum_cbor
+except ImportError:
+    lodum_cbor = None
+try:
+    from lodum import pickle as lodum_pickle
+except ImportError:
+    lodum_pickle = None
+try:
+    from lodum import yaml as lodum_yaml
+except ImportError:
+    lodum_yaml = None
+try:
+    from lodum import toml as lodum_toml
+except ImportError:
+    lodum_toml = None
 
 # Data Preparation
 simple_data = {"name": "Alice", "age": 30, "active": True}
@@ -232,7 +247,7 @@ def run_all():
     )
 
     # MsgPack
-    if msgpack:
+    if msgpack and lodum_msgpack:
         collect_group(
             "MsgPack Serialization",
             {
@@ -267,7 +282,7 @@ def run_all():
         )
 
     # CBOR
-    if cbor2:
+    if cbor2 and lodum_cbor:
         collect_group(
             "CBOR Serialization",
             {
@@ -300,7 +315,7 @@ def run_all():
         )
 
     # YAML
-    if ruamel.yaml:
+    if ruamel.yaml and lodum_yaml:
         collect_group(
             "YAML Serialization",
             {
@@ -323,7 +338,7 @@ def run_all():
         )
 
     # TOML
-    if tomli_w:
+    if tomli_w and lodum_toml:
         collect_group(
             "TOML Serialization",
             {
@@ -346,26 +361,27 @@ def run_all():
         )
 
     # Pickle
-    collect_group(
-        "Pickle Serialization",
-        {
-            "Lodum (Safe)": {
-                "simple": lambda: lodum_pickle.dumps(lodum_simple),
-                "complex": lambda: lodum_pickle.dumps(lodum_complex),
-                "nested": lambda: lodum_pickle.dumps(lodum_nested),
+    if lodum_pickle:
+        collect_group(
+            "Pickle Serialization",
+            {
+                "Lodum (Safe)": {
+                    "simple": lambda: lodum_pickle.dumps(lodum_simple),
+                    "complex": lambda: lodum_pickle.dumps(lodum_complex),
+                    "nested": lambda: lodum_pickle.dumps(lodum_nested),
+                },
             },
-        },
-    )
-    collect_group(
-        "Pickle Deserialization",
-        {
-            "Lodum (Safe)": {
-                "simple": lambda: lodum_pickle.loads(LodumSimple, simple_pickle),
-                "complex": lambda: lodum_pickle.loads(LodumComplex, complex_pickle),
-                "nested": lambda: lodum_pickle.loads(LodumNested, nested_pickle),
+        )
+        collect_group(
+            "Pickle Deserialization",
+            {
+                "Lodum (Safe)": {
+                    "simple": lambda: lodum_pickle.loads(LodumSimple, simple_pickle),
+                    "complex": lambda: lodum_pickle.loads(LodumComplex, complex_pickle),
+                    "nested": lambda: lodum_pickle.loads(LodumNested, nested_pickle),
+                },
             },
-        },
-    )
+        )
 
     if is_json:
         print(json.dumps(all_results))
