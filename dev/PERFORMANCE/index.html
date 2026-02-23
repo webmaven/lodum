@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#lodum-performance" class="md-skip">
+        <a href="#performance-tracking" class="md-skip">
           Skip to content
         </a>
       
@@ -494,8 +494,6 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
-      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -538,14 +536,23 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#performance-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Tracking
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#benchmark-results" class="md-nav__link">
@@ -1274,14 +1281,23 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#performance-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Tracking
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#benchmark-results" class="md-nav__link">
@@ -1375,8 +1391,12 @@
   
 
 
-<h1 id="lodum-performance">Lodum Performance</h1>
-<p>Lodum is designed for high performance by using runtime bytecode compilation (via Python AST) to generate specialized serialization and deserialization handlers for your classes.</p>
+  <h1>Performance</h1>
+
+<h2 id="performance-tracking">Performance Tracking</h2>
+<p>Lodum performance is automatically tracked on every push to the <code>main</code> branch. You can view the historical performance dashboard here:</p>
+<p>👉 <strong><a href="https://webmaven.github.io/lodum/dev/benchmarks">Lodum Performance Dashboard</a></strong></p>
+<p>We track performance across both <strong>Linux</strong> and <strong>Windows</strong> environments to ensure consistent quality for all users.</p>
 <h2 id="benchmark-results">Benchmark Results</h2>
 <p>The following benchmarks were run on Python 3.13.7 (win32). Results are in microseconds (us) per operation (lower is better).</p>
 <h3 id="json-serialization-object-json">JSON Serialization (Object -&gt; JSON)</h3>
