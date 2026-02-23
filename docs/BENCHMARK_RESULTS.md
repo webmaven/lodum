@@ -1,6 +1,24 @@
 # Lodum Benchmark History
 
-This file tracks the history of benchmark runs for Lodum. Each run is organized into a nested folder named by the date and description of the run.
+Lodum performance is now automatically tracked on every push to the `main` branch. This provides a continuous, high-quality performance record on standardized hardware (AMD EPYC 7763).
+
+👉 **[Lodum Performance Dashboard (Live)](https://webmaven.github.io/lodum/benchmarks/)**
+
+## CI-Standardized Baseline
+
+The following results were generated using the latest benchmarking suite running against historical versions of the library on identical CI hardware.
+
+### ubuntu-latest (AMD EPYC 7763)
+
+| Version | JSON Ser (Simple) | JSON Deser (Simple) | Details |
+| :--- | ---: | ---: | :--- |
+| **v0.3.0** (Latest) | 4.90 us | 12.47 us | [latest_native.md](https://github.com/webmaven/lodum/blob/main/benchmarks/results/latest_native.md) |
+| **v0.2.0** | 4.85 us | 12.05 us | [v0.2.0.md](https://github.com/webmaven/lodum/blob/main/benchmarks/results/ci_standardized/v0.2.0.md) |
+| **v0.1.0** | 5.56 us | 18.81 us | [v0.1.0.md](https://github.com/webmaven/lodum/blob/main/benchmarks/results/ci_standardized/v0.1.0.md) |
+
+## Legacy Manual Benchmarks
+
+These results were generated manually during development and are preserved for historical context. Note that they may have been run on different hardware.
 
 | Run Date | Description | Path |
 | :--- | :--- | :--- |
