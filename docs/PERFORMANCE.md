@@ -2,7 +2,7 @@
 
 Lodum performance is automatically tracked on every push to the `main` branch. You can view the historical performance dashboard here:
 
-👉 **[Lodum Performance Dashboard](https://webmaven.github.io/lodum/dev/benchmarks)**
+👉 **[Lodum Performance Dashboard](https://webmaven.github.io/lodum/benchmarks)**
 
 We track performance across both **Linux** and **Windows** environments to ensure consistent quality for all users.
 

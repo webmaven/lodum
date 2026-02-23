@@ -71,6 +71,9 @@ nav:
 
 plugins:
   - search
+  - git-revision-date-localized:
+      type: datetime
+      enable_creation_date: true
   - mkdocstrings:
       handlers:
         python:

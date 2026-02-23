@@ -80,6 +80,7 @@ jobs:
         name: Lodum Performance Index - ${{ matrix.os }}
         tool: 'customSmallerIsBetter'
         output-file-path: all_benchmarks.json
+        benchmark-data-dir-path: benchmarks
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
         alert-threshold: '150%'
