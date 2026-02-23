@@ -33,6 +33,7 @@ bson = ["pymongo"]
 numpy = ["numpy"]
 pandas = ["pandas"]
 polars = ["polars"]
+ijson = ["ijson"]
 all = [
     "ruamel.yaml>=0.18.0",
     "msgpack",
@@ -43,6 +44,7 @@ all = [
     "numpy",
     "pandas",
     "polars",
+    "ijson",
 ]
 
 [project.urls]
