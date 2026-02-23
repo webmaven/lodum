@@ -6,7 +6,7 @@ import pickle
 import io
 import os
 import time
-from typing import Callable, Dict, Optional, Any, List
+from typing import Callable, Dict, Optional
 
 # Optional dependencies
 try:
@@ -166,7 +166,9 @@ if ruamel.yaml:
 if tomli_w:
     simple_toml = tomli_w.dumps(simple_data)
     complex_toml = tomli_w.dumps(complex_data)
-    nested_toml = tomli_w.dumps({"root": nested_data})
+    # TOML requires a dictionary at the root.
+    # LodumNested is a class, so we use its dict representation.
+    nested_toml = tomli_w.dumps(nested_data)
 
 simple_pickle = pickle.dumps(lodum_simple)
 complex_pickle = pickle.dumps(lodum_complex)
@@ -185,12 +187,15 @@ if os.path.exists(BASELINES_FILE):
 def bench(func):
     if func is None:
         return None
-    
+
     # 1. Cold Start (First run)
     start_cold = time.perf_counter()
-    func()
-    cold_time = (time.perf_counter() - start_cold) * 1e6 # us
-    
+    try:
+        func()
+    except Exception:
+        return None
+    cold_time = (time.perf_counter() - start_cold) * 1e6  # us
+
     # 2. Warm Start (Steady state)
     timer = timeit.Timer(func)
     try:
@@ -199,7 +204,7 @@ def bench(func):
         return {
             "mean": statistics.mean(us_per_op),
             "stdev": statistics.stdev(us_per_op),
-            "cold": cold_time
+            "cold": cold_time,
         }
     except Exception:
         return None
@@ -228,9 +233,10 @@ def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable
             if res is None:
                 return "N/A"
             return f"{res['mean']:.2f} ± {res['stdev']:.2f}"
-        
+
         def fmt_cold(res):
-            if res is None or "cold" not in res: return "N/A"
+            if res is None or "cold" not in res:
+                return "N/A"
             return f"{res['cold']:.2f}"
 
         # We show cold start for the 'complex' scenario as a representative sample
@@ -254,7 +260,7 @@ def run_all():
                         res = competitor_baselines[baseline_key]
                     else:
                         res = bench(fn)
-                    
+
                     if res:
                         all_results.append(
                             {
