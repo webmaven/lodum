@@ -29,6 +29,11 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.action.view
+    - content.action.edit
+    - content.tooltips
+    - content.revision.date
+    - content.revision.history
 
 extra_css:
   - stylesheets/extra.css
@@ -36,6 +41,8 @@ extra_css:
 extra:
   version:
     provider: mike
+  # Enable last updated date in footer
+  last_updated: true
 
 repo_url: https://github.com/webmaven/lodum
 repo_name: webmaven/lodum
@@ -70,10 +77,10 @@ nav:
     - Contributing: CONTRIBUTING.md
 
 plugins:
-  - search
   - git-revision-date-localized:
       type: datetime
       enable_creation_date: true
+  - search
   - mkdocstrings:
       handlers:
         python:
