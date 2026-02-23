@@ -3,7 +3,12 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  console.log("Starting Pyodide...");
+  const isBenchmark = process.argv.includes("--benchmark");
+  
+  if (!isBenchmark) {
+    console.log("Starting Pyodide...");
+  }
+  
   const pyodide = await loadPyodide();
   await pyodide.loadPackage("micropip");
   const micropip = pyodide.pyimport("micropip");
@@ -22,9 +27,11 @@ async function main() {
   // Write wheel to emulated FS
   pyodide.FS.writeFile(wheelName, wheelData);
 
-  console.log(`Installing ${wheelName} and dependencies...`);
-  // Install lodum and pytest
-  // Try to install some optional dependencies that are likely pure python or have pyodide ports
+  if (!isBenchmark) {
+    console.log(`Installing ${wheelName} and dependencies...`);
+  }
+  
+  // Install lodum and standard benchmark dependencies
   await micropip.install([
     `emfs:${wheelName}`, 
     "pytest", 
@@ -36,13 +43,63 @@ async function main() {
     "numpy",
     "pandas",
     "ijson",
+    "marshmallow",
   ]);
 
+  if (isBenchmark) {
+    // Copy benchmark scripts
+    pyodide.FS.mkdir("benchmarks");
+    const benchDir = path.join(__dirname, "benchmarks");
+    const benchFiles = fs.readdirSync(benchDir).filter(f => f.endsWith(".py"));
+    for (const file of benchFiles) {
+      const data = fs.readFileSync(path.join(benchDir, file));
+      pyodide.FS.writeFile(path.join("benchmarks", file), data);
+    }
+    
+    // Also need models.py if it's in a subdirectory
+    if (fs.existsSync(path.join(benchDir, "models.py"))) {
+        const data = fs.readFileSync(path.join(benchDir, "models.py"));
+        pyodide.FS.writeFile(path.join("benchmarks", "models.py"), data);
+    }
+
+    // Run benchmarks
+    try {
+      const results = await pyodide.runPythonAsync(`
+import sys
+import os
+import json
+
+# Add current dir to path for benchmark imports
+sys.path.append(os.getcwd())
+
+from benchmarks.run import run_all
+import io
+from contextlib import redirect_stdout
+
+# Capture JSON output from run_all
+f = io.StringIO()
+with redirect_stdout(f):
+    # Pass --json and --use-baselines (to skip missing heavy deps)
+    sys.argv = ["benchmarks/run.py", "--json", "--use-baselines"]
+    run_all()
+
+print(f.getvalue())
+      `);
+      // We don't need to do anything with 'results' as runPythonAsync 
+      // already printed the JSON to stdout which we capture in CI
+      process.exit(0);
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    return;
+  }
+
+  // --- Standard Test Runner Path ---
   // Copy tests to emulated FS
   console.log("Copying tests...");
   pyodide.FS.mkdir("tests");
   const testsDir = path.join(__dirname, "tests");
-  // Recursive copy would be better, but for now we just get the top level
   const testFiles = fs.readdirSync(testsDir).filter(f => f.endsWith(".py"));
   for (const file of testFiles) {
     const data = fs.readFileSync(path.join(testsDir, file));
@@ -56,16 +113,14 @@ import pytest
 import sys
 import os
 
-# Propagate host environment variable to Python
 if "${process.env.PYODIDE_SHARED_MEMORY || ''}" == "1":
     os.environ["PYODIDE_SHARED_MEMORY"] = "1"
 
-# Ignore tests with heavy/missing dependencies in Pyodide
 ignore_args = [
     "--ignore=tests/test_polars.py",
-    "--ignore=tests/test_yaml.py",  # ruamel.yaml has C extensions
-    "--ignore=tests/test_bson.py",  # pymongo has C extensions
-    "-k not bson and not test_format_parity_bytes", # we don't have pymongo and parity bytes check is problematic
+    "--ignore=tests/test_yaml.py",
+    "--ignore=tests/test_bson.py",
+    "-k not bson and not test_format_parity_bytes",
 ]
 
 try:
@@ -73,7 +128,6 @@ try:
 except SystemExit as e:
     retcode = e.code
 
-print(f"Pytest exited with code: {retcode}")
 if retcode != 0:
     raise Exception(f"Pytest failed with code {retcode}")
     `);
