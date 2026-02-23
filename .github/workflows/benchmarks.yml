@@ -89,7 +89,7 @@ jobs:
         fail-on-alert: false
 
   historical:
-    name: Historical Baseline (One-time)
+    name: Historical Baseline (One-time) (${{ matrix.version }})
     if: github.event.inputs.run_historical == 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -97,33 +97,27 @@ jobs:
         version: ['v0.1.0', 'v0.2.0']
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/checkout@v4
       with:
         ref: ${{ matrix.version }}
-        path: lodum-old
-    - uses: actions/checkout@v4
+        fetch-depth: 0
+    - name: Checkout Benchmark Scripts
+      uses: actions/checkout@v4
       with:
         path: lodum-current
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
-    - name: Install Old Version
+    - name: Install dependencies
       run: |
-        cd lodum-old
         python -m pip install --upgrade pip
         pip install -e ".[all]"
         pip install pydantic ijson marshmallow orjson
-    - name: Record Hardware
-      run: |
-        python lodum-current/benchmarks/get_hw_info.py
     - name: Run Benchmarks (using current scripts on old code)
       run: |
         python lodum-current/benchmarks/run.py --json > standard_bench.json
       env:
-        PYTHONPATH: ${{ format('{0}/lodum-old/src:{0}/lodum-current', github.workspace) }}
-        # streaming.py might fail on very old versions if load_stream doesn't exist
-        # but run.py should work for core performance
+        PYTHONPATH: ${{ format('{0}/src:{0}/lodum-current', github.workspace) }}
     - name: Aggregate
       shell: python
       run: |
