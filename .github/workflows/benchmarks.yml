@@ -78,7 +78,7 @@ jobs:
       uses: benchmark-action/github-action-benchmark@v1
       with:
         name: Lodum Performance Index - ${{ matrix.os }}
-        tool: 'customGeneric'
+        tool: 'customSmallerIsBetter'
         output-file-path: all_benchmarks.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
@@ -135,7 +135,7 @@ jobs:
       uses: benchmark-action/github-action-benchmark@v1
       with:
         name: Lodum Performance Index - ubuntu-latest
-        tool: 'customGeneric'
+        tool: 'customSmallerIsBetter'
         output-file-path: historical_bench.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
