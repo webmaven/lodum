@@ -1,281 +1,323 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes" />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lodum Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
-      html {
-        font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
-        -webkit-font-smoothing: antialiased;
-        background-color: #fff;
-        font-size: 16px;
-      }
-      body {
-        color: #4a4a4a;
-        margin: 8px;
-        font-size: 1em;
-        font-weight: 400;
-      }
-      header {
-        margin-bottom: 8px;
-        display: flex;
-        flex-direction: column;
-      }
-      main {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-      a {
-        color: #3273dc;
-        cursor: pointer;
-        text-decoration: none;
-      }
-      a:hover {
-        color: #000;
-      }
-      button {
-        color: #fff;
-        background-color: #3298dc;
-        border-color: transparent;
-        cursor: pointer;
-        text-align: center;
-      }
-      button:hover {
-        background-color: #2793da;
-        flex: none;
-      }
-      .spacer {
-        flex: auto;
-      }
-      .small {
-        font-size: 0.75rem;
-      }
-      footer {
-        margin-top: 16px;
-        display: flex;
-        align-items: center;
-      }
-      .header-label {
-        margin-right: 4px;
-      }
-      .benchmark-set {
-        margin: 8px 0;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-      .benchmark-title {
-        font-size: 3rem;
-        font-weight: 600;
-        word-break: break-word;
-        text-align: center;
-      }
-      .benchmark-graphs {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-around;
-        align-items: center;
-        flex-wrap: wrap;
-        width: 100%;
-      }
-      .benchmark-chart {
-        max-width: 1000px;
-      }
+        :root {
+            --lodum-yellow: #fbc929;
+            --marshmallow-gray: #505256;
+            --pydantic-blue: #4f46e5;
+            --linux-color: #fbc929;
+            --windows-color: #3b82f6;
+            --pyodide-color: #10b981;
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-color: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; }
+
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--lodum-yellow);
+            margin: 10px 0;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .legend-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background: white;
+            font-size: 0.9rem;
+        }
     </style>
-    <title>Benchmarks</title>
-  </head>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lodum Performance Index</h1>
+            <a href="https://github.com/webmaven/lodum" id="repository-link" style="text-decoration: none; color: #6b7280;">View on GitHub</a>
+        </header>
 
-  <body>
-    <header id="header">
-      <div class="header-item">
-        <strong class="header-label">Last Update:</strong>
-        <span id="last-update"></span>
-      </div>
-      <div class="header-item">
-        <strong class="header-label">Repository:</strong>
-        <a id="repository-link" rel="noopener"></a>
-      </div>
-    </header>
-    <main id="main"></main>
-    <footer>
-      <button id="dl-button">Download data as JSON</button>
-      <div class="spacer"></div>
-      <div class="small">Powered by <a rel="noopener" href="https://github.com/marketplace/actions/continuous-benchmark">github-action-benchmark</a></div>
-    </footer>
+        <div class="kpi-container" id="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-label">Speedup vs Marshmallow</div>
+                <div class="kpi-value" id="kpi-speedup">--</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Streaming Memory Reduction</div>
+                <div class="kpi-value" id="kpi-memory">--</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">WASM Efficiency</div>
+                <div class="kpi-value" id="kpi-wasm">--</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">XL Throughput</div>
+                <div class="kpi-value" id="kpi-throughput">--</div>
+            </div>
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.2/dist/Chart.min.js"></script>
-    <script src="data.js"></script>
-    <script id="main-script">
-      'use strict';
-      (function() {
-        // Colors from https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
-        const toolColors = {
-          cargo: '#dea584',
-          go: '#00add8',
-          benchmarkjs: '#f1e05a',
-          benchmarkluau: '#000080',
-          pytest: '#3572a5',
-          googlecpp: '#f34b7d',
-          catch2: '#f34b7d',
-          julia: '#a270ba',
-          jmh: '#b07219',
-          benchmarkdotnet: '#178600',
-          customBiggerIsBetter: '#38ff38',
-          customSmallerIsBetter: '#ff3838',
-          _: '#333333'
-        };
+        <div class="chart-card">
+            <div class="chart-title">
+                <div>
+                    JSON Serialization Performance 
+                    <select id="scenario-selector">
+                        <option value="simple">Simple</option>
+                        <option value="complex">Complex</option>
+                        <option value="nested">Nested</option>
+                    </select>
+                </div>
+                <div style="font-size: 0.8rem; font-weight: normal; color: #6b7280;">
+                    <span class="legend-indicator" style="background: var(--linux-color)"></span> Linux
+                    <span class="legend-indicator" style="background: var(--windows-color)"></span> Windows
+                    <span class="legend-indicator" style="background: var(--pyodide-color)"></span> WASM
+                </div>
+            </div>
+            <div id="main-chart"></div>
+            <div id="brush-chart"></div>
+        </div>
 
-        function init() {
-          function collectBenchesPerTestCase(entries) {
-            const map = new Map();
-            for (const entry of entries) {
-              const {commit, date, tool, benches} = entry;
-              for (const bench of benches) {
-                const result = { commit, date, tool, bench };
-                const arr = map.get(bench.name);
-                if (arr === undefined) {
-                  map.set(bench.name, [result]);
-                } else {
-                  arr.push(result);
-                }
-              }
-            }
-            return map;
-          }
+        <div class="grid-2">
+            <div class="chart-card">
+                <div class="chart-title">XL Streaming Efficiency (Time vs Memory)</div>
+                <div id="streaming-chart"></div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Compiler Overhead (Cold Start)</div>
+                <div id="cold-start-chart"></div>
+            </div>
+        </div>
+    </div>
 
-          const data = window.BENCHMARK_DATA;
+    <script src="./data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawData = window.BENCHMARK_DATA;
+            if (!rawData) return;
 
-          // Render header
-          document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
-          const repoLink = document.getElementById('repository-link');
-          repoLink.href = data.repoUrl;
-          repoLink.textContent = data.repoUrl;
-
-          // Render footer
-          document.getElementById('dl-button').onclick = () => {
-            const dataUrl = 'data:,' + JSON.stringify(data, null, 2);
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = 'benchmark_data.json';
-            a.click();
-          };
-
-          // Prepare data points for charts
-          return Object.keys(data.entries).map(name => ({
-            name,
-            dataSet: collectBenchesPerTestCase(data.entries[name]),
-          }));
-        }
-
-        function renderAllChars(dataSets) {
-
-          function renderGraph(parent, name, dataset) {
-            const canvas = document.createElement('canvas');
-            canvas.className = 'benchmark-chart';
-            parent.appendChild(canvas);
-
-            const color = toolColors[dataset.length > 0 ? dataset[0].tool : '_'];
-            const data = {
-              labels: dataset.map(d => d.commit.id.slice(0, 7)),
-              datasets: [
-                {
-                  label: name,
-                  data: dataset.map(d => d.bench.value),
-                  borderColor: color,
-                  backgroundColor: color + '60', // Add alpha for #rrggbbaa
-                }
-              ],
-            };
-            const options = {
-              scales: {
-                xAxes: [
-                  {
-                    scaleLabel: {
-                      display: true,
-                      labelString: 'commit',
-                    },
-                  }
-                ],
-                yAxes: [
-                  {
-                    scaleLabel: {
-                      display: true,
-                      labelString: dataset.length > 0 ? dataset[0].bench.unit : '',
-                    },
-                    ticks: {
-                      beginAtZero: true,
+            const suites = rawData.entries;
+            
+            // 1. Data Transformation
+            const commitMap = new Map();
+            Object.values(suites).forEach(points => {
+                points.forEach(p => {
+                    const sha = p.commit.id.substring(0, 7);
+                    if (!commitMap.has(sha)) {
+                        commitMap.set(sha, { sha, date: p.date, msg: p.commit.message });
                     }
-                  }
-                ],
-              },
-              tooltips: {
-                callbacks: {
-                  afterTitle: items => {
-                    const {index} = items[0];
-                    const data = dataset[index];
-                    return '\n' + data.commit.message + '\n\n' + data.commit.timestamp + ' committed by @' + data.commit.committer.username + '\n';
-                  },
-                  label: item => {
-                    let label = item.value;
-                    const { range, unit } = dataset[item.index].bench;
-                    label += ' ' + unit;
-                    if (range) {
-                      label += ' (' + range + ')';
-                    }
-                    return label;
-                  },
-                  afterLabel: item => {
-                    const { extra } = dataset[item.index].bench;
-                    return extra ? '\n' + extra : '';
-                  }
-                }
-              },
-              onClick: (_mouseEvent, activeElems) => {
-                if (activeElems.length === 0) {
-                  return;
-                }
-                // XXX: Undocumented. How can we know the index?
-                const index = activeElems[0]._index;
-                const url = dataset[index].commit.url;
-                window.open(url, '_blank');
-              },
-            };
-
-            new Chart(canvas, {
-              type: 'line',
-              data,
-              options,
+                });
             });
-          }
+            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
+            const categories = sortedCommits.map(c => c.sha);
 
-          function renderBenchSet(name, benchSet, main) {
-            const setElem = document.createElement('div');
-            setElem.className = 'benchmark-set';
-            main.appendChild(setElem);
+            const getVal = (suiteName, benchPattern, sha) => {
+                const suite = suites[suiteName] || [];
+                const point = suite.find(p => p.commit.id.substring(0, 7) === sha);
+                if (!point) return null;
+                const bench = point.benches.find(b => b.name.includes(benchPattern));
+                return bench ? bench.value : null;
+            };
 
-            const nameElem = document.createElement('h1');
-            nameElem.className = 'benchmark-title';
-            nameElem.textContent = name;
-            setElem.appendChild(nameElem);
+            const envs = [
+                { id: 'ubuntu-latest', label: 'Linux', color: '#fbc929', dash: 0 },
+                { id: 'windows-latest', label: 'Windows', color: '#3b82f6', dash: 5 },
+                { id: 'Pyodide', label: 'WASM', color: '#10b981', dash: 2 }
+            ];
 
-            const graphsElem = document.createElement('div');
-            graphsElem.className = 'benchmark-graphs';
-            setElem.appendChild(graphsElem);
+            let mainChart, brushChart;
 
-            for (const [benchName, benches] of benchSet.entries()) {
-              renderGraph(graphsElem, benchName, benches)
+            const updateTrendCharts = (scenario) => {
+                const series = [];
+                const benchName = `JSON Serialization Lodum ${scenario}`;
+                
+                envs.forEach(env => {
+                    const suiteKey = Object.keys(suites).find(k => k.includes(env.id));
+                    if (suiteKey) {
+                        series.push({
+                            name: `Lodum (${env.label})`,
+                            data: sortedCommits.map(c => getVal(suiteKey, benchName, c.sha)),
+                            color: env.color,
+                            dashArray: env.dash
+                        });
+                    }
+                });
+
+                if (mainChart) mainChart.destroy();
+                if (brushChart) brushChart.destroy();
+
+                const mainOptions = {
+                    series: series,
+                    chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
+                    stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
+                    xaxis: { categories: categories },
+                    yaxis: { title: { text: 'Execution Time (us)' } },
+                    tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } }
+                };
+                mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
+                mainChart.render();
+
+                const brushOptions = {
+                    series: series,
+                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, categories.length - 10), max: categories.length - 1 } } },
+                    colors: series.map(s => s.color),
+                    xaxis: { categories: categories, labels: { show: false } },
+                    yaxis: { labels: { show: false } }
+                };
+                brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
+                brushChart.render();
+            };
+
+            // Initial render
+            updateTrendCharts('simple');
+            document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
+
+            // 4. Calculate KPIs (Latest commit)
+            const latestSha = categories[categories.length - 1];
+            const linuxSuite = Object.keys(suites).find(k => k.includes('ubuntu-latest'));
+            const wasmSuite = Object.keys(suites).find(k => k.includes('Pyodide'));
+
+            if (linuxSuite) {
+                const lodumVal = getVal(linuxSuite, 'JSON Serialization Lodum simple', latestSha);
+                const mmVal = getVal(linuxSuite, 'JSON Serialization Marshmallow simple', latestSha);
+                if (lodumVal && mmVal) {
+                    document.getElementById('kpi-speedup').textContent = (mmVal / lodumVal).toFixed(1) + 'x';
+                }
+
+                const stdTime = getVal(linuxSuite, 'Lodum Standard (loads) Time', latestSha);
+                const streamTime = getVal(linuxSuite, 'Lodum Streaming (load_stream) Time', latestSha);
+                const stdMem = getVal(linuxSuite, 'Lodum Standard (loads) Memory', latestSha);
+                const streamMem = getVal(linuxSuite, 'Lodum Streaming (load_stream) Memory', latestSha);
+
+                if (stdMem && streamMem) {
+                    document.getElementById('kpi-memory').textContent = ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%';
+                }
+                
+                if (streamTime) {
+                    // 45MB / time = throughput
+                    const throughput = 45 / streamTime;
+                    document.getElementById('kpi-throughput').textContent = throughput.toFixed(1) + ' MB/s';
+                }
+
+                if (lodumVal && wasmSuite) {
+                    const wasmVal = getVal(wasmSuite, 'JSON Serialization Lodum simple', latestSha);
+                    if (wasmVal) {
+                        document.getElementById('kpi-wasm').textContent = ((lodumVal / wasmVal) * 100).toFixed(0) + '%';
+                    }
+                }
+
+                // 5. Streaming Chart
+                if (stdTime && streamTime) {
+                    const streamOptions = {
+                        series: [
+                            { name: 'Time (s)', type: 'column', data: [stdTime, streamTime] },
+                            { name: 'Memory (MB)', type: 'line', data: [stdMem, streamMem] }
+                        ],
+                        chart: { height: 300, type: 'line', toolbar: { show: false } },
+                        stroke: { width: [0, 4] },
+                        colors: ['#d1d5db', '#fbc929'],
+                        labels: ['Standard loads', 'Streaming load_stream'],
+                        yaxis: [{ title: { text: 'Time (s)' } }, { opposite: true, title: { text: 'Memory (MB)' } }]
+                    };
+                    new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
+                }
+
+                // 6. Cold Start Chart
+                const coldSimple = getVal(linuxSuite, 'JSON Serialization Lodum simple (Cold Start)', latestSha);
+                const warmSimple = getVal(linuxSuite, 'JSON Serialization Lodum simple', latestSha);
+                if (coldSimple && warmSimple) {
+                    const coldOptions = {
+                        series: [{ name: 'Latency (us)', data: [coldSimple, warmSimple] }],
+                        chart: { type: 'bar', height: 300, toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+                        colors: ['#fbc929'],
+                        xaxis: { categories: ['Cold Start (Compiling)', 'Warm Start (Steady State)'] }
+                    };
+                    new ApexCharts(document.querySelector("#cold-start-chart"), coldOptions).render();
+                }
             }
-          }
-
-          const main = document.getElementById('main');
-          for (const {name, dataSet} of dataSets) {
-            renderBenchSet(name, dataSet, main);
-          }
-        }
-
-        renderAllChars(init()); // Start
-      })();
+        });
     </script>
-  </body>
+</body>
 </html>
