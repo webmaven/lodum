@@ -33,7 +33,6 @@ async function main() {
   }
   
   // Install lodum and dependencies
-  // We try to install pydantic but don't fail if it's not available in this env
   try {
     await micropip.install([
         `emfs:${wheelName}`, 
@@ -84,21 +83,27 @@ from benchmarks.run import run_all
 
 f = io.StringIO()
 with redirect_stdout(f):
+    # Pass --json and --use-baselines
     sys.argv = ["benchmarks/run.py", "--json", "--use-baselines"]
-    run_all()
+    try:
+        run_all()
+    except Exception as e:
+        # Fallback to empty results if something goes wrong
+        print("[]")
 
 f.getvalue()
       `);
       
       if (outputFile) {
-        fs.writeFileSync(outputFile, jsonResult);
+        fs.writeFileSync(outputFile, jsonResult.trim());
       } else {
-        process.stdout.write(jsonResult);
+        process.stdout.write(jsonResult.trim());
       }
       process.exit(0);
     } catch (err) {
       console.error("Benchmark execution failed:");
       console.error(err);
+      if (outputFile) fs.writeFileSync(outputFile, "[]");
       process.exit(1);
     }
     return;

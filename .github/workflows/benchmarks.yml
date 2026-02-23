@@ -70,7 +70,6 @@ jobs:
             std = json.load(f)
         with open('streaming_bench.json') as f:
             stream = json.load(f)
-        # Add OS prefix to names to distinguish in graphs
         for item in std + stream:
             item['name'] = f"(${{ matrix.os }}) {item['name']}"
         with open('all_benchmarks.json', 'w') as f:
@@ -87,22 +86,6 @@ jobs:
         alert-threshold: '150%'
         comment-on-alert: true
         fail-on-alert: false
-        # Ensure our custom index.html is not overwritten if the action tries to
-        # But actually, we want to force our version from main
-    
-    - name: Deploy Custom Dashboard Template
-      if: github.ref == 'refs/heads/main'
-      run: |
-        git fetch origin gh-pages
-        git checkout gh-pages
-        cp benchmarks/index.html benchmarks/index.html
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add benchmarks/index.html
-        git commit -m "docs: update custom performance dashboard template" || echo "No changes"
-        git push origin gh-pages
-        git checkout main
-      shell: bash
 
   benchmark-pyodide:
     name: Performance Tracking (Pyodide/WASM)
@@ -130,7 +113,12 @@ jobs:
     - name: Aggregate Results
       shell: python
       run: |
-        import json
+        import json, os
+        if not os.path.exists('pyodide_bench.json'):
+            print("Pyodide benchmarks failed to produce output.")
+            with open('all_benchmarks.json', 'w') as f:
+                json.dump([], f)
+            exit(0)
         with open('pyodide_bench.json') as f:
             data = json.load(f)
         for item in data:
@@ -150,18 +138,25 @@ jobs:
         comment-on-alert: true
         fail-on-alert: false
 
-    - name: Deploy Custom Dashboard Template
-      if: github.ref == 'refs/heads/main'
+  deploy-dashboard:
+    name: Deploy Custom Dashboard
+    needs: [benchmark, benchmark-pyodide]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Update Template on gh-pages
       run: |
         git fetch origin gh-pages
         git checkout gh-pages
-        cp benchmarks/index.html benchmarks/index.html
+        # Correctly reference the file from the main branch checkout
+        # which is still available in the parent or via git show
+        git show main:benchmarks/index.html > benchmarks/index.html
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add benchmarks/index.html
-        git commit -m "docs: update custom performance dashboard template (Pyodide)" || echo "No changes"
+        git commit -m "docs: update custom performance dashboard template" || echo "No changes"
         git push origin gh-pages
-        git checkout main
       shell: bash
 
   historical:
@@ -213,7 +208,4 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
         benchmark-data-dir-path: benchmarks
-        # Associate results with the historical tag
         ref: ${{ matrix.version }}
-
-

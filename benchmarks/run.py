@@ -167,7 +167,6 @@ if tomli_w:
     simple_toml = tomli_w.dumps(simple_data)
     complex_toml = tomli_w.dumps(complex_data)
     # TOML requires a dictionary at the root.
-    # LodumNested is a class, so we use its dict representation.
     nested_toml = tomli_w.dumps(nested_data)
 
 simple_pickle = pickle.dumps(lodum_simple)
@@ -193,6 +192,7 @@ def bench(func):
     try:
         func()
     except Exception:
+        # If even the cold start fails, we skip it
         return None
     cold_time = (time.perf_counter() - start_cold) * 1e6  # us
 
@@ -252,16 +252,16 @@ def run_all():
     all_results = []
 
     def collect_group(group_name, benchmarks):
-        if is_json:
-            for lib, funcs in benchmarks.items():
-                for name, fn in funcs.items():
-                    baseline_key = f"{group_name} {lib} {name}"
-                    if use_baselines and baseline_key in competitor_baselines:
-                        res = competitor_baselines[baseline_key]
-                    else:
-                        res = bench(fn)
+        for lib, funcs in benchmarks.items():
+            for name, fn in funcs.items():
+                baseline_key = f"{group_name} {lib} {name}"
+                if use_baselines and baseline_key in competitor_baselines:
+                    res = competitor_baselines[baseline_key]
+                else:
+                    res = bench(fn)
 
-                    if res:
+                if res:
+                    if is_json:
                         all_results.append(
                             {
                                 "name": f"{group_name} {lib} {name}",
@@ -277,7 +277,7 @@ def run_all():
                                     "value": res["cold"],
                                 }
                             )
-        else:
+        if not is_json:
             run_group(group_name, benchmarks)
 
     if not is_json:
