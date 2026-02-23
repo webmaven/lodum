@@ -35,7 +35,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e ".[all]"
-        pip install pydantic ijson
+        pip install pydantic ijson marshmallow orjson
     - name: Record and Validate Hardware
       run: |
         if [ "${{ github.event.inputs.init_hardware }}" == "true" ]; then
@@ -104,7 +104,7 @@ jobs:
         cd lodum-old
         python -m pip install --upgrade pip
         pip install -e ".[all]"
-        pip install pydantic ijson
+        pip install pydantic ijson marshmallow orjson
     - name: Record Hardware
       run: |
         python lodum-current/benchmarks/get_hw_info.py
