@@ -11,11 +11,9 @@ def get_cpu_info():
             command = "cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d':' -f2"
             return subprocess.check_output(command, shell=True).decode().strip()
         elif platform.system() == "Windows":
-            command = "wmic cpu get name"
-            output = subprocess.check_output(command, shell=True).decode().split("\n")
-            for line in output:
-                if line.strip() and "Name" not in line:
-                    return line.strip()
+            # Use PowerShell as wmic is deprecated and sometimes missing
+            command = 'powershell -Command "(Get-CimInstance Win32_Processor).Name"'
+            return subprocess.check_output(command, shell=True).decode().strip()
     except Exception:
         return "Unknown CPU"
     return "Unknown CPU"
@@ -31,6 +29,8 @@ def get_hw_info():
 
 
 if __name__ == "__main__":
+    # Ensure stdout handles UTF-8 for emoji-like characters if we decide to keep them,
+    # but better to just avoid them for maximum compatibility.
     info = get_hw_info()
     if "--init" in sys.argv:
         os.makedirs("benchmarks/metadata", exist_ok=True)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
         if not os.path.exists(filename):
             print(
-                f"⚠️ No reference hardware found at {filename}. Use --init to create one."
+                f"WARNING: No reference hardware found at {filename}. Use --init to create one."
             )
             sys.exit(0)
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
         # Compare OS family and CPU model
         if info["processor"] != ref["processor"] or info["os"] != ref["os"]:
-            print("❌ HARDWARE CHANGE DETECTED!")
+            print("ERROR: HARDWARE CHANGE DETECTED!")
             print(f"Current:   {info['processor']} ({info['os']})")
             print(f"Reference: {ref['processor']} ({ref['os']})")
             print(
@@ -59,6 +59,8 @@ if __name__ == "__main__":
             )
             sys.exit(1)
         else:
-            print(f"✅ Hardware matches reference: {info['processor']} ({info['os']})")
+            print(
+                f"SUCCESS: Hardware matches reference: {info['processor']} ({info['os']})"
+            )
     else:
         print(json.dumps(info, indent=2))
