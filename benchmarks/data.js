@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771838375383,
+  "lastUpdate": 1771838400682,
   "repoUrl": "https://github.com/webmaven/lodum",
   "entries": {
     "Lodum Performance Index - ubuntu-latest": [
@@ -9539,6 +9539,355 @@ window.BENCHMARK_DATA = {
           {
             "name": "(windows-latest) Pydantic v2 (validate_json) Time",
             "value": 4.144005399999969,
+            "unit": "s"
+          },
+          {
+            "name": "(windows-latest) Pydantic v2 (validate_json) Memory",
+            "value": 358.4476375579834,
+            "unit": "MB"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "zopemaven@gmail.com",
+            "name": "Michael R. Bernstein",
+            "username": "webmaven"
+          },
+          "committer": {
+            "email": "zopemaven@gmail.com",
+            "name": "Michael R. Bernstein",
+            "username": "webmaven"
+          },
+          "distinct": true,
+          "id": "136743961d81d91580f1772ccbee9a4159533f93",
+          "message": "fix: resolve indentation error in get_hw_info.py",
+          "timestamp": "2026-02-23T11:16:25+02:00",
+          "tree_id": "2694e27d4c4e0b71d9833db5b4eb4f445bc2d56d",
+          "url": "https://github.com/webmaven/lodum/commit/136743961d81d91580f1772ccbee9a4159533f93"
+        },
+        "date": 1771838397785,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "(windows-latest) JSON Serialization Lodum simple",
+            "value": 4.689689999997881,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum complex",
+            "value": 7.561500000002752,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum nested",
+            "value": 21.7301300000031,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Pydantic (v2) simple",
+            "value": 1.4183799999955227,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Pydantic (v2) complex",
+            "value": 1.9709900000009386,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Pydantic (v2) nested",
+            "value": 3.732940000003282,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Marshmallow simple",
+            "value": 6.67503000000238,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Marshmallow complex",
+            "value": 14.390700000001289,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Marshmallow nested",
+            "value": 39.669019999996635,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum simple",
+            "value": 11.502919999998085,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum complex",
+            "value": 25.004999999998745,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum nested",
+            "value": 71.58169999999586,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Pydantic (v2) simple",
+            "value": 1.5492099999960374,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Pydantic (v2) complex",
+            "value": 2.6770099999964714,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Pydantic (v2) nested",
+            "value": 6.837940000002618,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Marshmallow simple",
+            "value": 19.025409999994736,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Marshmallow complex",
+            "value": 40.975909999997384,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Marshmallow nested",
+            "value": 126.32932000000208,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum simple",
+            "value": 3.2763500000044132,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum complex",
+            "value": 5.425759999997126,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum nested",
+            "value": 16.949560000000474,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Native msgpack (dict) simple",
+            "value": 0.8545599999933984,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Native msgpack (dict) complex",
+            "value": 1.4074099999845657,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Native msgpack (dict) nested",
+            "value": 2.388070000006337,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum simple",
+            "value": 9.123119999992468,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum complex",
+            "value": 21.220569999996997,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum nested",
+            "value": 70.35950999999727,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Native msgpack (dict) simple",
+            "value": 0.4913599999952112,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Native msgpack (dict) complex",
+            "value": 1.0026499999980842,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Native msgpack (dict) nested",
+            "value": 2.2456600000055005,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum simple",
+            "value": 6.5894100000036815,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum complex",
+            "value": 9.67388000000824,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum nested",
+            "value": 23.548899999997275,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Native cbor2 (dict) simple",
+            "value": 4.275549999994155,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Native cbor2 (dict) complex",
+            "value": 5.76575000000048,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Native cbor2 (dict) nested",
+            "value": 8.598369999998567,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum simple",
+            "value": 10.695850000001883,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum complex",
+            "value": 23.89982000000259,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum nested",
+            "value": 70.32743000000323,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Native cbor2 (dict) simple",
+            "value": 1.6496600000039052,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Native cbor2 (dict) complex",
+            "value": 2.4695599999915885,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Native cbor2 (dict) nested",
+            "value": 4.261910000002445,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum simple",
+            "value": 343.7852100000043,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum complex",
+            "value": 811.8819099999996,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum nested",
+            "value": 2043.0944300000021,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum simple",
+            "value": 438.9415900000017,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum complex",
+            "value": 1162.8346799999917,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum nested",
+            "value": 1129.1531700000064,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum simple",
+            "value": 8.540139999985286,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum complex",
+            "value": 28.345089999993434,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum nested",
+            "value": 63.42425000000276,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum simple",
+            "value": 29.573409999994738,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum complex",
+            "value": 82.40513000000647,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) simple",
+            "value": 4.52601999998592,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) complex",
+            "value": 6.9647099999940565,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) nested",
+            "value": 22.11459000000673,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) simple",
+            "value": 3.5987500000032924,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) complex",
+            "value": 4.442709999989347,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) nested",
+            "value": 7.82813000000715,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Lodum Standard (loads) Time",
+            "value": 38.8472137,
+            "unit": "s"
+          },
+          {
+            "name": "(windows-latest) Lodum Standard (loads) Memory",
+            "value": 453.7406358718872,
+            "unit": "MB"
+          },
+          {
+            "name": "(windows-latest) Lodum Streaming (load_stream) Time",
+            "value": 36.128783699999985,
+            "unit": "s"
+          },
+          {
+            "name": "(windows-latest) Lodum Streaming (load_stream) Memory",
+            "value": 0.7155866622924805,
+            "unit": "MB"
+          },
+          {
+            "name": "(windows-latest) Pydantic v2 (validate_json) Time",
+            "value": 4.208723299999974,
             "unit": "s"
           },
           {
