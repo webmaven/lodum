@@ -10,11 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/CONTRIBUTING/">
+        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/BENCHMARK_METHODOLOGY/">
       
       
-        <link rel="prev" href="../plans/ide_plugin/">
+        <link rel="prev" href="../PERFORMANCE_ANALYSIS/">
       
+      
+        <link rel="next" href="../ROADMAP/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Contributing - lodum</title>
+        <title>Benchmark Methodology - lodum</title>
       
     
     
@@ -80,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#contributing-to-lodum" class="md-skip">
+        <a href="#benchmark-methodology" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              Benchmark Methodology
             
           </span>
         </div>
@@ -571,8 +573,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -583,11 +587,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -608,7 +612,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -735,10 +739,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../BENCHMARK_METHODOLOGY/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark Methodology
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -754,6 +785,120 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#standardized-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standardized Hardware
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measurement-techniques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measurement Techniques
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Measurement Techniques">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-execution-time-timeit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Execution Time (timeit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-memory-tracking-tracemalloc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Memory Tracking (tracemalloc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benchmark-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark Scenarios
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#xl-streaming-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        XL Streaming Benchmark
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#continuous-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Continuous Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducing-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing Locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -770,8 +915,6 @@
       
   
   
-    
-  
   
   
     
@@ -784,11 +927,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
@@ -809,7 +952,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1133,37 +1276,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contributing
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -1179,242 +1295,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#development-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Development Setup
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-can-i-contribute" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How Can I Contribute?
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="How Can I Contribute?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#reporting-bugs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reporting Bugs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#suggesting-enhancements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Suggesting Enhancements
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tracking-project-progress" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tracking Project Progress
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pull-requests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pull Requests
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#submitting-implementation-plans" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Submitting Implementation Plans
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running Tests
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Running Tests">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#native-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Native Tests
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pyodide-wasm-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pyodide (WASM) Tests
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pre-commit-checks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pre-commit Checks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#styleguides" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Styleguides
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#core-development-guidelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Core Development Guidelines
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Core Development Guidelines">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#modular-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Modular Architecture
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ast-generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AST Generation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#thread-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Thread Safety
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#release-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Release Process
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        License
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1454,10 +1334,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#development-setup" class="md-nav__link">
+  <a href="#standardized-hardware" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Development Setup
+        Standardized Hardware
       
     </span>
   </a>
@@ -1465,22 +1345,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-can-i-contribute" class="md-nav__link">
+  <a href="#measurement-techniques" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Can I Contribute?
+        Measurement Techniques
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How Can I Contribute?">
+    <nav class="md-nav" aria-label="Measurement Techniques">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reporting-bugs" class="md-nav__link">
+  <a href="#1-execution-time-timeit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reporting Bugs
+        1. Execution Time (timeit)
       
     </span>
   </a>
@@ -1488,43 +1368,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#suggesting-enhancements" class="md-nav__link">
+  <a href="#2-memory-tracking-tracemalloc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggesting Enhancements
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tracking-project-progress" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tracking Project Progress
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pull-requests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pull Requests
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#submitting-implementation-plans" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Submitting Implementation Plans
+        2. Memory Tracking (tracemalloc)
       
     </span>
   </a>
@@ -1537,49 +1384,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-tests" class="md-nav__link">
+  <a href="#benchmark-scenarios" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running Tests
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Running Tests">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#native-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Native Tests
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pyodide-wasm-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pyodide (WASM) Tests
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pre-commit-checks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pre-commit Checks
+        Benchmark Scenarios
       
     </span>
   </a>
@@ -1587,10 +1395,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#styleguides" class="md-nav__link">
+  <a href="#xl-streaming-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Styleguides
+        XL Streaming Benchmark
       
     </span>
   </a>
@@ -1598,60 +1406,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-development-guidelines" class="md-nav__link">
+  <a href="#continuous-monitoring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core Development Guidelines
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Core Development Guidelines">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#modular-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Modular Architecture
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ast-generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AST Generation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#thread-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Thread Safety
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#release-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Release Process
+        Continuous Monitoring
       
     </span>
   </a>
@@ -1659,10 +1417,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
+  <a href="#reproducing-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        License
+        Reproducing Locally
       
     </span>
   </a>
@@ -1686,7 +1444,7 @@
 
 
   
-    <a href="https://github.com/webmaven/lodum/edit/master/docs/CONTRIBUTING.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/webmaven/lodum/edit/master/docs/BENCHMARK_METHODOLOGY.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1695,228 +1453,67 @@
     
       
     
-    <a href="https://github.com/webmaven/lodum/raw/master/docs/CONTRIBUTING.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/webmaven/lodum/raw/master/docs/BENCHMARK_METHODOLOGY.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="contributing-to-lodum">Contributing to lodum</h1>
-<p>First off, thank you for considering contributing to <code>lodum</code>! It's people like you that make open source such a great community.</p>
-<h2 id="development-setup">Development Setup</h2>
-<p>To set up a local development environment:</p>
-<ol>
-<li>
-<p><strong>Clone the repository:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/webmaven/lodum.git
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>lodum
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Install the package in editable mode with all optional dependencies:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[all]&quot;</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Install development tools:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pytest<span class="w"> </span>ruff<span class="w"> </span>mypy<span class="w"> </span>pandas-stubs
-</code></pre></div></p>
-</li>
-</ol>
-<h2 id="how-can-i-contribute">How Can I Contribute?</h2>
-<p>There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into <code>lodum</code> itself.</p>
-<h3 id="reporting-bugs">Reporting Bugs</h3>
+<h1 id="benchmark-methodology">Benchmark Methodology</h1>
+<p>To ensure that Lodum's performance claims are accurate, reproducible, and comparable over time, we employ a rigorous benchmarking methodology standardized on GitHub Actions CI.</p>
+<h2 id="standardized-hardware">Standardized Hardware</h2>
+<p>We use <strong>Hardware Fingerprinting</strong> to ensure that all performance comparisons are made on identical runner types. </p>
 <ul>
-<li><strong>Ensure the bug was not already reported</strong> by searching on GitHub under <a href="https://github.com/webmaven/lodum/issues">Issues</a>.</li>
-<li>If you're unable to find an open issue addressing the problem, <a href="https://github.com/webmaven/lodum/issues/new">open a new one</a>. Be sure to include a <strong>title and clear description</strong>, as much relevant information as possible, and a <strong>code sample</strong> or an <strong>executable test case</strong> demonstrating the expected behavior that is not occurring.</li>
+<li><strong>Reference Hardware</strong>: AMD EPYC 7763 64-Core Processor.</li>
+<li><strong>Validation</strong>: Every benchmark run begins by executing <code>benchmarks/get_hw_info.py</code>. This script captures the CPU model and OS family.</li>
+<li><strong>Integrity Guard</strong>: If GitHub assigns a runner with different hardware, the CI system issues a warning. For official releases, this check is <strong>strict</strong>; the release will fail until a new baseline is established on the new hardware.</li>
 </ul>
-<h3 id="suggesting-enhancements">Suggesting Enhancements</h3>
-<ul>
-<li>Open a new issue and provide a clear description of the enhancement you'd like to see, why it's useful, and if possible, a suggestion for how it could be implemented.</li>
-</ul>
-<h3 id="tracking-project-progress">Tracking Project Progress</h3>
-<p><code>lodum</code> uses GitHub Issues and a Project Board to manage its development roadmap, features, and bugs. This system helps ensure clarity, accountability, and efficient progress.</p>
-<p><strong>Issue Labels:</strong>
-We categorize issues using <code>type:</code> and <code>status:</code> labels:
-*   <code>type: epic</code>: Major roadmap items or significant features.
-*   <code>type: story</code>: Smaller, actionable tasks contributing to an epic.
-*   <code>type: bug</code>: Issues identifying defects.
-*   <code>type: chore</code>: Maintenance tasks, refactoring, or non-feature work.
-*   <code>status: backlog</code>: Tasks awaiting prioritization.
-*   <code>status: ready</code>: Tasks ready to be picked up by a developer.
-*   <code>status: in-progress</code>: Tasks actively being worked on.
-*   <code>status: in-review</code>: Tasks with an open Pull Request awaiting review.
-*   <code>status: done</code>: Completed tasks (typically auto-closed by PR merges).</p>
-<p><strong>Project Board:</strong>
-You can view the overall project status and progress on our <a href="https://github.com/users/webmaven/projects/1">GitHub Project Board</a>. This Kanban board visualizes the flow of tasks through various stages.</p>
-<h3 id="pull-requests">Pull Requests</h3>
-<ul>
-<li>Open a new GitHub pull request with the patch.</li>
-<li>Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.</li>
-<li><strong>Link to Issues</strong>: All Pull Requests must be explicitly linked to one or more GitHub Issues they resolve or implement. Use closing keywords (e.g., <code>Closes #&lt;issue_number&gt;</code>, <code>Fixes #&lt;issue_number&gt;</code>, <code>Resolves #&lt;issue_number&gt;</code>) in your PR description. This automatically closes the associated issue upon merging the PR and ensures proper traceability.</li>
-<li>Before submitting, please ensure that your code follows the existing style of the project, and that all tests pass.</li>
-</ul>
-<h3 id="submitting-implementation-plans">Submitting Implementation Plans</h3>
-<p>For significant new features, architectural changes, or complex bug fixes, we encourage contributors to submit a detailed implementation plan <em>before</em> writing code. This ensures alignment, architectural soundness, and helps prevent "vague plans" that can lead to "messy code."</p>
-<p>A good implementation plan should be submitted as a separate Markdown document (e.g., in the <code>docs/plans/</code> directory if it's a major roadmap item) or included directly in a GitHub issue description. It should cover:</p>
-<ol>
-<li>
-<p><strong>Overview</strong>:</p>
-<ul>
-<li>What problem does this solve, and why is it needed?</li>
-<li>What is the goal of this change?</li>
-</ul>
-</li>
-<li>
-<p><strong>Current State Analysis</strong>:</p>
-<ul>
-<li>Briefly describe the relevant existing code or architecture (with file:line references where applicable).</li>
-<li>Identify affected components and current behavior.</li>
-</ul>
-</li>
-<li>
-<p><strong>Proposed Implementation Approach</strong>:</p>
-<ul>
-<li>High-level strategy or design.</li>
-<li>Break down the work into logical, atomic phases (e.g., Schema -&gt; Backend -&gt; UI, or smaller logical steps).</li>
-</ul>
-</li>
-<li>
-<p><strong>Detailed Changes (per phase)</strong>:</p>
-<ul>
-<li>For each phase, specify:<ul>
-<li><strong>Files to be changed</strong>: List specific file paths (e.g., <code>src/module/file.py</code>).</li>
-<li><strong>Summary of changes</strong>: Briefly describe the modifications (e.g., "Add <code>validate()</code> method handling X").</li>
-<li><em>(Optional: Code snippets)</em>: Include small, illustrative code snippets if they significantly clarify the change.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>Verification Strategy (per phase)</strong>:</p>
-<ul>
-<li>For each phase, outline how the changes will be verified:<ul>
-<li><strong>Automated Tests</strong>: Specify commands to run (e.g., <code>PYTHONPATH=src pytest tests/my_feature.py</code>).</li>
-<li><strong>Manual Verification</strong>: Provide clear, reproducible steps (e.g., "Click X, expect Y").</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>Architectural Risks/Considerations</strong>:</p>
-<ul>
-<li>Identify potential side effects, dependency issues, performance risks, or violations of existing project conventions.</li>
-</ul>
-</li>
-<li>
-<p><strong>Out of Scope</strong>:</p>
-<ul>
-<li>Explicitly state what this plan does <em>not</em> cover to prevent scope creep.</li>
-</ul>
-</li>
-</ol>
-<p>Submitting a plan allows for early feedback and ensures that the proposed solution aligns with <code>lodum</code>'s architectural principles and quality standards.</p>
-<h2 id="running-tests">Running Tests</h2>
-<p>We use <code>pytest</code> for native testing and a Node.js-based runner for Pyodide (WASM) testing.</p>
-<h3 id="native-tests">Native Tests</h3>
-<p>Run the full test suite locally:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">PYTHONPATH</span><span class="o">=</span>src<span class="w"> </span>pytest
-</code></pre></div></p>
-<h3 id="pyodide-wasm-tests">Pyodide (WASM) Tests</h3>
-<p>To ensure compatibility with browser environments, we run tests in Pyodide via Node.js.</p>
-<ol>
-<li>
-<p><strong>Install Node.js dependencies:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>npm<span class="w"> </span>install
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Build the distribution wheel:</strong>
-    The Pyodide runner requires a built wheel to install the package in the virtual WASM environment.
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>build
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Run the Pyodide tests:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Run standard sequential tests</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>node<span class="w"> </span>run_pyodide_node.js
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Run with simulated shared memory (concurrency testing)</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nv">PYODIDE_SHARED_MEMORY</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>node<span class="w"> </span>run_pyodide_node.js
-</code></pre></div></p>
-</li>
-</ol>
-<h2 id="pre-commit-checks">Pre-commit Checks</h2>
-<p>Before submitting a pull request, please run the following checks to ensure code quality:</p>
-<ol>
-<li>
-<p><strong>Linting &amp; Formatting:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ruff<span class="w"> </span>check<span class="w"> </span>src<span class="w"> </span>tests<span class="w"> </span>benchmarks
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>ruff<span class="w"> </span>format<span class="w"> </span>--check<span class="w"> </span>src<span class="w"> </span>tests<span class="w"> </span>benchmarks
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Type Checking:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mypy<span class="w"> </span>src<span class="w"> </span>tests
-</code></pre></div></p>
-</li>
-</ol>
-<h2 id="styleguides">Styleguides</h2>
-<ul>
-<li>We use <a href="https://github.com/astral-sh/ruff">Ruff</a> for code formatting and linting. Please run it on your code before submitting a pull request.</li>
-<li>We follow <a href="https://www.python.org/dev/psps/pep-0008/">PEP 8</a> for all Python code.</li>
-</ul>
-<h2 id="core-development-guidelines">Core Development Guidelines</h2>
-<h3 id="modular-architecture">Modular Architecture</h3>
-<p>The core engine is split into two primary areas:
-- <code>src/lodum/compiler/</code>: Handles type analysis and specialized bytecode generation.
-- <code>src/lodum/handlers/</code>: Contains generic fallback logic for types when specialized code cannot be compiled.</p>
-<h3 id="ast-generation">AST Generation</h3>
-<p>When modifying the compiler, use the <code>ASTBuilder</code> DSL found in <code>src/lodum/compiler/dsl.py</code>. This ensures that generated code is readable and consistent across different Python versions.</p>
-<h3 id="thread-safety">Thread Safety</h3>
-<p>Lodum uses a <code>Context</code> object to manage global state. All handlers must be stateless or use the provided <code>Context</code> for caching. Avoid global variables that could cause race conditions during concurrent serialization.</p>
-<h2 id="release-process">Release Process</h2>
-<p>When a new version of <code>lodum</code> is ready for release, follow these steps:</p>
-<ol>
-<li><strong>Prepare the Release Branch</strong>:<ul>
-<li>Create a new branch <code>release/vX.Y.Z</code>.</li>
-</ul>
-</li>
-<li><strong>Update Version</strong>:<ul>
-<li>Update <code>__version__</code> in <code>src/lodum/__init__.py</code>.</li>
-<li>Update the <code>version</code> field in <code>pyproject.toml</code>.</li>
-</ul>
-</li>
-<li><strong>Update Changelog</strong>:<ul>
-<li>Add a new section to <code>CHANGELOG.md</code> following the <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a> format.</li>
-<li>Set the release date.</li>
-</ul>
-</li>
-<li><strong>Final Checks</strong>:<ul>
-<li>Ensure CI is passing on the release branch (includes native and Pyodide tests).</li>
-<li>Ensure all branding assets are correct.</li>
-</ul>
-</li>
-<li><strong>Merge and Tag</strong>:<ul>
-<li>Merge the release branch into <code>main</code> via Pull Request.</li>
-<li>Create and push a signed Git tag:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>vX.Y.Z<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Release vX.Y.Z&quot;</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>vX.Y.Z
-</code></pre></div></li>
-</ul>
-</li>
-<li><strong>Automated Deployment</strong>:<ul>
-<li>Pushing the tag triggers the <strong>Release Workflow</strong>, which automatically:<ul>
-<li>Builds and uploads the package to <strong>PyPI</strong>.</li>
-<li>Deploys versioned documentation and updates the <strong>latest</strong> alias.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-<h2 id="license">License</h2>
-<p>By contributing, you agree that your contributions will be licensed under the Apache License 2.0.</p>
+<h2 id="measurement-techniques">Measurement Techniques</h2>
+<h3 id="1-execution-time-timeit">1. Execution Time (<code>timeit</code>)</h3>
+<p>For core serialization and deserialization, we use the standard Python <code>timeit</code> module.
+- <strong>Iterations</strong>: Each operation is timed over <strong>2,000 iterations</strong>.
+- <strong>Statistics</strong>: We perform <strong>5 repeats</strong> of the iteration cycle and report the <strong>Mean</strong> and <strong>Standard Deviation</strong> in microseconds (us) per operation.</p>
+<h3 id="2-memory-tracking-tracemalloc">2. Memory Tracking (<code>tracemalloc</code>)</h3>
+<p>For our <strong>XL Streaming Benchmarks</strong>, we measure memory efficiency using the <code>tracemalloc</code> module.
+- <strong>Metric</strong>: We capture the <strong>Peak Memory Usage</strong> during the entire deserialization process.
+- <strong>Verification</strong>: This allows us to quantitatively prove the memory reduction (typically &gt;90%) achieved by using <code>load_stream</code> instead of standard <code>loads</code>.</p>
+<h2 id="benchmark-scenarios">Benchmark Scenarios</h2>
+<p>We use three standardized data structures to measure performance across different complexity levels:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Scenario</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Simple</strong></td>
+<td style="text-align: left;">A flat object with a few primitive fields (int, str, bool).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Complex</strong></td>
+<td style="text-align: left;">An object containing lists, nested dictionaries, enums, and dates.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Nested</strong></td>
+<td style="text-align: left;">A multi-level object containing a hierarchy of other @lodum objects.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="xl-streaming-benchmark">XL Streaming Benchmark</h2>
+<p>The XL benchmark simulates real-world "Big Data" scenarios:
+- <strong>Dataset</strong>: A JSON array containing <strong>500,000 objects</strong>.
+- <strong>Data Size</strong>: Approximately <strong>45MB</strong> of raw JSON.
+- <strong>Objective</strong>: Compare the time and memory consumption of loading the entire array into memory vs. processing it lazily via a binary stream.</p>
+<h2 id="continuous-monitoring">Continuous Monitoring</h2>
+<p>Performance is tracked automatically on every push to the <code>main</code> branch across both <strong>Linux (ubuntu-latest)</strong> and <strong>Windows (windows-latest)</strong>. Results are pushed to our <a href="https://webmaven.github.io/lodum/benchmarks/">Live Performance Dashboard</a> to ensure no regressions are introduced during development.</p>
+<h2 id="reproducing-locally">Reproducing Locally</h2>
+<p>You can run the full suite on your own machine by installing the benchmarking dependencies:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[all]&quot;</span><span class="w"> </span>pydantic<span class="w"> </span>marshmallow
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">PYTHONPATH</span><span class="o">=</span>src:.<span class="w"> </span>python<span class="w"> </span>benchmarks/run.py
+</code></pre></div>
 
 
 
