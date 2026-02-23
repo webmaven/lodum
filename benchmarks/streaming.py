@@ -60,7 +60,7 @@ def run_benchmark(count: int):
 
     # We use a string for loads as per existing API
     json_str = raw_data.decode("utf-8")
-    items = lodum_json.loads(List[LargeItem], json_str)
+    items = lodum_json.loads(List[LargeItem], json_str, max_size=len(raw_data) * 2)
     # Force consumption if it was somehow lazy (it isn't)
     _ = len(items)
 
