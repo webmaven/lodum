@@ -49,23 +49,19 @@ if __name__ == "__main__":
         with open(filename, "r") as f:
             ref = json.load(f)
 
-        # Compare OS family and CPU model
-        if info["processor"] != ref["processor"] or info["os"] != ref["os"]:
-            print("⚠️ HARDWARE DRIFT DETECTED!")
-            print(f"Current:   {info['processor']} ({info['os']})")
-            print(f"Reference: {ref['processor']} ({ref['os']})")
-
-            if "--strict" in sys.argv:
-                print("\nERROR: Strict hardware validation failed.")
-                print(
-                    "Action required: Run historical benchmarks to update baseline, then run with --init to update signature."
-                )
-                sys.exit(1)
-            else:
-                print("\nProceeding with warning (non-strict mode).")
-        else:
-            print(
-                f"SUCCESS: Hardware matches reference: {info['processor']} ({info['os']})"
-            )
+                # Compare OS family and CPU model
+                if info["processor"] != ref["processor"] or info["os"] != ref["os"]:
+                    print("WARNING: HARDWARE DRIFT DETECTED!")
+                    print(f"Current:   {info['processor']} ({info['os']})")
+                    print(f"Reference: {ref['processor']} ({ref['os']})")
+                    
+                    if "--strict" in sys.argv:
+                        print("\nERROR: Strict hardware validation failed.")
+                        print("Action required: Run historical benchmarks to update baseline, then run with --init to update signature.")
+                        sys.exit(1)
+                    else:
+                        print("\nProceeding with warning (non-strict mode).")
+                else:
+                    print(f"SUCCESS: Hardware matches reference: {info['processor']} ({info['os']})")
     else:
         print(json.dumps(info, indent=2))
