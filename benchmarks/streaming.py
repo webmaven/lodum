@@ -3,7 +3,7 @@ import json
 import time
 import tracemalloc
 import sys
-from typing import List, Type, Any
+from typing import List
 from lodum import lodum, json as lodum_json
 
 try:

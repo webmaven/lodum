@@ -4,7 +4,7 @@ import sys
 import statistics
 import pickle
 import io
-from typing import Callable, Dict, Optional, List, Any
+from typing import Callable, Dict, Optional
 
 # Optional dependencies
 try:
@@ -147,7 +147,8 @@ def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable
             continue
 
         def fmt(res):
-            if res is None: return "N/A"
+            if res is None:
+                return "N/A"
             return f"{res['mean']:.2f} ± {res['stdev']:.2f}"
 
         print(f"| {lib_name} | {fmt(simple_res)} | {fmt(complex_res)} | {fmt(nested_res)} |")
