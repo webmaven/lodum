@@ -149,13 +149,12 @@ jobs:
       run: |
         git fetch origin gh-pages
         git checkout gh-pages
-        # Correctly reference the file from the main branch checkout
-        # which is still available in the parent or via git show
         git show main:benchmarks/index.html > benchmarks/index.html
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add benchmarks/index.html
         git commit -m "docs: update custom performance dashboard template" || echo "No changes"
+        git pull origin gh-pages --rebase
         git push origin gh-pages
       shell: bash
 
