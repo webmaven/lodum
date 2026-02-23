@@ -126,7 +126,7 @@ jobs:
       run: python -m build
     - name: Run Pyodide Benchmarks
       run: |
-        node run_pyodide_node.js --benchmark > pyodide_bench.json
+        node run_pyodide_node.js --benchmark --output=pyodide_bench.json
     - name: Aggregate Results
       shell: python
       run: |

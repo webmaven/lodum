@@ -5,6 +5,7 @@ import statistics
 import pickle
 import io
 import os
+import time
 from typing import Callable, Dict, Optional, Any, List
 
 # Optional dependencies
@@ -184,6 +185,13 @@ if os.path.exists(BASELINES_FILE):
 def bench(func):
     if func is None:
         return None
+    
+    # 1. Cold Start (First run)
+    start_cold = time.perf_counter()
+    func()
+    cold_time = (time.perf_counter() - start_cold) * 1e6 # us
+    
+    # 2. Warm Start (Steady state)
     timer = timeit.Timer(func)
     try:
         times = timer.repeat(repeat=5, number=ITERATIONS)
@@ -191,6 +199,7 @@ def bench(func):
         return {
             "mean": statistics.mean(us_per_op),
             "stdev": statistics.stdev(us_per_op),
+            "cold": cold_time
         }
     except Exception:
         return None
@@ -198,15 +207,14 @@ def bench(func):
 
 def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable]]]):
     print(f"### {group_name}")
-    print("| Library | Simple (us) | Complex (us) | Nested (us) |")
-    print("| :--- | ---: | ---: | ---: |")
+    print("| Library | Simple (us) | Complex (us) | Nested (us) | Cold Start (us) |")
+    print("| :--- | ---: | ---: | ---: | ---: |")
 
     use_baselines = "--use-baselines" in sys.argv
 
     for lib_name, funcs in benchmarks.items():
         results = {}
         for scenario in ["simple", "complex", "nested"]:
-            # Check if we should use baseline
             baseline_key = f"{group_name} {lib_name} {scenario}"
             if use_baselines and baseline_key in competitor_baselines:
                 results[scenario] = competitor_baselines[baseline_key]
@@ -220,9 +228,14 @@ def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable
             if res is None:
                 return "N/A"
             return f"{res['mean']:.2f} ± {res['stdev']:.2f}"
+        
+        def fmt_cold(res):
+            if res is None or "cold" not in res: return "N/A"
+            return f"{res['cold']:.2f}"
 
+        # We show cold start for the 'complex' scenario as a representative sample
         print(
-            f"| {lib_name} | {fmt(results.get('simple'))} | {fmt(results.get('complex'))} | {fmt(results.get('nested'))} |"
+            f"| {lib_name} | {fmt(results.get('simple'))} | {fmt(results.get('complex'))} | {fmt(results.get('nested'))} | {fmt_cold(results.get('complex'))} |"
         )
     print()
 
@@ -250,6 +263,14 @@ def run_all():
                                 "value": res["mean"],
                             }
                         )
+                        if "cold" in res:
+                            all_results.append(
+                                {
+                                    "name": f"{group_name} {lib} {name} (Cold Start)",
+                                    "unit": "us",
+                                    "value": res["cold"],
+                                }
+                            )
         else:
             run_group(group_name, benchmarks)
 
