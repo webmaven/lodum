@@ -46,6 +46,7 @@ from benchmarks.models import (
     MarshmallowComplexSchema,
     MarshmallowNestedSchema,
 )
+
 # --- Lodum Imports with fallbacks for very old versions ---
 try:
     from lodum import json as lodum_json

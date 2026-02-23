@@ -1,4 +1,5 @@
 from typing import List, Dict
+
 try:
     # Try the modern public API
     from lodum import lodum
@@ -13,9 +14,10 @@ except (ImportError, AttributeError):
         except (ImportError, AttributeError):
             # Last resort: try direct import of core
             import lodum.core
-            if hasattr(lodum.core, 'lodum'):
+
+            if hasattr(lodum.core, "lodum"):
                 lodum = lodum.core.lodum
-            elif hasattr(lodum.core, 'serializable'):
+            elif hasattr(lodum.core, "serializable"):
                 lodum = lodum.core.serializable
             else:
                 raise ImportError("Could not find lodum or serializable decorator")
