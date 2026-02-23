@@ -47,10 +47,13 @@ def generate_large_json(count: int) -> bytes:
 
 
 def run_benchmark(count: int):
-    print(f"Generating {count} items...")
+    is_json = "--json" in sys.argv
+    if not is_json:
+        print(f"Generating {count} items...")
     raw_data = generate_large_json(count)
     data_size_mb = len(raw_data) / (1024 * 1024)
-    print(f"Data size: {data_size_mb:.2f} MB\n")
+    if not is_json:
+        print(f"Data size: {data_size_mb:.2f} MB\n")
 
     results = []
 
