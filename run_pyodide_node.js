@@ -44,6 +44,7 @@ async function main() {
     "pandas",
     "ijson",
     "marshmallow",
+    "pydantic",
   ]);
 
   if (isBenchmark) {
