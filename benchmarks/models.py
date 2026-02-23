@@ -7,8 +7,18 @@ except (ImportError, AttributeError):
         # Try the v0.2.0 internal location
         from lodum.core import lodum
     except (ImportError, AttributeError):
-        # Fallback for v0.1.0 where it was named 'serializable'
-        from lodum.core import serializable as lodum
+        try:
+            # Fallback for v0.1.0 where it was named 'serializable'
+            from lodum.core import serializable as lodum
+        except (ImportError, AttributeError):
+            # Last resort: try direct import of core
+            import lodum.core
+            if hasattr(lodum.core, 'lodum'):
+                lodum = lodum.core.lodum
+            elif hasattr(lodum.core, 'serializable'):
+                lodum = lodum.core.serializable
+            else:
+                raise ImportError("Could not find lodum or serializable decorator")
 from pydantic import BaseModel
 from marshmallow import Schema, fields, post_load
 

@@ -46,27 +46,61 @@ from benchmarks.models import (
     MarshmallowComplexSchema,
     MarshmallowNestedSchema,
 )
-from lodum import json as lodum_json
+# --- Lodum Imports with fallbacks for very old versions ---
+try:
+    from lodum import json as lodum_json
+except ImportError:
+    try:
+        import lodum.json as lodum_json
+    except ImportError:
+        lodum_json = None
+
 try:
     from lodum import msgpack as lodum_msgpack
 except ImportError:
-    lodum_msgpack = None
+    try:
+        import lodum.msgpack as lodum_msgpack
+    except ImportError:
+        lodum_msgpack = None
+
 try:
     from lodum import cbor as lodum_cbor
 except ImportError:
-    lodum_cbor = None
+    try:
+        import lodum.cbor as lodum_cbor
+    except ImportError:
+        lodum_cbor = None
+
 try:
     from lodum import pickle as lodum_pickle
 except ImportError:
-    lodum_pickle = None
+    try:
+        import lodum.pickle as lodum_pickle
+    except ImportError:
+        lodum_pickle = None
+
 try:
     from lodum import yaml as lodum_yaml
 except ImportError:
-    lodum_yaml = None
+    try:
+        import lodum.yaml as lodum_yaml
+    except ImportError:
+        lodum_yaml = None
+
 try:
     from lodum import toml as lodum_toml
 except ImportError:
-    lodum_toml = None
+    try:
+        import lodum.toml as lodum_toml
+    except ImportError:
+        lodum_toml = None
+
+# Fallbacks for function names in v0.1.0
+if lodum_json:
+    if not hasattr(lodum_json, "dumps") and hasattr(lodum_json, "to_json"):
+        lodum_json.dumps = lodum_json.to_json
+    if not hasattr(lodum_json, "loads") and hasattr(lodum_json, "from_json"):
+        lodum_json.loads = lodum_json.from_json
 
 # Data Preparation
 simple_data = {"name": "Alice", "age": 30, "active": True}
