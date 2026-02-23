@@ -128,6 +128,10 @@ jobs:
             item['name'] = f"(ubuntu-latest) {item['name']}"
         with open('historical_bench.json', 'w') as f:
             json.dump(std, f)
+    - name: Get Tag SHA
+      id: get_sha
+      run: |
+        echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     - name: Store Historical Results
       uses: benchmark-action/github-action-benchmark@v1
       with:
@@ -137,5 +141,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
         benchmark-data-dir-path: benchmarks
+        # Explicitly set the commit ID from the tag checkout
+        commit-id: ${{ steps.get_sha.outputs.sha }}
 
 
