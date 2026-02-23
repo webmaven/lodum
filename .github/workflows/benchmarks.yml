@@ -9,6 +9,10 @@ on:
         description: 'Run historical benchmarks (v0.1.0, v0.2.0)'
         type: boolean
         default: false
+      init_hardware:
+        description: 'Initialize/Update hardware signature for current runner'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,6 +36,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[all]"
         pip install pydantic ijson
+    - name: Record and Validate Hardware
+      run: |
+        if ("${{ github.event.inputs.init_hardware }}" == "true") {
+          python benchmarks/get_hw_info.py --init
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add benchmarks/metadata/
+          git commit -m "chore: update hardware signature for ${{ matrix.os }}"
+          git push origin main
+        } else {
+          python benchmarks/get_hw_info.py --check
+        }
+      shell: bash
     - name: Run Standard Benchmarks
       run: |
         python benchmarks/run.py --json > standard_bench.json
@@ -88,6 +105,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[all]"
         pip install pydantic ijson
+    - name: Record Hardware
+      run: |
+        python lodum-current/benchmarks/get_hw_info.py
     - name: Run Benchmarks (using current scripts on old code)
       run: |
         export PYTHONPATH=$GITHUB_WORKSPACE/lodum-old/src
