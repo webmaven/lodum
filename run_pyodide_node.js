@@ -4,6 +4,7 @@ const path = require("path");
 
 async function main() {
   const isBenchmark = process.argv.includes("--benchmark");
+  const outputFile = process.argv.find(arg => arg.startsWith("--output="))?.split("=")[1];
   
   if (!isBenchmark) {
     console.log("Starting Pyodide...");
@@ -31,21 +32,27 @@ async function main() {
     console.log(`Installing ${wheelName} and dependencies...`);
   }
   
-  // Install lodum and standard benchmark dependencies
-  await micropip.install([
-    `emfs:${wheelName}`, 
-    "pytest", 
-    "cbor2", 
-    "msgpack",
-    "tomli",
-    "tomli-w",
-    "ruamel.yaml",
-    "numpy",
-    "pandas",
-    "ijson",
-    "marshmallow",
-    "pydantic",
-  ]);
+  // Install lodum and dependencies
+  // We try to install pydantic but don't fail if it's not available in this env
+  try {
+    await micropip.install([
+        `emfs:${wheelName}`, 
+        "pytest", 
+        "cbor2", 
+        "msgpack",
+        "tomli",
+        "tomli-w",
+        "ruamel.yaml",
+        "numpy",
+        "pandas",
+        "ijson",
+        "marshmallow",
+        "pydantic"
+      ]);
+  } catch (err) {
+    if (!isBenchmark) console.warn("Optional dependencies failed to install, retrying with core only...");
+    await micropip.install([`emfs:${wheelName}`, "pytest", "ijson"]);
+  }
 
   if (isBenchmark) {
     // Copy benchmark scripts
@@ -57,39 +64,40 @@ async function main() {
       pyodide.FS.writeFile(path.join("benchmarks", file), data);
     }
     
-    // Also need models.py if it's in a subdirectory
     if (fs.existsSync(path.join(benchDir, "models.py"))) {
         const data = fs.readFileSync(path.join(benchDir, "models.py"));
         pyodide.FS.writeFile(path.join("benchmarks", "models.py"), data);
     }
 
-    // Run benchmarks
+    // Run benchmarks and return JSON string
     try {
-      const results = await pyodide.runPythonAsync(`
+      const jsonResult = await pyodide.runPythonAsync(`
 import sys
 import os
 import json
-
-# Add current dir to path for benchmark imports
-sys.path.append(os.getcwd())
-
-from benchmarks.run import run_all
 import io
 from contextlib import redirect_stdout
 
-# Capture JSON output from run_all
+sys.path.append(os.getcwd())
+
+from benchmarks.run import run_all
+
 f = io.StringIO()
 with redirect_stdout(f):
-    # Pass --json and --use-baselines (to skip missing heavy deps)
     sys.argv = ["benchmarks/run.py", "--json", "--use-baselines"]
     run_all()
 
-print(f.getvalue())
+f.getvalue()
       `);
-      // We don't need to do anything with 'results' as runPythonAsync 
-      // already printed the JSON to stdout which we capture in CI
+      
+      if (outputFile) {
+        fs.writeFileSync(outputFile, jsonResult);
+      } else {
+        process.stdout.write(jsonResult);
+      }
       process.exit(0);
     } catch (err) {
+      console.error("Benchmark execution failed:");
       console.error(err);
       process.exit(1);
     }
@@ -97,7 +105,6 @@ print(f.getvalue())
   }
 
   // --- Standard Test Runner Path ---
-  // Copy tests to emulated FS
   console.log("Copying tests...");
   pyodide.FS.mkdir("tests");
   const testsDir = path.join(__dirname, "tests");

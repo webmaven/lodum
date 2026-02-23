@@ -87,6 +87,22 @@ jobs:
         alert-threshold: '150%'
         comment-on-alert: true
         fail-on-alert: false
+        # Ensure our custom index.html is not overwritten if the action tries to
+        # But actually, we want to force our version from main
+    
+    - name: Deploy Custom Dashboard Template
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git fetch origin gh-pages
+        git checkout gh-pages
+        cp benchmarks/index.html benchmarks/index.html
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add benchmarks/index.html
+        git commit -m "docs: update custom performance dashboard template" || echo "No changes"
+        git push origin gh-pages
+        git checkout main
+      shell: bash
 
   benchmark-pyodide:
     name: Performance Tracking (Pyodide/WASM)
@@ -110,7 +126,7 @@ jobs:
       run: python -m build
     - name: Run Pyodide Benchmarks
       run: |
-        node run_pyodide_node.js --benchmark > pyodide_bench.json
+        node run_pyodide_node.js --benchmark --output=pyodide_bench.json
     - name: Aggregate Results
       shell: python
       run: |
@@ -133,6 +149,20 @@ jobs:
         alert-threshold: '200%'
         comment-on-alert: true
         fail-on-alert: false
+
+    - name: Deploy Custom Dashboard Template
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git fetch origin gh-pages
+        git checkout gh-pages
+        cp benchmarks/index.html benchmarks/index.html
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add benchmarks/index.html
+        git commit -m "docs: update custom performance dashboard template (Pyodide)" || echo "No changes"
+        git push origin gh-pages
+        git checkout main
+      shell: bash
 
   historical:
     name: Historical Baseline (One-time) (${{ matrix.version }})
