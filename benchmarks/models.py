@@ -1,9 +1,14 @@
 from typing import List, Dict
 try:
+    # Try the modern public API
     from lodum import lodum
-except ImportError:
-    # Support for v0.1.0 where it was named 'serializable'
-    from lodum.core import serializable as lodum
+except (ImportError, AttributeError):
+    try:
+        # Try the v0.2.0 internal location
+        from lodum.core import lodum
+    except (ImportError, AttributeError):
+        # Fallback for v0.1.0 where it was named 'serializable'
+        from lodum.core import serializable as lodum
 from pydantic import BaseModel
 from marshmallow import Schema, fields, post_load
 

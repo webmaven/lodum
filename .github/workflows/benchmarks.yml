@@ -138,10 +138,10 @@ jobs:
       with:
         name: Lodum Performance Index - ubuntu-latest
         tool: 'customSmallerIsBetter'
-        output-file-path: historical_bench.json
+        output-file-path: ../historical_bench.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
         benchmark-data-dir-path: benchmarks
-      # Run in the current checkout which is a git repo
-      # The historical_bench.json was created in the root
+      # Run inside the current checkout which is a full git repo
+      working-directory: lodum-current
 
