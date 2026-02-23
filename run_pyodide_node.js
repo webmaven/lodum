@@ -35,6 +35,7 @@ async function main() {
     "ruamel.yaml",
     "numpy",
     "pandas",
+    "ijson",
   ]);
 
   // Copy tests to emulated FS

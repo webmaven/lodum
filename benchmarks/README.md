@@ -11,23 +11,15 @@ This directory contains scripts to measure the performance of Lodum compared to 
 - **orjson**: A fast JSON library for Python.
 - **msgpack/cbor2/ruamel.yaml**: Common binary and text formats.
 
-## Running Benchmarks
+## Automated Performance Tracking
 
-To run the benchmarks, you need to have the optional dependencies installed. You can install them with:
+Performance is tracked automatically via GitHub Actions on every push to `main`. You can view the historical performance graphs on our [GitHub Pages site](https://webmaven.github.io/lodum/dev/benchmarks).
 
-```bash
-pip install -e ".[all]" pydantic marshmallow orjson
-```
+Benchmarks are run on both **Linux (Ubuntu)** and **Windows** to ensure cross-platform performance consistency.
 
-Then, run the benchmark script from the root of the repository:
+## Standard Benchmarks (`run.py`)
 
-```bash
-PYTHONPATH=src:. python benchmarks/run.py
-```
-
-## Methodology
-
-The benchmarks use the `timeit` module to measure the execution time of serialization (Object -> String/Bytes) and deserialization (String/Bytes -> Object) operations.
+The standard benchmarks use the `timeit` module to measure the execution time of serialization (Object -> String/Bytes) and deserialization (String/Bytes -> Object) operations.
 
 We use three scenarios:
 1. **Simple**: A small object with a few primitive fields.
@@ -35,3 +27,25 @@ We use three scenarios:
 3. **Nested**: An object containing other objects and lists of objects.
 
 Results are reported in microseconds (us) per operation. Lower is better.
+
+## Streaming & Memory Benchmark (`streaming.py`)
+
+This benchmark specifically measures the efficiency of `load_stream` when dealing with very large datasets (e.g., 500,000 objects). It tracks both execution time and **Peak Memory Usage** using `tracemalloc`.
+
+## Running Locally
+
+To run the benchmarks locally, ensure you have the optional dependencies installed:
+
+```bash
+pip install -e ".[all]" pydantic marshmallow ijson
+```
+
+Then, run the scripts from the root of the repository:
+
+```bash
+# Standard benchmarks
+PYTHONPATH=src python benchmarks/run.py
+
+# Streaming/Memory benchmark
+PYTHONPATH=src python benchmarks/streaming.py 100000
+```

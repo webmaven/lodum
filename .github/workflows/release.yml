@@ -6,8 +6,22 @@ on:
       - 'v*'
 
 jobs:
+  validate-hardware:
+    name: Validate Benchmark Hardware
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Check Hardware Consistency
+        run: |
+          python benchmarks/get_hw_info.py --check
+
   pypi-publish:
     name: Upload release to PyPI
+    needs: validate-hardware
     runs-on: ubuntu-latest
     environment:
       name: pypi
