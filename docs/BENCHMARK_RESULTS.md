@@ -28,4 +28,6 @@ These results were generated manually during development and are preserved for h
 | 2026-01-24 | AST Verification | [benchmarks/results/2026-01-24_ast_verification/comparison.md](https://github.com/webmaven/lodum/blob/main/benchmarks/results/2026-01-24_ast_verification/comparison.md) ([Raw](https://github.com/webmaven/lodum/blob/main/benchmarks/results/2026-01-24_ast_verification/results.md)) |
 | 2026-01-25 | Final Modular Refactor | [benchmarks/results/2026-01-25_final_modular_refactor/results.md](https://github.com/webmaven/lodum/blob/main/benchmarks/results/2026-01-25_final_modular_refactor/results.md) |
 
+For more information on how we measure performance and ensure hardware consistency, see our [Benchmark Methodology](BENCHMARK_METHODOLOGY.md).
+
 For the latest performance analysis and summary, see [PERFORMANCE.md](PERFORMANCE.md).

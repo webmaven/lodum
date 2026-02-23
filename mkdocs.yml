@@ -61,8 +61,9 @@ nav:
   - Technical Specs:
     - Architecture: ARCHITECTURE.md
     - Implementing Formats: IMPLEMENTING_FORMATS.md
-    - Benchmark Results: BENCHMARK_RESULTS.md
-    - Performance Analysis: PERFORMANCE_ANALYSIS.md
+    - Benchmark History: BENCHMARK_RESULTS.md
+    - Performance Evolution: PERFORMANCE_ANALYSIS.md
+    - Benchmark Methodology: BENCHMARK_METHODOLOGY.md
   - Project:
     - Roadmap: ROADMAP.md
     - Implementation Plans:
