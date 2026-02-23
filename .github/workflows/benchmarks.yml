@@ -51,12 +51,16 @@ jobs:
       shell: bash
     - name: Run Standard Benchmarks
       run: |
-        PYTHONPATH=src:. python benchmarks/run.py --json > standard_bench.json
+        python benchmarks/run.py --json > standard_bench.json
       shell: bash
+      env:
+        PYTHONPATH: ${{ matrix.os == 'windows-latest' && 'src;.' || 'src:.' }}
     - name: Run Streaming Benchmark
       run: |
-        PYTHONPATH=src:. python benchmarks/streaming.py 500000 --json > streaming_bench.json
+        python benchmarks/streaming.py 500000 --json > streaming_bench.json
       shell: bash
+      env:
+        PYTHONPATH: ${{ matrix.os == 'windows-latest' && 'src;.' || 'src:.' }}
     - name: Aggregate Results
       shell: python
       run: |
@@ -112,8 +116,9 @@ jobs:
         python lodum-current/benchmarks/get_hw_info.py
     - name: Run Benchmarks (using current scripts on old code)
       run: |
-        export PYTHONPATH=$GITHUB_WORKSPACE/lodum-old/src:$GITHUB_WORKSPACE/lodum-current
         python lodum-current/benchmarks/run.py --json > standard_bench.json
+      env:
+        PYTHONPATH: ${{ format('{0}/lodum-old/src:{0}/lodum-current', github.workspace) }}
         # streaming.py might fail on very old versions if load_stream doesn't exist
         # but run.py should work for core performance
     - name: Aggregate
