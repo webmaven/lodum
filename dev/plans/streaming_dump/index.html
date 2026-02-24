@@ -10,31 +10,27 @@
       
       
       
-        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/PERFORMANCE_EVOLUTION/">
+        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/plans/streaming_dump/">
       
       
-        <link rel="prev" href="../PERFORMANCE/">
-      
-      
-        <link rel="next" href="../BENCHMARK_METHODOLOGY/">
       
       
         
       
       
-      <link rel="icon" href="../assets/dumptruck-icon.png">
+      <link rel="icon" href="../../assets/dumptruck-icon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
-        <title>Performance Evolution - lodum</title>
+        <title>Detailed Design: Streaming Serialization (Phase 2) - lodum</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,11 +49,11 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#performance-evolution-the-ast-revolution" class="md-skip">
+        <a href="#detailed-design-streaming-serialization-phase-2" class="md-skip">
           Skip to content
         </a>
       
@@ -102,9 +98,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href="../.." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../assets/dumptruck-icon.png" alt="logo">
+  <img src="../../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -121,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Performance Evolution
+              Detailed Design: Streaming Serialization (Phase 2)
             
           </span>
         </div>
@@ -239,9 +235,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href="../.." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../assets/dumptruck-icon.png" alt="logo">
+  <img src="../../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     lodum
@@ -268,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -295,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../NEWS/" class="md-nav__link">
+      <a href="../../NEWS/" class="md-nav__link">
         
   
   
@@ -319,8 +315,6 @@
       
   
   
-    
-  
   
   
     
@@ -333,11 +327,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -358,7 +352,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -376,7 +370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GETTING_STARTED/" class="md-nav__link">
+      <a href="../../GETTING_STARTED/" class="md-nav__link">
         
   
   
@@ -404,7 +398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../demo/" class="md-nav__link">
+      <a href="../../demo/" class="md-nav__link">
         
   
   
@@ -432,7 +426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FIELD_CUSTOMIZATION/" class="md-nav__link">
+      <a href="../../FIELD_CUSTOMIZATION/" class="md-nav__link">
         
   
   
@@ -460,7 +454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../VALIDATION/" class="md-nav__link">
+      <a href="../../VALIDATION/" class="md-nav__link">
         
   
   
@@ -485,8 +479,6 @@
                 
   
   
-    
-  
   
   
     
@@ -496,11 +488,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
         
           
           <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
@@ -521,7 +513,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -539,7 +531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PERFORMANCE/" class="md-nav__link">
+      <a href="../../PERFORMANCE/" class="md-nav__link">
         
   
   
@@ -564,37 +556,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Performance Evolution
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE_EVOLUTION/" class="md-nav__link">
         
   
   
@@ -610,109 +575,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#performance-trajectory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Trajectory
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#core-optimization-experiments" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Core Optimization Experiments
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Core Optimization Experiments">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-pre-resolved-handlers-experiment-2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Pre-Resolved Handlers (Experiment 2)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fast-raw-dict-access-experiment-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fast Raw-Dict Access (Experiment 5)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-loop-inlining-experiments-6-7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Loop Inlining (Experiments 6 &amp; 7)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-modular-thread-safety-experiment-9" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Modular Thread-Safety (Experiment 9)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-milestone-the-ast-transition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Milestone: The AST Transition
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -725,7 +587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../BENCHMARK_METHODOLOGY/" class="md-nav__link">
+      <a href="../../BENCHMARK_METHODOLOGY/" class="md-nav__link">
         
   
   
@@ -753,7 +615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../BENCHMARK_HISTORY/" class="md-nav__link">
+      <a href="../../BENCHMARK_HISTORY/" class="md-nav__link">
         
   
   
@@ -789,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MIGRATION/" class="md-nav__link">
+      <a href="../../MIGRATION/" class="md-nav__link">
         
   
   
@@ -824,7 +686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api_reference/" class="md-nav__link">
+      <a href="../../api_reference/" class="md-nav__link">
         
   
   
@@ -903,7 +765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ARCHITECTURE/" class="md-nav__link">
+      <a href="../../ARCHITECTURE/" class="md-nav__link">
         
   
   
@@ -931,7 +793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../IMPLEMENTING_FORMATS/" class="md-nav__link">
+      <a href="../../IMPLEMENTING_FORMATS/" class="md-nav__link">
         
   
   
@@ -1018,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ROADMAP/" class="md-nav__link">
+      <a href="../../ROADMAP/" class="md-nav__link">
         
   
   
@@ -1095,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/streaming_support/" class="md-nav__link">
+      <a href="../streaming_support/" class="md-nav__link">
         
   
   
@@ -1123,7 +985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/partial_serialization/" class="md-nav__link">
+      <a href="../partial_serialization/" class="md-nav__link">
         
   
   
@@ -1151,7 +1013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/fastapi_integration/" class="md-nav__link">
+      <a href="../fastapi_integration/" class="md-nav__link">
         
   
   
@@ -1179,7 +1041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/openapi_support/" class="md-nav__link">
+      <a href="../openapi_support/" class="md-nav__link">
         
   
   
@@ -1207,7 +1069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/schema_to_code_cli_tool/" class="md-nav__link">
+      <a href="../schema_to_code_cli_tool/" class="md-nav__link">
         
   
   
@@ -1235,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/compiler_enhancements_cython_mypyc/" class="md-nav__link">
+      <a href="../compiler_enhancements_cython_mypyc/" class="md-nav__link">
         
   
   
@@ -1263,7 +1125,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/protocol_buffers_support/" class="md-nav__link">
+      <a href="../protocol_buffers_support/" class="md-nav__link">
         
   
   
@@ -1291,7 +1153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/ide_plugin/" class="md-nav__link">
+      <a href="../ide_plugin/" class="md-nav__link">
         
   
   
@@ -1327,7 +1189,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CONTRIBUTING/" class="md-nav__link">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -1382,10 +1244,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#performance-trajectory" class="md-nav__link">
+  <a href="#status-draft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Trajectory
+        Status: Draft
       
     </span>
   </a>
@@ -1393,22 +1255,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-optimization-experiments" class="md-nav__link">
+  <a href="#current-vs-proposed-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core Optimization Experiments
+        🏛️ Current vs. Proposed Architecture
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Core Optimization Experiments">
+    <nav class="md-nav" aria-label="🏛️ Current vs. Proposed Architecture">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-pre-resolved-handlers-experiment-2" class="md-nav__link">
+  <a href="#current-ir-based" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Pre-Resolved Handlers (Experiment 2)
+        Current (IR-Based)
       
     </span>
   </a>
@@ -1416,32 +1278,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-fast-raw-dict-access-experiment-5" class="md-nav__link">
+  <a href="#proposed-direct-to-stream" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Fast Raw-Dict Access (Experiment 5)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-loop-inlining-experiments-6-7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Loop Inlining (Experiments 6 &amp; 7)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-modular-thread-safety-experiment-9" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Modular Thread-Safety (Experiment 9)
+        Proposed (Direct-to-Stream)
       
     </span>
   </a>
@@ -1454,10 +1294,71 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-milestone-the-ast-transition" class="md-nav__link">
+  <a href="#technical-components" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Milestone: The AST Transition
+        🛠️ Technical Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Technical Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-dumper-protocol-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Dumper Protocol Extension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-dual-mode-ast-codegen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Dual-Mode AST Codegen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-buffering-and-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Buffering and Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📅 Implementation Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Verification
       
     </span>
   </a>
@@ -1481,7 +1382,7 @@
 
 
   
-    <a href="https://github.com/webmaven/lodum/edit/master/docs/PERFORMANCE_EVOLUTION.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/webmaven/lodum/edit/master/docs/plans/streaming_dump.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1490,100 +1391,73 @@
     
       
     
-    <a href="https://github.com/webmaven/lodum/raw/master/docs/PERFORMANCE_EVOLUTION.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/webmaven/lodum/raw/master/docs/plans/streaming_dump.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="performance-evolution-the-ast-revolution">Performance Evolution: The AST Revolution</h1>
-<p>Lodum's performance is the result of systematic experimentation and a fundamental shift in how Python serialization is handled. This document tracks our journey from a dynamic baseline to a high-performance, bytecode-compiled engine.</p>
-<h2 id="performance-trajectory">Performance Trajectory</h2>
-<p>Standardized on <strong>Linux (ubuntu-latest)</strong> hardware. Measurements in microseconds (us) per operation.</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Scenario</th>
-<th style="text-align: right;">v0.1.0 (Initial)</th>
-<th style="text-align: right;">v0.2.0 (AST Core)</th>
-<th style="text-align: right;">v0.3.0 (Modular)</th>
-<th style="text-align: left;">Total Improvement</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>Simple Serialization</strong></td>
-<td style="text-align: right;">5.56</td>
-<td style="text-align: right;">4.86</td>
-<td style="text-align: right;">4.90</td>
-<td style="text-align: left;"><strong>12% faster</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Simple Deserialization</strong></td>
-<td style="text-align: right;">18.82</td>
-<td style="text-align: right;">12.05</td>
-<td style="text-align: right;">12.47</td>
-<td style="text-align: left;"><strong>34% faster</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Complex Serialization</strong></td>
-<td style="text-align: right;">10.95</td>
-<td style="text-align: right;">7.79</td>
-<td style="text-align: right;">7.90</td>
-<td style="text-align: left;"><strong>28% faster</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Complex Deserialization</strong></td>
-<td style="text-align: right;">37.31</td>
-<td style="text-align: right;">25.99</td>
-<td style="text-align: right;">26.35</td>
-<td style="text-align: left;"><strong>29% faster</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Nested Serialization</strong></td>
-<td style="text-align: right;">25.58</td>
-<td style="text-align: right;">21.54</td>
-<td style="text-align: right;">21.69</td>
-<td style="text-align: left;"><strong>15% faster</strong></td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Nested Deserialization</strong></td>
-<td style="text-align: right;">117.81</td>
-<td style="text-align: right;">72.63</td>
-<td style="text-align: right;">74.44</td>
-<td style="text-align: left;"><strong>37% faster</strong></td>
-</tr>
-</tbody>
-</table>
+<h1 id="detailed-design-streaming-serialization-phase-2">Detailed Design: Streaming Serialization (Phase 2)</h1>
+<h2 id="status-draft">Status: Draft</h2>
+<p>This document specifies the technical architectural changes required to enable direct-to-stream serialization in Lodum, bypassing the in-memory intermediate representation (IR).</p>
+<h2 id="current-vs-proposed-architecture">🏛️ Current vs. Proposed Architecture</h2>
+<h3 id="current-ir-based">Current (IR-Based)</h3>
+<ol>
+<li><strong>Codegen</strong>: Generates a function that returns a <code>dict</code>.</li>
+<li><strong>Internal Flow</strong>: <code>dump_internal</code> ➔ <code>CompiledHandler</code> ➔ <code>Returns Dict</code> ➔ <code>json.dumps(Dict)</code>.</li>
+<li><strong>Constraint</strong>: Memory usage scales linearly with object size.</li>
+</ol>
+<h3 id="proposed-direct-to-stream">Proposed (Direct-to-Stream)</h3>
+<ol>
+<li><strong>Codegen</strong>: Generates a "Dual-Mode" function.</li>
+<li><strong>Internal Flow</strong>: <code>dump_internal</code> ➔ <code>CompiledHandler(target)</code> ➔ <code>dumper.write_chunk()</code> ➔ <code>Stream</code>.</li>
+<li><strong>Constraint</strong>: Memory usage remains constant (O(1)).</li>
+</ol>
 <hr />
-<h2 id="core-optimization-experiments">Core Optimization Experiments</h2>
-<p>Our optimization strategy focused on eliminating the "Interpreter Tax"—the overhead of generic loops and repeated runtime inspections.</p>
-<h3 id="1-pre-resolved-handlers-experiment-2">1. Pre-Resolved Handlers (Experiment 2)</h3>
-<p>Originally, every field access triggered a cache lookup and type introspection. 
-- <strong>The Optimization</strong>: We moved handler resolution to compile-time. The generated function now has direct references to the handlers it needs.
-- <strong>Impact</strong>: Achieved a <strong>65% reduction in dumping overhead</strong>.</p>
-<h3 id="2-fast-raw-dict-access-experiment-5">2. Fast Raw-Dict Access (Experiment 5)</h3>
-<p>Traditional loaders often wrap input data in several layers of abstraction. 
-- <strong>The Optimization</strong>: We implemented a "Fast Path" that allows the generated bytecode to access the raw underlying Python dictionary directly when possible.
-- <strong>Impact</strong>: Improved loading performance by <strong>~25%</strong>.</p>
-<h3 id="3-loop-inlining-experiments-6-7">3. Loop Inlining (Experiments 6 &amp; 7)</h3>
-<p>Generic sequence handlers (for <code>List</code> and <code>Dict</code>) are a common bottleneck in Python.
-- <strong>The Optimization</strong>: For common types (like <code>List[int]</code> or <code>List[str]</code>), the compiler now inlines the loop directly into the generated handler, avoiding thousands of function calls.
-- <strong>Impact</strong>: Reduced loading time for large collections by <strong>35%</strong>.</p>
-<h3 id="4-modular-thread-safety-experiment-9">4. Modular Thread-Safety (Experiment 9)</h3>
-<p>As Lodum moved toward v0.3.0, we needed to support high-concurrency environments.
-- <strong>The Challenge</strong>: Ensuring thread-safe access to the global registry and caches without introducing locking overhead.
-- <strong>The Solution</strong>: A lock-free fast path for handler lookups using thread-local contexts.
-- <strong>Result</strong>: Successfully achieved full thread-safety with <strong>zero performance regression</strong>.</p>
+<h2 id="technical-components">🛠️ Technical Components</h2>
+<h3 id="1-dumper-protocol-extension">1. <code>Dumper</code> Protocol Extension</h3>
+<p>We need to add a method to the <code>Dumper</code> protocol that handles direct writing:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Dumper</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="c1"># Existing methods...</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Writes a pre-encoded chunk directly to the output stream.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="o">...</span>
+</code></pre></div>
+<h3 id="2-dual-mode-ast-codegen">2. Dual-Mode AST Codegen</h3>
+<p>The <code>_build_dump_function_ast</code> in <code>dump_codegen.py</code> will be modified to support a <code>target</code> argument.</p>
+<ul>
+<li><strong>Mode A (IR)</strong>: When <code>target is None</code>, the generated code builds and returns a <code>dict</code> (current behavior).</li>
+<li><strong>Mode B (Streaming)</strong>: When <code>target</code> is provided, the generated code calls <code>dumper.write_int()</code>, <code>dumper.write_str()</code>, etc., directly.</li>
+</ul>
+<p><strong>Example of Generated Logic (Pseudo-code):</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">dump_User</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">dumper</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">if</span> <span class="n">target</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s1">&#39;&quot;id&quot;: &#39;</span><span class="p">)</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">dump_int</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s1">&#39;, &quot;name&quot;: &#39;</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">dump_str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+</code></pre></div></p>
+<h3 id="3-buffering-and-performance">3. Buffering and Performance</h3>
+<p>To maintain high throughput, we will implement <strong>Aggressive Buffering</strong> in the format-specific dumpers. Instead of making a syscall for every field, the dumper will aggregate chunks into an internal buffer before calling <code>target.write()</code>.</p>
 <hr />
-<h2 id="key-milestone-the-ast-transition">Key Milestone: The AST Transition</h2>
-<p>The move from string-based <code>exec()</code> to structured <strong>AST (Abstract Syntax Tree)</strong> generation was the turning point for the project. By generating and compiling an AST, Lodum:
-1.  <strong>Tailors the Bytecode</strong>: The generated code contains the absolute minimum number of operations required for your specific class schema.
-2.  <strong>Improves Debuggability</strong>: Even though the code is generated at runtime, the compiler attaches correct line numbers and context, allowing for detailed error reporting without performance penalties.
-3.  <strong>Ensures Safety</strong>: Type validation and circular reference checks are baked into the compiled handler, providing native-level safety at Python speed.</p>
-<hr />
-<p>For technical details on how we measure these gains, see <a href="../BENCHMARK_METHODOLOGY/">Benchmark Methodology</a>.</p>
+<h2 id="implementation-steps">📅 Implementation Steps</h2>
+<ol>
+<li><strong>Protocol Update</strong>: Modify <code>src/lodum/core.py</code> to include stream-writing methods.</li>
+<li><strong>Compiler Overhaul</strong>: Update <code>src/lodum/compiler/dump_codegen.py</code> to generate the dual-mode logic.</li>
+<li><strong>JSON Streamer</strong>: Implement a <code>JsonStreamDumper</code> that handles braces, commas, and quotes.</li>
+<li><strong>Binary Streamers</strong>: Implement <code>MsgPackStreamDumper</code> and <code>CborStreamDumper</code> using underlying library buffer APIs.</li>
+</ol>
+<h2 id="verification">🧪 Verification</h2>
+<ul>
+<li>[ ] <strong>Memory Profiling</strong>: Use <code>tracemalloc</code> to confirm O(1) memory during a 100,000 object dump.</li>
+<li>[ ] <strong>Functional Parity</strong>: Ensure that <code>dump(obj)</code> (string) and <code>dump(obj, io.StringIO())</code> (stream) produce identical output.</li>
+</ul>
 
 
 
@@ -1671,10 +1545,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.view", "content.action.edit", "content.tooltips", "content.revision.date", "content.revision.history"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.view", "content.action.edit", "content.tooltips", "content.revision.date", "content.revision.history"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

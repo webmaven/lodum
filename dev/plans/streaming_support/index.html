@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#streaming-support-implementation-plan" class="md-skip">
+        <a href="#streaming-support-polymorphic-api-implementation-plan" class="md-skip">
           Skip to content
         </a>
       
@@ -1036,10 +1036,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-state-analysis" class="md-nav__link">
+  <a href="#architectural-pillars" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current State Analysis
+        Architectural Pillars
       
     </span>
   </a>
@@ -1047,26 +1047,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-approach" class="md-nav__link">
+  <a href="#phase-1-polymorphic-deserialization-lazy-streams-completed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Implementation Approach
+        Phase 1: Polymorphic Deserialization &amp; Lazy Streams (Completed)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Polymorphic Deserialization &amp; Lazy Streams (Completed)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objectives
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-1-streaming-deserialization-load_stream" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#technical-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 1: Streaming Deserialization (load_stream)
+        Technical Implementation
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Phase 1: Streaming Deserialization (load_stream)">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-streaming-serialization-dump-to-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Streaming Serialization (dump to target)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Streaming Serialization (dump to target)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1081,80 +1109,13 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changes-required" class="md-nav__link">
+  <a href="#objectives_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Changes Required:
+        Objectives
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Changes Required:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-srclodumjsonpy-add-streamingjsonloader-and-load_stream" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. src/lodum/json.py: Add StreamingJSONLoader and load_stream
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-teststest_jsonpy-add-tests-for-streaming-deserialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. tests/test_json.py: Add Tests for Streaming Deserialization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#success-criteria" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Success Criteria:
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Success Criteria:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#automated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Automated:
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#manual" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Manual:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -1164,15 +1125,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-2-streaming-serialization-dump_stream" class="md-nav__link">
+  <a href="#phase-3-async-integration-aload-adump-astream" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 2: Streaming Serialization (dump_stream)
+        Phase 3: Async Integration (aload, adump, astream)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Phase 2: Streaming Serialization (dump_stream)">
+    <nav class="md-nav" aria-label="Phase 3: Async Integration (aload, adump, astream)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1187,10 +1148,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changes-required_1" class="md-nav__link">
+  <a href="#objectives_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Changes Required:
+        Objectives
       
     </span>
   </a>
@@ -1203,10 +1164,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#review-criteria-self-critique" class="md-nav__link">
+  <a href="#verification-criteria" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Review Criteria (Self-Critique)
+        Verification Criteria
       
     </span>
   </a>
@@ -1499,10 +1460,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-state-analysis" class="md-nav__link">
+  <a href="#architectural-pillars" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current State Analysis
+        Architectural Pillars
       
     </span>
   </a>
@@ -1510,26 +1471,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-approach" class="md-nav__link">
+  <a href="#phase-1-polymorphic-deserialization-lazy-streams-completed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Implementation Approach
+        Phase 1: Polymorphic Deserialization &amp; Lazy Streams (Completed)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Polymorphic Deserialization &amp; Lazy Streams (Completed)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objectives
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-1-streaming-deserialization-load_stream" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#technical-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 1: Streaming Deserialization (load_stream)
+        Technical Implementation
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Phase 1: Streaming Deserialization (load_stream)">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-streaming-serialization-dump-to-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Streaming Serialization (dump to target)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Streaming Serialization (dump to target)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1544,80 +1533,13 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changes-required" class="md-nav__link">
+  <a href="#objectives_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Changes Required:
+        Objectives
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Changes Required:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-srclodumjsonpy-add-streamingjsonloader-and-load_stream" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. src/lodum/json.py: Add StreamingJSONLoader and load_stream
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-teststest_jsonpy-add-tests-for-streaming-deserialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. tests/test_json.py: Add Tests for Streaming Deserialization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#success-criteria" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Success Criteria:
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Success Criteria:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#automated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Automated:
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#manual" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Manual:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -1627,15 +1549,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-2-streaming-serialization-dump_stream" class="md-nav__link">
+  <a href="#phase-3-async-integration-aload-adump-astream" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 2: Streaming Serialization (dump_stream)
+        Phase 3: Async Integration (aload, adump, astream)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Phase 2: Streaming Serialization (dump_stream)">
+    <nav class="md-nav" aria-label="Phase 3: Async Integration (aload, adump, astream)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1650,10 +1572,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changes-required_1" class="md-nav__link">
+  <a href="#objectives_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Changes Required:
+        Objectives
       
     </span>
   </a>
@@ -1666,10 +1588,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#review-criteria-self-critique" class="md-nav__link">
+  <a href="#verification-criteria" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Review Criteria (Self-Critique)
+        Verification Criteria
       
     </span>
   </a>
@@ -1709,109 +1631,55 @@
   
 
 
-<h1 id="streaming-support-implementation-plan">Streaming Support Implementation Plan</h1>
+<h1 id="streaming-support-polymorphic-api-implementation-plan">Streaming Support &amp; Polymorphic API Implementation Plan</h1>
 <h2 id="overview">Overview</h2>
-<p>This plan details the implementation of streaming serialization (<code>dump_stream</code>) and deserialization (<code>load_stream</code>) for <code>lodum</code>, as requested in issue #41. The goal is to enable the processing of datasets larger than memory by operating on streams instead of in-memory objects.</p>
-<h2 id="current-state-analysis">Current State Analysis</h2>
-<p>Our research of the existing codebase (<code>src/lodum/core.py</code>, <code>src/lodum/compiler/dump_codegen.py</code>, <code>src/lodum/compiler/load_codegen.py</code>) reveals:
-*   <strong>Serialization (<code>dump</code>):</strong> The current <code>Dumper</code> protocol and codegen are fundamentally in-memory. The process starts with <code>dumper.begin_struct()</code> (which creates a <code>dict</code>), populates it, and returns the completed dictionary. This is not suitable for streaming.
-*   <strong>Deserialization (<code>load</code>):</strong> The <code>Loader</code> protocol is more amenable to streaming, with <code>load_list</code> and <code>load_dict</code> returning iterators. However, the current codegen immediately consumes these iterators to build in-memory objects, preventing true streaming.</p>
-<h2 id="implementation-approach">Implementation Approach</h2>
-<p>The implementation will be split into two phases. Phase 1 will focus on deserialization (<code>load_stream</code>), which is a more natural extension of the current architecture. Phase 2 will address the more complex serialization (<code>dump_stream</code>), which requires a new protocol and codegen path.</p>
-<hr />
-<h2 id="phase-1-streaming-deserialization-load_stream">Phase 1: Streaming Deserialization (<code>load_stream</code>)</h2>
-<h3 id="overview_1">Overview</h3>
-<p>The goal of this phase is to implement <code>load_stream</code>, a generator function that yields objects from a stream (e.g., a file handle) one at a time. We will initially target JSON using the <code>ijson</code> library.</p>
-<h3 id="changes-required">Changes Required:</h3>
-<h4 id="1-srclodumjsonpy-add-streamingjsonloader-and-load_stream">1. <code>src/lodum/json.py</code>: Add <code>StreamingJSONLoader</code> and <code>load_stream</code></h4>
-<p><strong>Changes</strong>:
-- Introduce a new <code>StreamingJSONLoader</code> class that inherits from <code>BaseLoader</code>. This loader will wrap an <code>ijson</code> stream parser.
-- Implement the <code>load_stream(cls, stream)</code> generator function. This function will initialize the <code>StreamingJSONLoader</code> and yield objects as they are parsed from the stream.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># src/lodum/json.py</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">ijson</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseLoader</span><span class="p">,</span> <span class="n">T</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">load</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterable</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># ... existing code ...</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">class</span><span class="w"> </span><span class="nc">StreamingJSONLoader</span><span class="p">(</span><span class="n">BaseLoader</span><span class="p">):</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="sd">    A loader that operates on a streaming parser (ijson) instead of a pre-loaded dict.</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_events</span><span class="p">):</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span> <span class="o">=</span> <span class="n">parser_events</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="c1"># ... implementation to pull tokens from the stream ...</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="c1"># ...</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_stream</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">stream</span><span class="p">:</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sd">    Lazily decodes a stream of JSON objects into instances of `cls`.</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sd">    This is intended for streams containing a top-level array of objects.</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    <span class="c1"># We assume the stream is a JSON array of objects.</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    <span class="n">parser</span> <span class="o">=</span> <span class="n">ijson</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    <span class="k">for</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parser</span><span class="p">:</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        <span class="k">if</span> <span class="n">prefix</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.item&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;end_map&#39;</span><span class="p">:</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>            <span class="c1"># At the end of each object in the array, &#39;value&#39; will be the dict.</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>            <span class="c1"># We can now use the existing &#39;load&#39; logic with a standard JSONLoader.</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>            <span class="k">yield</span> <span class="n">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">JSONLoader</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-</code></pre></div>
-<h4 id="2-teststest_jsonpy-add-tests-for-streaming-deserialization">2. <code>tests/test_json.py</code>: Add Tests for Streaming Deserialization</h4>
-<p><strong>Changes</strong>:
-- Add new test cases to verify <code>json.load_stream</code>.
-- Tests should cover:
-    - Loading a stream of multiple objects.
-    - Handling an empty stream/array.
-    - Behavior with malformed JSON in the stream.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># tests/test_json.py</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># ...</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_load_stream</span><span class="p">():</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">json_stream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;[{&quot;id&quot;: 1, &quot;name&quot;: &quot;A&quot;}, {&quot;id&quot;: 2, &quot;name&quot;: &quot;B&quot;}]&#39;</span><span class="p">)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="nd">@lodum</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">MyItem</span><span class="p">:</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load_stream</span><span class="p">(</span><span class="n">MyItem</span><span class="p">,</span> <span class="n">json_stream</span><span class="p">))</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="k">assert</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="mi">1</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="k">assert</span> <span class="n">items</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;B&quot;</span>
-</code></pre></div>
-<h3 id="success-criteria">Success Criteria:</h3>
-<h4 id="automated">Automated:</h4>
-<ul>
-<li>[ ] <code>PYTHONPATH=src pytest tests/test_json.py</code> passes.</li>
-</ul>
-<h4 id="manual">Manual:</h4>
-<ul>
-<li>[ ] Verify that <code>load_stream</code> can process a large JSON file (e.g., &gt;1GB) without consuming significant memory.</li>
-</ul>
-<hr />
-<h2 id="phase-2-streaming-serialization-dump_stream">Phase 2: Streaming Serialization (<code>dump_stream</code>)</h2>
-<p><em>This phase will be implemented after Phase 1 is complete and merged.</em></p>
-<h3 id="overview_2">Overview</h3>
-<p>This phase will implement <code>dump_stream(iterable_of_objects, stream)</code>, which serializes an iterable of objects to a stream. This requires a new <code>StreamingDumper</code> protocol and a parallel codegen path.</p>
-<h3 id="changes-required_1">Changes Required:</h3>
+<p>This plan details the implementation of high-efficiency streaming and the unification of the Lodum API. The goal is to provide a "Serde-style" experience where <code>load</code>, <code>dump</code>, and <code>stream</code> are the only functions a developer needs to know, regardless of data source or format.</p>
+<h2 id="architectural-pillars">Architectural Pillars</h2>
 <ol>
-<li><strong><code>src/lodum/core.py</code></strong>: Define a new <code>StreamingDumper</code> protocol.</li>
-<li><strong><code>src/lodum/compiler/dump_codegen.py</code></strong>: Create a new <code>_build_dump_stream_function_ast</code> function.</li>
-<li><strong><code>src/lodum/json.py</code></strong>: Implement a <code>JSONStreamingDumper</code> and the public <code>dump_stream</code> function.</li>
-<li><strong><code>tests/test_json.py</code></strong>: Add tests for <code>json.dump_stream</code>.</li>
+<li><strong>Polymorphism</strong>: Functions must be source-aware. <code>load(cls, source)</code> accepts <code>str</code>, <code>bytes</code>, <code>IO</code>, or <code>Path</code>.</li>
+<li><strong>Decentralization</strong>: Each format module (JSON, MsgPack, etc.) is an autonomous implementation of the "Lodum Protocol."</li>
+<li><strong>Lazy Evaluation</strong>: The <code>stream()</code> function provides an iterator-based alternative to <code>load()</code> for horizontal scale.</li>
 </ol>
-<p><strong>Implementation Note</strong>: The specifics of this phase will be detailed in a subsequent plan once Phase 1 is validated. This provides a high-level outline.</p>
-<h2 id="review-criteria-self-critique">Review Criteria (Self-Critique)</h2>
+<h2 id="phase-1-polymorphic-deserialization-lazy-streams-completed">Phase 1: Polymorphic Deserialization &amp; Lazy Streams (Completed)</h2>
+<h3 id="objectives">Objectives</h3>
 <ul>
-<li><strong>Specificity</strong>: Phase 1 is highly specific, with clear code examples and file paths. Phase 2 is intentionally high-level and will be detailed later.</li>
-<li><strong>Verification</strong>: Phase 1 includes both automated and manual success criteria.</li>
-<li><strong>Phasing</strong>: The plan is phased logically, with deserialization first, as it builds upon existing architecture more directly.</li>
+<li>[x] Standardize on <code>load(cls, source)</code> across all formats.</li>
+<li>[x] Implement <code>stream(cls, source)</code> for JSON (via <code>ijson</code>) and binary formats.</li>
+<li>[x] Create internal IO helpers (<code>_resolve_source</code>, <code>_resolve_target</code>) in <code>internal.py</code>.</li>
+<li>[x] Consolidate <code>loads</code>/<code>load_stream</code> into the new unified API.</li>
+</ul>
+<h3 id="technical-implementation">Technical Implementation</h3>
+<ul>
+<li><strong>JSON</strong>: Uses <code>ijson.items(src, "item")</code> to yield objects from a top-level array.</li>
+<li><strong>MsgPack/CBOR/BSON</strong>: Leverages underlying library unpackers/iterators to yield concatenated objects.</li>
+<li><strong>Safety</strong>: All parsing errors are wrapped in Lodum's <code>DeserializationError</code>.</li>
+</ul>
+<hr />
+<h2 id="phase-2-streaming-serialization-dump-to-target">Phase 2: Streaming Serialization (<code>dump</code> to target)</h2>
+<h3 id="overview_1">Overview</h3>
+<p>The goal of this phase is to extend the <code>dump(obj, target)</code> API to support true memory-efficient streaming. Currently, <code>dump</code> to a target often materializes the intermediate dictionary in memory before writing.</p>
+<p><strong>Detailed Design</strong>: See <a href="../streaming_dump/"><strong>Streaming Dump Specification (Phase 2)</strong></a>.</p>
+<h3 id="objectives_1">Objectives</h3>
+<ol>
+<li><strong>Direct Stream Writing</strong>: Modify the AST-compiled dump handlers to write chunks directly to an IO target when provided, bypassing the intermediate Python <code>dict</code>.</li>
+<li><strong>Collection Streaming</strong>: Implement a way to dump large iterables of objects efficiently.</li>
+</ol>
+<hr />
+<h2 id="phase-3-async-integration-aload-adump-astream">Phase 3: Async Integration (<code>aload</code>, <code>adump</code>, <code>astream</code>)</h2>
+<h3 id="overview_2">Overview</h3>
+<p>Provide native support for <code>asyncio</code> streams (e.g., loading from an <code>aiohttp</code> response or dumping to an <code>aiofiles</code> handle).</p>
+<h3 id="objectives_2">Objectives</h3>
+<ol>
+<li><strong><code>aload(cls, source)</code></strong>: Awaits data from an async stream.</li>
+<li><strong><code>astream(cls, source)</code></strong>: Returns an <code>AsyncIterator</code>.</li>
+<li><strong><code>adump(obj, target)</code></strong>: Awaits writes to an async target.</li>
+</ol>
+<hr />
+<h2 id="verification-criteria">Verification Criteria</h2>
+<ul>
+<li>[ ] <strong>Throughput</strong>: <code>stream()</code> must maintain &gt;10MB/s throughput on standardized XL datasets.</li>
+<li>[ ] <strong>Memory</strong>: <code>stream()</code> and <code>dump(target=...)</code> must maintain near-constant peak memory regardless of dataset size.</li>
+<li>[ ] <strong>Parity</strong>: All formats must implement the 3-function protocol (<code>load</code>, <code>dump</code>, <code>stream</code>).</li>
 </ul>
 
 
@@ -1835,7 +1703,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 23, 2026 18:23:34 UTC">February 23, 2026 18:23:34</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 24, 2026 17:45:06 UTC">February 24, 2026 17:45:06</span>
   </span>
 
     
@@ -1845,7 +1713,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 23, 2026 18:23:34 UTC">February 23, 2026 18:23:34</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 24, 2026 17:45:06 UTC">February 24, 2026 17:45:06</span>
   </span>
 
     
