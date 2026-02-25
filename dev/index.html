@@ -477,6 +477,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#streaming-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming Serialization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Streaming Serialization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lodumjsondump_streamobj-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lodum.json.dump_stream(obj, target)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#converting-tofrom-dictionaries" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1724,6 +1752,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#streaming-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming Serialization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Streaming Serialization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lodumjsondump_streamobj-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lodum.json.dump_stream(obj, target)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#converting-tofrom-dictionaries" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2142,26 +2198,43 @@
 <a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="c1">#   &quot;required&quot;: [&quot;id&quot;, &quot;name&quot;]</span>
 <a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="c1"># }</span>
 </code></pre></div>
+<h2 id="streaming-serialization">Streaming Serialization</h2>
+<p>For extremely large datasets, <code>lodum</code> supports O(1) memory streaming serialization. This allows you to encode massive object graphs directly to an IO stream (like a file or socket) without building the entire representation in memory.</p>
+<h3 id="lodumjsondump_streamobj-target"><code>lodum.json.dump_stream(obj, target)</code></h3>
+<p>Writes the JSON representation of an object directly to a text stream.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lodum</span><span class="w"> </span><span class="kn">import</span> <span class="n">lodum</span><span class="p">,</span> <span class="n">json</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nd">@lodum</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">LargeData</span><span class="p">:</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">items</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># Serialize a large object directly to stdout (or a file)</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">data</span> <span class="o">=</span> <span class="n">LargeData</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)))</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">json</span><span class="o">.</span><span class="n">dump_stream</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+</code></pre></div>
+<p>For loading, <code>lodum.json.load_stream</code> provides lazy, iterator-based deserialization of JSON arrays.</p>
 <h2 id="converting-tofrom-dictionaries">Converting to/from Dictionaries</h2>
 <p>While <code>lodum</code> is primarily used for external wire formats, it also provides ergonomic helpers for converting objects to and from plain Python primitives (dictionaries and lists) without any string encoding.</p>
 <h3 id="lodumasdictobj"><code>lodum.asdict(obj)</code></h3>
 <p>Recursively converts a lodum-enabled object into standard Python primitives. This is a "Deep Normalization" that handles renaming, skipping fields, and converting complex types like Enums or Datetimes into plain values.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lodum</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nd">@lodum</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="p">:</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">lodum</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">rename</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">),</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user_id</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">user_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Alex&quot;</span><span class="p">)</span>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">data</span> <span class="o">=</span> <span class="n">lodum</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="c1"># Output: {&quot;id&quot;: 1, &quot;name&quot;: &quot;Alex&quot;}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lodum</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nd">@lodum</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="p">:</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">lodum</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">rename</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">),</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user_id</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">user_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Alex&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="n">data</span> <span class="o">=</span> <span class="n">lodum</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># Output: {&quot;id&quot;: 1, &quot;name&quot;: &quot;Alex&quot;}</span>
 </code></pre></div>
 <h3 id="lodumfromdictcls-data"><code>lodum.fromdict(cls, data)</code></h3>
 <p>Hydrates a lodum-enabled class from a dictionary. Unlike standard dictionary assignment, this performs full type validation and automatically instantiates nested objects.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">new_user</span> <span class="o">=</span> <span class="n">lodum</span><span class="o">.</span><span class="n">fromdict</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Sam&quot;</span><span class="p">})</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">new_user</span> <span class="o">=</span> <span class="n">lodum</span><span class="o">.</span><span class="n">fromdict</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Sam&quot;</span><span class="p">})</span>
 </code></pre></div>
 <h3 id="supported-collection-wrappers">Supported Collection Wrappers</h3>
 <p><code>lodum</code> automatically normalizes and hydrates various standard library collection wrappers, converting them to/from standard <code>list</code> and <code>dict</code> during serialization:
@@ -2246,7 +2319,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 24, 2026 17:45:06 UTC">February 24, 2026 17:45:06</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 25, 2026 14:10:12 UTC">February 25, 2026 14:10:12</span>
   </span>
 
     
@@ -2256,7 +2329,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 24, 2026 17:45:06 UTC">February 24, 2026 17:45:06</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 25, 2026 14:10:12 UTC">February 25, 2026 14:10:12</span>
   </span>
 
     

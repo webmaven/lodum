@@ -1244,10 +1244,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#status-draft" class="md-nav__link">
+  <a href="#status-revised-implementation-strategy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Status: Draft
+        Status: Revised Implementation Strategy
       
     </span>
   </a>
@@ -1255,22 +1255,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-vs-proposed-architecture" class="md-nav__link">
+  <a href="#architecture-the-stateful-dumper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🏛️ Current vs. Proposed Architecture
+        🏛️ Architecture: The Stateful Dumper
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="🏛️ Current vs. Proposed Architecture">
+    <nav class="md-nav" aria-label="🏛️ Architecture: The Stateful Dumper">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#current-ir-based" class="md-nav__link">
+  <a href="#1-the-lodum-protocol-interface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current (IR-Based)
+        1. The "Lodum Protocol" Interface
       
     </span>
   </a>
@@ -1278,60 +1278,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#proposed-direct-to-stream" class="md-nav__link">
+  <a href="#2-dual-mode-implementation-strategy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Proposed (Direct-to-Stream)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#technical-components" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🛠️ Technical Components
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🛠️ Technical Components">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-dumper-protocol-extension" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Dumper Protocol Extension
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-dual-mode-ast-codegen" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Dual-Mode AST Codegen
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-buffering-and-performance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Buffering and Performance
+        2. Dual-Mode Implementation Strategy
       
     </span>
   </a>
@@ -1347,18 +1297,57 @@
   <a href="#implementation-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📅 Implementation Steps
+        🛠️ Implementation Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Implementation Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-a-protocol-core-hygiene-surgical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A: Protocol &amp; Core Hygiene (Surgical)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#verification" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#phase-b-compiler-refactor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧪 Verification
+        Phase B: Compiler Refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-c-the-json-streamer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase C: The JSON Streamer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-regression-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Verification &amp; Regression Testing
       
     </span>
   </a>
@@ -1399,64 +1388,59 @@
 
 
 <h1 id="detailed-design-streaming-serialization-phase-2">Detailed Design: Streaming Serialization (Phase 2)</h1>
-<h2 id="status-draft">Status: Draft</h2>
-<p>This document specifies the technical architectural changes required to enable direct-to-stream serialization in Lodum, bypassing the in-memory intermediate representation (IR).</p>
-<h2 id="current-vs-proposed-architecture">🏛️ Current vs. Proposed Architecture</h2>
-<h3 id="current-ir-based">Current (IR-Based)</h3>
-<ol>
-<li><strong>Codegen</strong>: Generates a function that returns a <code>dict</code>.</li>
-<li><strong>Internal Flow</strong>: <code>dump_internal</code> ➔ <code>CompiledHandler</code> ➔ <code>Returns Dict</code> ➔ <code>json.dumps(Dict)</code>.</li>
-<li><strong>Constraint</strong>: Memory usage scales linearly with object size.</li>
-</ol>
-<h3 id="proposed-direct-to-stream">Proposed (Direct-to-Stream)</h3>
-<ol>
-<li><strong>Codegen</strong>: Generates a "Dual-Mode" function.</li>
-<li><strong>Internal Flow</strong>: <code>dump_internal</code> ➔ <code>CompiledHandler(target)</code> ➔ <code>dumper.write_chunk()</code> ➔ <code>Stream</code>.</li>
-<li><strong>Constraint</strong>: Memory usage remains constant (O(1)).</li>
-</ol>
-<hr />
-<h2 id="technical-components">🛠️ Technical Components</h2>
-<h3 id="1-dumper-protocol-extension">1. <code>Dumper</code> Protocol Extension</h3>
-<p>We need to add a method to the <code>Dumper</code> protocol that handles direct writing:</p>
+<h2 id="status-revised-implementation-strategy">Status: Revised Implementation Strategy</h2>
+<p>This document specifies the technical architecture for enabling O(1) memory streaming serialization in Lodum via a <strong>Stateful Dumper Protocol</strong>.</p>
+<h2 id="architecture-the-stateful-dumper">🏛️ Architecture: The Stateful Dumper</h2>
+<p>The primary goal is to shift responsibility for "data shaping" from the compiler to the Dumper implementation. The compiler becomes a structural driver that informs the dumper about the object's topology.</p>
+<h3 id="1-the-lodum-protocol-interface">1. The "Lodum Protocol" Interface</h3>
+<p>The <code>Dumper</code> protocol in <code>core.py</code> will be expanded to include structural orchestration:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Dumper</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="c1"># Existing methods...</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Writes a pre-encoded chunk directly to the output stream.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="o">...</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="c1"># Primitives (Standardized Signature)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dump_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dump_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="c1"># ... other primitives ...</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="c1"># Struct Orchestration</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">begin_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">end_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="c1"># Collection Orchestration</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">begin_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">end_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">list_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 </code></pre></div>
-<h3 id="2-dual-mode-ast-codegen">2. Dual-Mode AST Codegen</h3>
-<p>The <code>_build_dump_function_ast</code> in <code>dump_codegen.py</code> will be modified to support a <code>target</code> argument.</p>
+<h3 id="2-dual-mode-implementation-strategy">2. Dual-Mode Implementation Strategy</h3>
 <ul>
-<li><strong>Mode A (IR)</strong>: When <code>target is None</code>, the generated code builds and returns a <code>dict</code> (current behavior).</li>
-<li><strong>Mode B (Streaming)</strong>: When <code>target</code> is provided, the generated code calls <code>dumper.write_int()</code>, <code>dumper.write_str()</code>, etc., directly.</li>
+<li><strong>BaseDumper (IR Mode)</strong>: Implements these methods to build and return standard Python dictionaries and lists. This preserves backward compatibility for <code>dump(obj) -&gt; str</code>.</li>
+<li><strong>StreamingDumper (O(1) Mode)</strong>: Implements these methods to write tokens directly to an IO target, managing separators (commas) and depth internally.</li>
 </ul>
-<p><strong>Example of Generated Logic (Pseudo-code):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">dump_User</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">dumper</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">if</span> <span class="n">target</span><span class="p">:</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s1">&#39;&quot;id&quot;: &#39;</span><span class="p">)</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">dump_int</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s1">&#39;, &quot;name&quot;: &#39;</span><span class="p">)</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">dump_str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="n">dumper</span><span class="o">.</span><span class="n">write_raw</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
-</code></pre></div></p>
-<h3 id="3-buffering-and-performance">3. Buffering and Performance</h3>
-<p>To maintain high throughput, we will implement <strong>Aggressive Buffering</strong> in the format-specific dumpers. Instead of making a syscall for every field, the dumper will aggregate chunks into an internal buffer before calling <code>target.write()</code>.</p>
 <hr />
-<h2 id="implementation-steps">📅 Implementation Steps</h2>
+<h2 id="implementation-steps">🛠️ Implementation Steps</h2>
+<h3 id="phase-a-protocol-core-hygiene-surgical">Phase A: Protocol &amp; Core Hygiene (Surgical)</h3>
 <ol>
-<li><strong>Protocol Update</strong>: Modify <code>src/lodum/core.py</code> to include stream-writing methods.</li>
-<li><strong>Compiler Overhaul</strong>: Update <code>src/lodum/compiler/dump_codegen.py</code> to generate the dual-mode logic.</li>
-<li><strong>JSON Streamer</strong>: Implement a <code>JsonStreamDumper</code> that handles braces, commas, and quotes.</li>
-<li><strong>Binary Streamers</strong>: Implement <code>MsgPackStreamDumper</code> and <code>CborStreamDumper</code> using underlying library buffer APIs.</li>
+<li>Update <code>Dumper</code> protocol and <code>BaseDumper</code> in <code>core.py</code>. <ul>
+<li><strong>CRITICAL</strong>: Do not remove <code>Context</code>, <code>get_context</code>, or decorator analysis logic.</li>
+</ul>
+</li>
+<li>Update all primitive handlers in <code>handlers/</code> to support the 3-argument <code>(value, depth, seen)</code> signature.</li>
 </ol>
-<h2 id="verification">🧪 Verification</h2>
+<h3 id="phase-b-compiler-refactor">Phase B: Compiler Refactor</h3>
+<ol>
+<li>Update <code>dump_codegen.py</code> to use <code>dumper.field()</code> and <code>dumper.list_item()</code>.</li>
+<li>The generated AST should no longer create lists or dicts; it should purely call dumper orchestration methods.</li>
+</ol>
+<h3 id="phase-c-the-json-streamer">Phase C: The JSON Streamer</h3>
+<ol>
+<li>Implement <code>JsonStreamingDumper(StreamingDumper)</code> in <code>json.py</code>.</li>
+<li>Handle recursive state and separators using an internal depth stack.</li>
+</ol>
+<hr />
+<h2 id="verification-regression-testing">🧪 Verification &amp; Regression Testing</h2>
 <ul>
-<li>[ ] <strong>Memory Profiling</strong>: Use <code>tracemalloc</code> to confirm O(1) memory during a 100,000 object dump.</li>
-<li>[ ] <strong>Functional Parity</strong>: Ensure that <code>dump(obj)</code> (string) and <code>dump(obj, io.StringIO())</code> (stream) produce identical output.</li>
+<li><strong>Signature Parity</strong>: All 315 existing tests must pass with <code>BaseDumper</code>'s new orchestration logic.</li>
+<li><strong>Deep Parity</strong>: <code>test_json_streaming_dumper_deep</code> must confirm that nested structures and character escaping are identical between IR and Stream paths.</li>
+<li><strong>Memory Guard</strong>: Profile a 100k-object dump to ensure peak memory remains constant.</li>
 </ul>
 
 
@@ -1480,7 +1464,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 24, 2026 17:45:06 UTC">February 24, 2026 17:45:06</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 25, 2026 14:10:12 UTC">February 25, 2026 14:10:12</span>
   </span>
 
     
@@ -1490,7 +1474,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 24, 2026 17:45:06 UTC">February 24, 2026 17:45:06</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 25, 2026 14:10:12 UTC">February 25, 2026 14:10:12</span>
   </span>
 
     
