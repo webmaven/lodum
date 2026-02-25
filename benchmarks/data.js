@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772060294123,
+  "lastUpdate": 1772060300095,
   "repoUrl": "https://github.com/webmaven/lodum",
   "entries": {
     "Lodum Performance Index - ubuntu-latest": [
@@ -52132,6 +52132,630 @@ window.BENCHMARK_DATA = {
           {
             "name": "(Pyodide) Pickle Deserialization Lodum (Safe) nested (Cold Start)",
             "value": 54.33199999060889,
+            "unit": "us"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "zopemaven@gmail.com",
+            "name": "Michael R. Bernstein",
+            "username": "webmaven"
+          },
+          "committer": {
+            "email": "zopemaven@gmail.com",
+            "name": "Michael R. Bernstein",
+            "username": "webmaven"
+          },
+          "distinct": true,
+          "id": "b654c18dd872a341278599ff98d2a71edfcba72d",
+          "message": "feat: overhaul dashboard data logic and add Windows backfill",
+          "timestamp": "2026-02-26T00:55:01+02:00",
+          "tree_id": "79f09ee3375114a91d66e890ddd8b341dadff97e",
+          "url": "https://github.com/webmaven/lodum/commit/b654c18dd872a341278599ff98d2a71edfcba72d"
+        },
+        "date": 1772060299255,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "(Pyodide) JSON Serialization Lodum simple",
+            "value": 13.995590714285784,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Lodum simple (Cold Start)",
+            "value": 3639.8819999998723,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Lodum complex",
+            "value": 36.8318965,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Lodum complex (Cold Start)",
+            "value": 3634.7629999990972,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Lodum nested",
+            "value": 54.841688428571366,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Lodum nested (Cold Start)",
+            "value": 1628.1989999988866,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Pydantic (v2) simple",
+            "value": 2.7279635232192527,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Pydantic (v2) simple (Cold Start)",
+            "value": 2555.1840000002103,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Pydantic (v2) complex",
+            "value": 3.8148018334932283,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Pydantic (v2) complex (Cold Start)",
+            "value": 1331.29700000012,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Pydantic (v2) nested",
+            "value": 9.218208183871404,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Pydantic (v2) nested (Cold Start)",
+            "value": 27.060999999051205,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Marshmallow simple",
+            "value": 12.388902357142786,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Marshmallow simple (Cold Start)",
+            "value": 80.26000000072031,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Marshmallow complex",
+            "value": 28.08660864285731,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Marshmallow complex (Cold Start)",
+            "value": 74.22899999909305,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Marshmallow nested",
+            "value": 70.17751750000005,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Serialization Marshmallow nested (Cold Start)",
+            "value": 112.42900000141276,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Lodum simple",
+            "value": 12.054029357142884,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Lodum simple (Cold Start)",
+            "value": 3380.7499999998213,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Lodum complex",
+            "value": 28.74865333333343,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Lodum complex (Cold Start)",
+            "value": 4408.973000000316,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Lodum nested",
+            "value": 45.40393385714303,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Lodum nested (Cold Start)",
+            "value": 3556.76700000096,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Pydantic (v2) simple",
+            "value": 5.241962928571248,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Pydantic (v2) simple (Cold Start)",
+            "value": 3930.2020000011594,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Pydantic (v2) complex",
+            "value": 5.168760583333339,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Pydantic (v2) complex (Cold Start)",
+            "value": 1834.4230000000293,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Pydantic (v2) nested",
+            "value": 12.090660401845868,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Pydantic (v2) nested (Cold Start)",
+            "value": 31.448999999739158,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Marshmallow simple",
+            "value": 34.268246833333144,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Marshmallow simple (Cold Start)",
+            "value": 118.1599999995342,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Marshmallow complex",
+            "value": 80.0330653571428,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Marshmallow complex (Cold Start)",
+            "value": 183.5119999995527,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Marshmallow nested",
+            "value": 239.26508083333312,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) JSON Deserialization Marshmallow nested (Cold Start)",
+            "value": 309.0750000005471,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Lodum simple",
+            "value": 12.283229416666744,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Lodum simple (Cold Start)",
+            "value": 1018.9460000020745,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Lodum complex",
+            "value": 36.82101392857134,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Lodum complex (Cold Start)",
+            "value": 84.98800000111828,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Lodum nested",
+            "value": 52.21027350000007,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Lodum nested (Cold Start)",
+            "value": 80.37999999999101,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Native msgpack (dict) simple",
+            "value": 1.1404931106758232,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Native msgpack (dict) simple (Cold Start)",
+            "value": 7.9749999990497145,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Native msgpack (dict) complex",
+            "value": 2.0508416081577985,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Native msgpack (dict) complex (Cold Start)",
+            "value": 9.107000000341259,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Native msgpack (dict) nested",
+            "value": 3.7573722465638304,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Serialization Native msgpack (dict) nested (Cold Start)",
+            "value": 11.221000001171433,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Lodum simple",
+            "value": 9.72841608333308,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Lodum simple (Cold Start)",
+            "value": 629.7310000000778,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Lodum complex",
+            "value": 23.34242299999989,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Lodum complex (Cold Start)",
+            "value": 65.68199999890112,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Lodum nested",
+            "value": 38.919724500000235,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Lodum nested (Cold Start)",
+            "value": 79.30700000002844,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Native msgpack (dict) simple",
+            "value": 1.0984980278409753,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Native msgpack (dict) simple (Cold Start)",
+            "value": 7.174000000276237,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Native msgpack (dict) complex",
+            "value": 2.426157743805981,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Native msgpack (dict) complex (Cold Start)",
+            "value": 10.02799999838544,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Native msgpack (dict) nested",
+            "value": 5.810760319321187,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) MsgPack Deserialization Native msgpack (dict) nested (Cold Start)",
+            "value": 12.343000001635573,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Lodum simple",
+            "value": 39.75203783333381,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Lodum simple (Cold Start)",
+            "value": 109.06300000002034,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Lodum complex",
+            "value": 96.82491675000016,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Lodum complex (Cold Start)",
+            "value": 147.41500000070573,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Lodum nested",
+            "value": 179.16081233333375,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Lodum nested (Cold Start)",
+            "value": 205.05099999823528,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Native cbor2 (dict) simple",
+            "value": 23.40783999999983,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Native cbor2 (dict) simple (Cold Start)",
+            "value": 44.752999997399456,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Native cbor2 (dict) complex",
+            "value": 50.2965690833331,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Native cbor2 (dict) complex (Cold Start)",
+            "value": 75.77099999878101,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Native cbor2 (dict) nested",
+            "value": 115.53885650000011,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Serialization Native cbor2 (dict) nested (Cold Start)",
+            "value": 148.22500000022387,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Lodum simple",
+            "value": 31.649841916666272,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Lodum simple (Cold Start)",
+            "value": 161.1889999999505,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Lodum complex",
+            "value": 69.17325814285721,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Lodum complex (Cold Start)",
+            "value": 146.27199999850404,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Lodum nested",
+            "value": 128.06790108333328,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Lodum nested (Cold Start)",
+            "value": 160.1779999980124,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Native cbor2 (dict) simple",
+            "value": 18.293163071429014,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Native cbor2 (dict) simple (Cold Start)",
+            "value": 55.0729999986288,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Native cbor2 (dict) complex",
+            "value": 38.99288442857239,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Native cbor2 (dict) complex (Cold Start)",
+            "value": 59.97199999541181,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Native cbor2 (dict) nested",
+            "value": 83.68941057142924,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) CBOR Deserialization Native cbor2 (dict) nested (Cold Start)",
+            "value": 103.35300000008374,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Serialization Lodum simple",
+            "value": 586.6732396428575,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Serialization Lodum simple (Cold Start)",
+            "value": 1235.839000003125,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Serialization Lodum complex",
+            "value": 1365.5394600714292,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Serialization Lodum complex (Cold Start)",
+            "value": 1494.3400000007045,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Serialization Lodum nested",
+            "value": 3412.6643194999992,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Serialization Lodum nested (Cold Start)",
+            "value": 3476.9990000000917,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Deserialization Lodum simple",
+            "value": 683.6724480714287,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Deserialization Lodum simple (Cold Start)",
+            "value": 1385.4360000067345,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Deserialization Lodum complex",
+            "value": 1760.2223401428591,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Deserialization Lodum complex (Cold Start)",
+            "value": 1954.1850000024397,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Deserialization Lodum nested",
+            "value": 1620.8440801428553,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) YAML Deserialization Lodum nested (Cold Start)",
+            "value": 1742.0869999966726,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Serialization Lodum simple",
+            "value": 25.217369916667565,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Serialization Lodum simple (Cold Start)",
+            "value": 76.39200001108293,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Serialization Lodum complex",
+            "value": 90.1383425714276,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Serialization Lodum complex (Cold Start)",
+            "value": 193.40999998007646,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Serialization Lodum nested",
+            "value": 153.8068716428569,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Serialization Lodum nested (Cold Start)",
+            "value": 194.39100000795406,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Deserialization Lodum simple",
+            "value": 37.93397199999996,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Deserialization Lodum simple (Cold Start)",
+            "value": 127.82799998944938,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Deserialization Lodum complex",
+            "value": 108.49219071428706,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Deserialization Lodum complex (Cold Start)",
+            "value": 257.7700000188088,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Deserialization Lodum nested",
+            "value": 212.4459955000008,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) TOML Deserialization Lodum nested (Cold Start)",
+            "value": 267.04699999413606,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Serialization Lodum (Safe) simple",
+            "value": 15.939891166667053,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Serialization Lodum (Safe) simple (Cold Start)",
+            "value": 182.00799999590345,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Serialization Lodum (Safe) complex",
+            "value": 38.11253391666488,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Serialization Lodum (Safe) complex (Cold Start)",
+            "value": 82.41299997280294,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Serialization Lodum (Safe) nested",
+            "value": 60.03442050000274,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Serialization Lodum (Safe) nested (Cold Start)",
+            "value": 99.55499999136919,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Deserialization Lodum (Safe) simple",
+            "value": 11.806341083331043,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Deserialization Lodum (Safe) simple (Cold Start)",
+            "value": 1159.7760000086055,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Deserialization Lodum (Safe) complex",
+            "value": 13.755081999998234,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Deserialization Lodum (Safe) complex (Cold Start)",
+            "value": 161.54099998288984,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Deserialization Lodum (Safe) nested",
+            "value": 21.86140557142226,
+            "unit": "us"
+          },
+          {
+            "name": "(Pyodide) Pickle Deserialization Lodum (Safe) nested (Cold Start)",
+            "value": 52.027000009502444,
             "unit": "us"
           }
         ]
