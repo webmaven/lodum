@@ -276,7 +276,6 @@
                 return bench ? bench.value : null;
             };
 
-            const latestSha = categories[categories.length - 1];
             const baselineSha = sortedCommits.find(c => c.msg.includes('v0.3.0'))?.sha || categories[0];
 
             // 2. Heatmap Generation
