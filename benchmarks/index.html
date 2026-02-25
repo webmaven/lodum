@@ -347,13 +347,14 @@
                     data: sortedCommits.map(c => {
                         const time = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Time', c.sha);
                         const mem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', c.sha);
-                        return time && mem ? [time, mem] : null;
+                        return (time !== null && mem !== null) ? [time, mem] : null;
                     }).filter(p => p !== null)
                 }],
                 chart: { type: 'scatter', height: 250, toolbar: { show: false } },
                 xaxis: { title: { text: 'Time (s)' } },
                 yaxis: { title: { text: 'Memory (MB)' } },
-                colors: ['#fbc929']
+                colors: ['#fbc929'],
+                noData: { text: 'No streaming data available yet' }
             };
             new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions).render();
 
@@ -370,9 +371,11 @@
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
                 envs.forEach(env => {
+                    const data = sortedCommits.map(c => getVal(env.id, benchName, c.sha));
+                    console.log(`Trend Debug [${env.label} ${scenario}]:`, data);
                     series.push({
                         name: `Lodum (${env.label})`,
-                        data: sortedCommits.map(c => getVal(env.id, benchName, c.sha)),
+                        data: data,
                         color: env.color,
                         dashArray: env.dash
                     });
@@ -387,7 +390,8 @@
                     stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
                     xaxis: { categories: categories },
                     yaxis: { title: { text: 'Execution Time (us)' } },
-                    tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } }
+                    tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } },
+                    noData: { text: 'Loading benchmark data...' }
                 };
                 mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
                 mainChart.render();
@@ -404,15 +408,20 @@
             };
 
             // Initial render
-            console.log('Lodum Dashboard: Initializing charts for latest commit:', latestSha);
+            console.log('Lodum Dashboard: Starting Initial Render for latest commit:', latestSha);
             updateTrendCharts('simple');
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
             // 4. Calculate KPIs (Latest commit)
+            const getKPI = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+
             const lodumVal = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
             const mmVal = getVal('ubuntu-latest', 'JSON Serialization Marshmallow simple', latestSha);
             if (lodumVal && mmVal) {
-                document.getElementById('kpi-speedup').textContent = (mmVal / lodumVal).toFixed(1) + 'x';
+                getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
             }
 
             const stdTime = getVal('ubuntu-latest', 'Lodum Standard (loads) Time', latestSha);
@@ -421,18 +430,17 @@
             const streamMem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', latestSha);
 
             if (stdMem && streamMem) {
-                document.getElementById('kpi-memory').textContent = ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%';
+                getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
             }
             
             if (streamTime) {
-                // 45MB / time = throughput
                 const throughput = 45 / streamTime;
-                document.getElementById('kpi-throughput').textContent = throughput.toFixed(1) + ' MB/s';
+                getKPI('kpi-throughput', throughput.toFixed(1) + ' MB/s');
             }
 
             const wasmVal = getVal('Pyodide', 'JSON Serialization Lodum simple', latestSha);
             if (lodumVal && wasmVal) {
-                document.getElementById('kpi-wasm').textContent = ((lodumVal / wasmVal) * 100).toFixed(0) + '%';
+                getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
             }
 
             // 5. Streaming Chart
