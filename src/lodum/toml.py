@@ -99,8 +99,10 @@ def load(
                         f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
                     )
                 data = tomllib.loads(src)
+            elif hasattr(src, "read"):
+                data = tomllib.load(src)  # type: ignore[arg-type]
             else:
-                data = tomllib.load(src)
+                raise DeserializationError(f"Unsupported source type: {type(src)}")
     except Exception as e:
         if isinstance(e, DeserializationError):
             raise
