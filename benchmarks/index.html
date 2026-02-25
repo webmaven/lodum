@@ -268,15 +268,26 @@
             const categories = sortedCommits.map(c => c.sha);
             const latestSha = categories[categories.length - 1];
 
-            const getVal = (suiteName, benchPattern, sha) => {
-                const suite = suites[suiteName] || [];
+            // Robust Baseline Search
+            let v030Sha = null;
+            Object.values(suites).forEach(points => {
+                const p = points.find(p => p.commit.message.includes('v0.3.0'));
+                if (p) v030Sha = p.commit.id.substring(0, 7);
+            });
+            const baselineSha = v030Sha || categories[0];
+            console.log('Lodum Dashboard: Baseline SHA (v0.3.0):', baselineSha);
+
+            const getVal = (suitePattern, benchPattern, sha) => {
+                const suiteKey = Object.keys(suites).find(k => k.includes(suitePattern));
+                if (!suiteKey) return null;
+                const suite = suites[suiteKey];
                 const point = suite.find(p => p.commit.id.substring(0, 7) === sha);
                 if (!point) return null;
                 const bench = point.benches.find(b => b.name.includes(benchPattern));
                 return bench ? bench.value : null;
             };
 
-            const baselineSha = sortedCommits.find(c => c.msg.includes('v0.3.0'))?.sha || categories[0];
+            const baselineShaFinal = baselineSha; // Alias for closure scope
 
             // 2. Heatmap Generation
             const heatmapGrid = document.getElementById('regression-heatmap');
@@ -289,10 +300,9 @@
 
             platforms.forEach(p => {
                 scenarios.forEach(s => {
-                    const suiteKey = Object.keys(suites).find(k => k.includes(p.id));
                     const benchName = `JSON Serialization Lodum ${s}`;
-                    const current = getVal(suiteKey, benchName, latestSha);
-                    const base = getVal(suiteKey, benchName, baselineSha);
+                    const current = getVal(p.id, benchName, latestSha);
+                    const base = getVal(p.id, benchName, baselineShaFinal);
                     
                     let delta = 0;
                     let colorClass = 'cell-neutral';
@@ -303,9 +313,11 @@
                         else if (delta > 5) colorClass = 'cell-warn';
                     }
 
+                    console.log(`Heatmap Debug [${p.label} ${s}]: current=${current}, base=${base}, delta=${delta}%`);
+
                     const cell = document.createElement('div');
                     cell.className = `heatmap-cell ${colorClass}`;
-                    cell.innerHTML = `<span class="heatmap-label">${p.label} ${s}</span>${delta > 0 ? '+' : ''}${delta.toFixed(0)}%`;
+                    cell.innerHTML = `<span class="heatmap-label">${p.label} ${s}</span>${current ? (delta > 0 ? '+' : '') + delta.toFixed(0) + '%' : 'N/A'}`;
                     heatmapGrid.appendChild(cell);
                 });
             });
@@ -313,9 +325,9 @@
             // 3. Actionable Advice
             const healthTitle = document.getElementById('health-title');
             const healthAdvice = document.getElementById('health-advice');
-            const linuxSuiteKey = Object.keys(suites).find(k => k.includes('ubuntu-latest'));
-            const latestDelta = ((getVal(linuxSuiteKey, 'JSON Serialization Lodum complex', latestSha) / 
-                                 getVal(linuxSuiteKey, 'JSON Serialization Lodum complex', baselineSha)) - 1) * 100;
+            const currentComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', latestSha);
+            const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineShaFinal);
+            const latestDelta = (currentComplex && baseComplex) ? ((currentComplex / baseComplex) - 1) * 100 : 0;
 
             if (latestDelta > 50) {
                 healthTitle.textContent = "Critical Regression Detected";
@@ -333,8 +345,8 @@
                 series: [{
                     name: 'Commits',
                     data: sortedCommits.map(c => {
-                        const time = getVal(linuxSuiteKey, 'Lodum Streaming (load_stream) Time', c.sha);
-                        const mem = getVal(linuxSuiteKey, 'Lodum Streaming (load_stream) Memory', c.sha);
+                        const time = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Time', c.sha);
+                        const mem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', c.sha);
                         return time && mem ? [time, mem] : null;
                     }).filter(p => p !== null)
                 }],
@@ -358,15 +370,12 @@
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
                 envs.forEach(env => {
-                    const suiteKey = Object.keys(suites).find(k => k.includes(env.id));
-                    if (suiteKey) {
-                        series.push({
-                            name: `Lodum (${env.label})`,
-                            data: sortedCommits.map(c => getVal(suiteKey, benchName, c.sha)),
-                            color: env.color,
-                            dashArray: env.dash
-                        });
-                    }
+                    series.push({
+                        name: `Lodum (${env.label})`,
+                        data: sortedCommits.map(c => getVal(env.id, benchName, c.sha)),
+                        color: env.color,
+                        dashArray: env.dash
+                    });
                 });
 
                 if (mainChart) mainChart.destroy();
@@ -400,67 +409,60 @@
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
             // 4. Calculate KPIs (Latest commit)
-            const linuxSuite = Object.keys(suites).find(k => k.includes('ubuntu-latest'));
-            const wasmSuite = Object.keys(suites).find(k => k.includes('Pyodide'));
+            const lodumVal = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
+            const mmVal = getVal('ubuntu-latest', 'JSON Serialization Marshmallow simple', latestSha);
+            if (lodumVal && mmVal) {
+                document.getElementById('kpi-speedup').textContent = (mmVal / lodumVal).toFixed(1) + 'x';
+            }
 
-            if (linuxSuite) {
-                const lodumVal = getVal(linuxSuite, 'JSON Serialization Lodum simple', latestSha);
-                const mmVal = getVal(linuxSuite, 'JSON Serialization Marshmallow simple', latestSha);
-                if (lodumVal && mmVal) {
-                    document.getElementById('kpi-speedup').textContent = (mmVal / lodumVal).toFixed(1) + 'x';
-                }
+            const stdTime = getVal('ubuntu-latest', 'Lodum Standard (loads) Time', latestSha);
+            const streamTime = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Time', latestSha);
+            const stdMem = getVal('ubuntu-latest', 'Lodum Standard (loads) Memory', latestSha);
+            const streamMem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', latestSha);
 
-                const stdTime = getVal(linuxSuite, 'Lodum Standard (loads) Time', latestSha);
-                const streamTime = getVal(linuxSuite, 'Lodum Streaming (load_stream) Time', latestSha);
-                const stdMem = getVal(linuxSuite, 'Lodum Standard (loads) Memory', latestSha);
-                const streamMem = getVal(linuxSuite, 'Lodum Streaming (load_stream) Memory', latestSha);
+            if (stdMem && streamMem) {
+                document.getElementById('kpi-memory').textContent = ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%';
+            }
+            
+            if (streamTime) {
+                // 45MB / time = throughput
+                const throughput = 45 / streamTime;
+                document.getElementById('kpi-throughput').textContent = throughput.toFixed(1) + ' MB/s';
+            }
 
-                if (stdMem && streamMem) {
-                    document.getElementById('kpi-memory').textContent = ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%';
-                }
-                
-                if (streamTime) {
-                    // 45MB / time = throughput
-                    const throughput = 45 / streamTime;
-                    document.getElementById('kpi-throughput').textContent = throughput.toFixed(1) + ' MB/s';
-                }
+            const wasmVal = getVal('Pyodide', 'JSON Serialization Lodum simple', latestSha);
+            if (lodumVal && wasmVal) {
+                document.getElementById('kpi-wasm').textContent = ((lodumVal / wasmVal) * 100).toFixed(0) + '%';
+            }
 
-                if (lodumVal && wasmSuite) {
-                    const wasmVal = getVal(wasmSuite, 'JSON Serialization Lodum simple', latestSha);
-                    if (wasmVal) {
-                        document.getElementById('kpi-wasm').textContent = ((lodumVal / wasmVal) * 100).toFixed(0) + '%';
-                    }
-                }
+            // 5. Streaming Chart
+            if (stdTime && streamTime) {
+                const streamOptions = {
+                    series: [
+                        { name: 'Time (s)', type: 'column', data: [stdTime, streamTime] },
+                        { name: 'Memory (MB)', type: 'line', data: [stdMem, streamMem] }
+                    ],
+                    chart: { height: 300, type: 'line', toolbar: { show: false } },
+                    stroke: { width: [0, 4] },
+                    colors: ['#d1d5db', '#fbc929'],
+                    labels: ['Standard loads', 'Streaming load_stream'],
+                    yaxis: [{ title: { text: 'Time (s)' } }, { opposite: true, title: { text: 'Memory (MB)' } }]
+                };
+                new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
+            }
 
-                // 5. Streaming Chart
-                if (stdTime && streamTime) {
-                    const streamOptions = {
-                        series: [
-                            { name: 'Time (s)', type: 'column', data: [stdTime, streamTime] },
-                            { name: 'Memory (MB)', type: 'line', data: [stdMem, streamMem] }
-                        ],
-                        chart: { height: 300, type: 'line', toolbar: { show: false } },
-                        stroke: { width: [0, 4] },
-                        colors: ['#d1d5db', '#fbc929'],
-                        labels: ['Standard loads', 'Streaming load_stream'],
-                        yaxis: [{ title: { text: 'Time (s)' } }, { opposite: true, title: { text: 'Memory (MB)' } }]
-                    };
-                    new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
-                }
-
-                // 6. Cold Start Chart
-                const coldSimple = getVal(linuxSuite, 'JSON Serialization Lodum simple (Cold Start)', latestSha);
-                const warmSimple = getVal(linuxSuite, 'JSON Serialization Lodum simple', latestSha);
-                if (coldSimple && warmSimple) {
-                    const coldOptions = {
-                        series: [{ name: 'Latency (us)', data: [coldSimple, warmSimple] }],
-                        chart: { type: 'bar', height: 300, toolbar: { show: false } },
-                        plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-                        colors: ['#fbc929'],
-                        xaxis: { categories: ['Cold Start (Compiling)', 'Warm Start (Steady State)'] }
-                    };
-                    new ApexCharts(document.querySelector("#cold-start-chart"), coldOptions).render();
-                }
+            // 6. Cold Start Chart
+            const coldSimple = getVal('ubuntu-latest', 'JSON Serialization Lodum simple (Cold Start)', latestSha);
+            const warmSimple = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
+            if (coldSimple && warmSimple) {
+                const coldOptions = {
+                    series: [{ name: 'Latency (us)', data: [coldSimple, warmSimple] }],
+                    chart: { type: 'bar', height: 300, toolbar: { show: false } },
+                    plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+                    colors: ['#fbc929'],
+                    xaxis: { categories: ['Cold Start (Compiling)', 'Warm Start (Steady State)'] }
+                };
+                new ApexCharts(document.querySelector("#cold-start-chart"), coldOptions).render();
             }
         });
     </script>
