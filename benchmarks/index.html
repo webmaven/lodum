@@ -266,6 +266,7 @@
             });
             const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
             const categories = sortedCommits.map(c => c.sha);
+            const latestSha = categories[categories.length - 1];
 
             const getVal = (suiteName, benchPattern, sha) => {
                 const suite = suites[suiteName] || [];
@@ -395,11 +396,11 @@
             };
 
             // Initial render
+            console.log('Lodum Dashboard: Initializing charts for latest commit:', latestSha);
             updateTrendCharts('simple');
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
             // 4. Calculate KPIs (Latest commit)
-            const latestSha = categories[categories.length - 1];
             const linuxSuite = Object.keys(suites).find(k => k.includes('ubuntu-latest'));
             const wasmSuite = Object.keys(suites).find(k => k.includes('Pyodide'));
 
