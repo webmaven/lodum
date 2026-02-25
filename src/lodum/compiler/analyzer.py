@@ -49,13 +49,13 @@ def _analyze_class(cls: Type[Any]) -> None:
             field_info = param.default
         else:
             # Create a default Field for params without one, preserving its default value
-            default = (
-                param.default if param.default is not param.empty else _MISSING
-            )
+            default = param.default if param.default is not param.empty else _MISSING
             field_info = Field(default=default)
 
         field_info.name = param.name
-        field_info.type = param.annotation
+        field_info.type = (
+            param.annotation if param.annotation is not param.empty else Any
+        )
         fields[param.name] = field_info
 
     setattr(cls, "_lodum_fields", fields)

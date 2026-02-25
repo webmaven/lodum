@@ -276,6 +276,29 @@ print(json.dumps(schema, indent=2))
 # }
 ```
 
+## Streaming Serialization
+
+For extremely large datasets, `lodum` supports O(1) memory streaming serialization. This allows you to encode massive object graphs directly to an IO stream (like a file or socket) without building the entire representation in memory.
+
+### `lodum.json.dump_stream(obj, target)`
+Writes the JSON representation of an object directly to a text stream.
+
+```python
+import sys
+from lodum import lodum, json
+
+@lodum
+class LargeData:
+    def __init__(self, items: list[int]):
+        self.items = items
+
+# Serialize a large object directly to stdout (or a file)
+data = LargeData(items=list(range(1000000)))
+json.dump_stream(data, sys.stdout)
+```
+
+For loading, `lodum.json.load_stream` provides lazy, iterator-based deserialization of JSON arrays.
+
 ## Converting to/from Dictionaries
 
 While `lodum` is primarily used for external wire formats, it also provides ergonomic helpers for converting objects to and from plain Python primitives (dictionaries and lists) without any string encoding.

@@ -160,6 +160,9 @@ class ASTBuilder:
     def compare(self, left: ast.expr, op: ast.cmpop, right: ast.expr) -> ast.Compare:
         return ast.Compare(left=left, ops=[op], comparators=[right])
 
+    def gt(self, left: ast.expr, right: ast.expr) -> ast.Compare:
+        return self.compare(left, ast.Gt(), right)
+
     def return_stmt(self, value: Optional[ast.expr]) -> ast.Return:
         return ast.Return(value=value)
 

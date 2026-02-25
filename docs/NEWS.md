@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - Unreleased
+
+### Added
+- **O(1) Streaming JSON Serialization**: Fully implemented the stateful `Dumper` protocol, enabling constant-memory JSON serialization via `dump_stream`.
+- **Eager Metadata Analysis**: The `@lodum` decorator now performs eager analysis of classes, ensuring metadata is immediately available for tests and schema generation without requiring a prior serialization call.
+
 ## [0.3.0] - 2026-02-21
 
 ### Added

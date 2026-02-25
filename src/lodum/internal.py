@@ -14,7 +14,6 @@ from typing import (
     Any,
     Dict,
     Iterator,
-    List,
     Optional,
     Type,
     TypeVar,
@@ -80,9 +79,27 @@ from .handlers.stdlib import (
     _load_bytes,
     _load_bytearray,
 )
+from .schema import (
+    _schema_int,
+    _schema_str,
+    _schema_float,
+    _schema_bool,
+    _schema_none,
+    _schema_any,
+    _schema_list,
+    _schema_dict,
+    _schema_union,
+    _schema_datetime,
+    _schema_enum,
+    _schema_uuid,
+    _schema_decimal,
+    _schema_path,
+    _schema_bytes,
+    _schema_set,
+    _schema_tuple,
+)
 
 # Re-export schema generation
-from .schema import generate_schema as generate_schema
 
 T = TypeVar("T")
 
@@ -129,10 +146,11 @@ def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -
     if obj_id in seen:
         raise SerializationError("Circular reference detected")
 
-    # Only track containers and lodum objects to detect cycles
+    # Only track containers to detect cycles.
+    # Lodum-enabled objects are tracked in their compiled handlers.
     is_container = isinstance(
         obj, (list, dict, set, tuple, collections.deque, array.array)
-    ) or getattr(obj, "_lodum_enabled", False)
+    )
 
     if is_container:
         seen.add(obj_id)
@@ -249,7 +267,9 @@ def _get_dump_handler(
             v_type = args[1] if len(args) == 2 else Any
         v_handler = _get_dump_handler(v_type, excluding=excluding)
 
-        def dump_mapping(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
+        def dump_mapping(
+            obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+        ) -> Any:
             # We treat generic dicts as anonymous structs
             dumper.begin_struct(dict)
             for k, v in obj.items():
@@ -483,50 +503,64 @@ def generate_schema(t: Type[Any]) -> Dict[str, Any]:
 
 
 def _register_builtin_handlers(ctx: Context) -> None:
-    ctx.registry.register(int, TypeHandler(_dump_int, _load_primitive, None))
-    ctx.registry.register(str, TypeHandler(_dump_str, _load_primitive, None))
-    ctx.registry.register(float, TypeHandler(_dump_float, _load_primitive, None))
-    ctx.registry.register(bool, TypeHandler(_dump_bool, _load_primitive, None))
+    ctx.registry.register(int, TypeHandler(_dump_int, _load_primitive, _schema_int))
+    ctx.registry.register(str, TypeHandler(_dump_str, _load_primitive, _schema_str))
     ctx.registry.register(
-        type(None), TypeHandler(_dump_primitive, _load_primitive, None)
+        float, TypeHandler(_dump_float, _load_primitive, _schema_float)
     )
-    ctx.registry.register(Any, TypeHandler(dump, _load_any, None))
+    ctx.registry.register(bool, TypeHandler(_dump_bool, _load_primitive, _schema_bool))
+    ctx.registry.register(
+        type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
+    )
+    ctx.registry.register(Any, TypeHandler(dump, _load_any, _schema_any))  # type: ignore[arg-type]
 
     # Containers
-    ctx.registry.register(list, TypeHandler(_dump_sequence, _load_list, None))
-    ctx.registry.register(dict, TypeHandler(_dump_dict, _load_dict, None))
-    ctx.registry.register(tuple, TypeHandler(_dump_sequence, _load_tuple, None))
-    ctx.registry.register(set, TypeHandler(_dump_sequence, _load_set, None))
-    ctx.registry.register(Union, TypeHandler(dump, _load_union, None))
+    ctx.registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
+    ctx.registry.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
+    ctx.registry.register(
+        tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple)
+    )
+    ctx.registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
+    ctx.registry.register(Union, TypeHandler(dump, _load_union, _schema_union))  # type: ignore[arg-type]
 
     # Library types
     ctx.registry.register(
-        datetime.datetime, TypeHandler(_dump_datetime, _load_datetime, None)
+        datetime.datetime, TypeHandler(_dump_datetime, _load_datetime, _schema_datetime)
     )
-    ctx.registry.register(enum.Enum, TypeHandler(_dump_enum, _load_enum, None))
-    ctx.registry.register(uuid.UUID, TypeHandler(_dump_uuid, _load_uuid, None))
-    ctx.registry.register(Decimal, TypeHandler(_dump_decimal, _load_decimal, None))
-    ctx.registry.register(Path, TypeHandler(_dump_path, _load_path, None))
-    ctx.registry.register(bytes, TypeHandler(_dump_bytes, _load_bytes, None))
+    ctx.registry.register(enum.Enum, TypeHandler(_dump_enum, _load_enum, _schema_enum))
+    ctx.registry.register(uuid.UUID, TypeHandler(_dump_uuid, _load_uuid, _schema_uuid))
     ctx.registry.register(
-        bytearray, TypeHandler(_dump_bytearray, _load_bytearray, None)
+        Decimal, TypeHandler(_dump_decimal, _load_decimal, _schema_decimal)
     )
-    ctx.registry.register(array.array, TypeHandler(_dump_array, _load_array, None))
+    ctx.registry.register(Path, TypeHandler(_dump_path, _load_path, _schema_path))
+    ctx.registry.register(bytes, TypeHandler(_dump_bytes, _load_bytes, _schema_bytes))
+    ctx.registry.register(
+        bytearray, TypeHandler(_dump_bytearray, _load_bytearray, _schema_bytes)
+    )
+    ctx.registry.register(
+        array.array, TypeHandler(_dump_array, _load_array, _schema_list)
+    )
 
     # Collections
-    ctx.registry.register(collections.deque, TypeHandler(_dump_sequence, _load_list, None))
     ctx.registry.register(
-        collections.UserList, TypeHandler(_dump_sequence, _load_list, None)
-    )
-    ctx.registry.register(collections.UserDict, TypeHandler(_dump_dict, _load_dict, None))
-    ctx.registry.register(
-        collections.defaultdict, TypeHandler(_dump_dict, _load_defaultdict, None)
+        collections.deque, TypeHandler(_dump_sequence, _load_list, _schema_list)
     )
     ctx.registry.register(
-        collections.OrderedDict, TypeHandler(_dump_dict, _load_ordered_dict, None)
+        collections.UserList, TypeHandler(_dump_sequence, _load_list, _schema_list)
     )
     ctx.registry.register(
-        collections.Counter, TypeHandler(_dump_dict, _load_counter, None)
+        collections.UserDict, TypeHandler(_dump_dict, _load_dict, _schema_dict)
+    )
+    ctx.registry.register(
+        collections.defaultdict,
+        TypeHandler(_dump_dict, _load_defaultdict, _schema_dict),
+    )
+    ctx.registry.register(
+        collections.OrderedDict,
+        TypeHandler(_dump_dict, _load_ordered_dict, _schema_dict),
+    )
+    ctx.registry.register(
+        collections.Counter, TypeHandler(_dump_dict, _load_counter, _schema_dict)
     )
 
     # Initialize name-to-type cache with basic types

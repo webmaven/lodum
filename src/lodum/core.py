@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import inspect
-import functools
 from .concurrency import Lock, local
 from typing import (
     Any,
@@ -15,7 +13,6 @@ from typing import (
     TypeVar,
     Protocol,
     TYPE_CHECKING,
-    Union,
     Union as TypingUnion,
     IO,
 )
@@ -24,7 +21,6 @@ if TYPE_CHECKING:
     from .registry import TypeRegistry, DumpHandler, LoadHandler
 
 from .exception import DeserializationError
-from .field import Field, _MISSING
 
 T = TypeVar("T", bound=Type[Any])
 
@@ -67,11 +63,6 @@ def set_context(context: Context) -> None:
     _active_context.current = context
 
 
-def set_context(context: Context) -> None:
-    """Sets the active context for the current thread."""
-    _active_context.current = context
-
-
 def reset_context() -> Context:
     """Resets the active context to a fresh one and returns it."""
     from .internal import _register_builtin_handlers
@@ -105,6 +96,12 @@ def lodum(
         setattr(c, "_lodum_tag_value", tag_value or c.__name__)
 
         register_type(c)
+
+        # Analysis is still officially lazy, but we perform it here
+        # to ensure metadata is available for immediate use (e.g. in tests).
+        from .compiler.analyzer import _analyze_class
+
+        _analyze_class(c)
         return c
 
     if cls is None:
@@ -117,14 +114,27 @@ class Dumper(Protocol):
     Defines the interface for a data format dumper (encoder).
     """
 
-    def dump_int(self, value: int, depth: int, seen: Optional[set]) -> Any: ...
-    def dump_str(self, value: str, depth: int, seen: Optional[set]) -> Any: ...
-    def dump_float(self, value: float, depth: int, seen: Optional[set]) -> Any: ...
-    def dump_bool(self, value: bool, depth: int, seen: Optional[set]) -> Any: ...
-    def dump_bytes(self, value: bytes, depth: int, seen: Optional[set]) -> Any: ...
-    def dump_list(self, value: List[Any], depth: int, seen: Optional[set]) -> Any: ...
+    def dump_int(
+        self, value: int, depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
+    def dump_str(
+        self, value: str, depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
+    def dump_float(
+        self, value: float, depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
+    def dump_bool(
+        self, value: bool, depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
+    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any: ...
+    def dump_list(
+        self, value: List[Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
     def dump_dict(
-        self, value: Dict[str, Any], depth: int, seen: Optional[set]
+        self, value: Dict[str, Any], depth: int = 0, seen: Optional[set] = None
     ) -> Any: ...
     def begin_struct(self, cls: Type) -> Any: ...
     def end_struct(self) -> Any: ...
@@ -133,8 +143,8 @@ class Dumper(Protocol):
         name: str,
         value: Any,
         handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
-        depth: int,
-        seen: Optional[set],
+        depth: int = 0,
+        seen: Optional[set] = None,
     ) -> None:
         """Processes a single struct field."""
         ...
@@ -143,7 +153,7 @@ class Dumper(Protocol):
         """Starts a sequence/list."""
         ...
 
-    def end_list(self) -> None:
+    def end_list(self) -> Any:
         """Ends a sequence/list."""
         ...
 
@@ -151,8 +161,8 @@ class Dumper(Protocol):
         self,
         value: Any,
         handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
-        depth: int,
-        seen: Optional[set],
+        depth: int = 0,
+        seen: Optional[set] = None,
     ) -> None:
         """Processes a single list item."""
         ...
@@ -167,25 +177,36 @@ class BaseDumper:
         self._struct_stack: List[Dict[str, Any]] = []
         self._list_stack: List[List[Any]] = []
 
-    def dump_int(self, value: int, depth: int, seen: Optional[set]) -> Any:
+    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
         return value
 
-    def dump_str(self, value: str, depth: int, seen: Optional[set]) -> Any:
+    def dump_str(self, value: str, depth: int = 0, seen: Optional[set] = None) -> Any:
         return value
 
-    def dump_float(self, value: float, depth: int, seen: Optional[set]) -> Any:
+    def dump_float(
+        self, value: float, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         return value
 
-    def dump_bool(self, value: bool, depth: int, seen: Optional[set]) -> Any:
+    def dump_bool(self, value: bool, depth: int = 0, seen: Optional[set] = None) -> Any:
         return value
 
-    def dump_bytes(self, value: bytes, depth: int, seen: Optional[set]) -> Any:
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         return value
 
-    def dump_list(self, value: List[Any], depth: int, seen: Optional[set]) -> Any:
+    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:
+        return None
+
+    def dump_list(
+        self, value: List[Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         return value
 
-    def dump_dict(self, value: Dict[str, Any], depth: int, seen: Optional[set]) -> Any:
+    def dump_dict(
+        self, value: Dict[str, Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         return value
 
     def begin_struct(self, cls: Type) -> Any:
@@ -200,8 +221,8 @@ class BaseDumper:
         name: str,
         value: Any,
         handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
-        depth: int,
-        seen: Optional[set],
+        depth: int = 0,
+        seen: Optional[set] = None,
     ) -> None:
         res = handler(value, self, depth, seen)
         self._struct_stack[-1][name] = res
@@ -216,8 +237,8 @@ class BaseDumper:
         self,
         value: Any,
         handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
-        depth: int,
-        seen: Optional[set],
+        depth: int = 0,
+        seen: Optional[set] = None,
     ) -> None:
         res = handler(value, self, depth, seen)
         self._list_stack[-1].append(res)
@@ -237,12 +258,12 @@ class StreamingDumper(Dumper):
         """Writes pre-encoded data directly to the stream."""
         self._target.write(chunk)
 
-    def begin_struct(self, cls: Type) -> None:
+    def begin_struct(self, cls: Type) -> Any:
         self._depth += 1
         self._first_item_stack.append(True)
         return None
 
-    def end_struct(self) -> None:
+    def end_struct(self) -> Any:
         self._depth -= 1
         self._first_item_stack.pop()
         return None
@@ -252,8 +273,8 @@ class StreamingDumper(Dumper):
         name: str,
         value: Any,
         handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
-        depth: int,
-        seen: Optional[set],
+        depth: int = 0,
+        seen: Optional[set] = None,
     ) -> None:
         handler(value, self, depth, seen)
 
@@ -261,16 +282,17 @@ class StreamingDumper(Dumper):
         self._depth += 1
         self._first_item_stack.append(True)
 
-    def end_list(self) -> None:
+    def end_list(self) -> Any:
         self._depth -= 1
         self._first_item_stack.pop()
+        return None
 
     def list_item(
         self,
         value: Any,
         handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
-        depth: int,
-        seen: Optional[set],
+        depth: int = 0,
+        seen: Optional[set] = None,
     ) -> None:
         handler(value, self, depth, seen)
 

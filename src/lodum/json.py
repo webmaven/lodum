@@ -2,71 +2,111 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import json
-from typing import Any, Dict, Iterator, Type, TypeVar, IO
+from typing import Any, Dict, Iterator, Optional, Type, TypeVar, IO, Union
+from pathlib import Path
 
-from .core import Loader, BaseDumper, BaseLoader
+from .core import Loader, BaseDumper, BaseLoader, StreamingDumper
 from .exception import DeserializationError
-from .internal import dump, load, generate_schema, DEFAULT_MAX_SIZE
+from .internal import (
+    dump as dump_internal,
+    load as load_internal,
+    generate_schema,
+    DEFAULT_MAX_SIZE,
+    _resolve_source,
+    _resolve_target,
+)
 
 T = TypeVar("T")
 
 # --- Public API ---
 
 
-def dumps(obj: Any) -> str:
+def dump(
+    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs
+) -> Optional[str]:
     """
-    Encodes a Python object to a JSON string.
+    Encodes a Python object to JSON.
 
     Args:
-        obj: The object to encode. Must be lodum-enabled or a supported type.
+        obj: The object to encode.
+        target: Optional file-like object or Path to write to.
+        **kwargs: Additional arguments for json.dump(s) (e.g., indent).
+                 Note: If target is provided, O(1) streaming is used and some
+                 formatting kwargs might be ignored in the current implementation.
 
     Returns:
-        A JSON string representation of the object.
+        The JSON string if target is None, otherwise None.
     """
-    dumper = JsonDumper()
-    dumped_data = dump(obj, dumper)
-    return json.dumps(dumped_data)
+    if target is None:
+        # IR Mode for string output
+        dumper = JsonDumper()
+        dumped_data = dump_internal(obj, dumper)
+        return json.dumps(dumped_data, **kwargs)
+
+    # O(1) Streaming Mode
+    with _resolve_target(target, "w") as out:
+        assert out is not None
+        dumper_stream = JsonStreamingDumper(out)
+        dump_internal(obj, dumper_stream)
+        return None
 
 
-def loads(cls: Type[T], json_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
+def dumps(obj: Any, **kwargs) -> str:
+    """Legacy alias for dump(obj)."""
+    return dump(obj, **kwargs)  # type: ignore
+
+
+def load(
+    cls: Type[T], source: Union[str, IO[Any], Path], max_size: int = DEFAULT_MAX_SIZE
+) -> T:
     """
-    Decodes a JSON string into a Python object of the specified type.
+    Decodes JSON from a string, stream, or file into a Python object.
 
     Args:
         cls: The class to instantiate.
-        json_string: The JSON data to decode.
-        max_size: Maximum allowed size of the input string in bytes.
+        source: JSON string, file-like object, or Path.
+        max_size: Maximum allowed size for string input.
 
     Returns:
-        An instance of cls populated with the decoded data.
-
-    Raises:
-        DeserializationError: If the input is invalid or exceeds max_size.
+        An instance of cls.
     """
-    if len(json_string) > max_size:
-        raise DeserializationError(
-            f"Input size ({len(json_string)}) exceeds maximum allowed ({max_size})"
-        )
-    data = json.loads(json_string)
+    try:
+        with _resolve_source(source, "r") as src:
+            if isinstance(src, str):
+                if len(src) > max_size:
+                    raise DeserializationError(
+                        f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
+                    )
+                data = json.loads(src)
+            elif hasattr(src, "read"):
+                data = json.load(src)  # type: ignore[arg-type]
+            else:
+                raise DeserializationError(f"Unsupported source type: {type(src)}")
+    except Exception as e:
+        if isinstance(e, DeserializationError):
+            raise
+        raise DeserializationError(f"Failed to parse JSON: {e}")
+
     loader = JsonLoader(data)
-    return load(cls, loader)
+    return load_internal(cls, loader)
 
 
-def load_stream(cls: Type[T], stream: IO[bytes]) -> Iterator[T]:
+def loads(cls: Type[T], json_string: str, **kwargs) -> T:
+    """Legacy alias for load(cls, source)."""
+    return load(cls, json_string, **kwargs)
+
+
+def stream(cls: Type[T], source: Union[IO[bytes], Path]) -> Iterator[T]:
     """
     Lazily decodes a stream of JSON objects into instances of `cls`.
-    This is intended for streams containing a top-level array of objects.
+    Intended for sources containing a top-level array of objects.
 
     Args:
-        cls: The class to instantiate for each item in the array.
-        stream: A binary stream (file-like object) containing a JSON array.
+        cls: The class to instantiate for each item.
+        source: A binary stream, file-like object, or Path to a JSON array.
 
     Returns:
         An iterator yielding instances of `cls`.
-
-    Raises:
-        RuntimeError: If `ijson` is not installed.
-        DeserializationError: If the stream contains invalid JSON or non-object items.
     """
     try:
         import ijson  # type: ignore[import-untyped]
@@ -75,13 +115,18 @@ def load_stream(cls: Type[T], stream: IO[bytes]) -> Iterator[T]:
             "Streaming support requires 'ijson'. Install it with: pip install lodum[ijson]"
         )
 
-    # Use 'item' to target each element in the top-level array.
-    # ijson.items yields standard Python dicts for each element.
-    try:
-        for item in ijson.items(stream, "item"):
-            yield load(cls, JsonLoader(item))
-    except ijson.common.JSONError as e:
-        raise DeserializationError(f"Streaming JSON error: {e}")
+    with _resolve_source(source, "rb") as src:
+        try:
+            # ijson.items yields standard Python dicts for each element.
+            for item in ijson.items(src, "item"):
+                yield load_internal(cls, JsonLoader(item))
+        except ijson.common.JSONError as e:
+            raise DeserializationError(f"Streaming JSON error: {e}")
+
+
+def load_stream(cls: Type[T], stream_io: IO[bytes]) -> Iterator[T]:
+    """Legacy alias for stream(cls, source)."""
+    return stream(cls, stream_io)
 
 
 def schema(cls: Type[Any]) -> Dict[str, Any]:
@@ -93,10 +138,111 @@ def schema(cls: Type[Any]) -> Dict[str, Any]:
 
 
 class JsonDumper(BaseDumper):
-    def dump_bytes(self, value: bytes) -> Any:
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         import base64
 
         return base64.b64encode(value).decode("ascii")
+
+
+class JsonStreamingDumper(StreamingDumper):
+    """
+    Writes JSON tokens directly to a stream.
+    """
+
+    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
+        self.write_raw(str(value))
+
+    def dump_str(self, value: str, depth: int = 0, seen: Optional[set] = None) -> Any:
+        self.write_raw(json.dumps(value))
+
+    def dump_float(
+        self, value: float, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        self.write_raw(str(value))
+
+    def dump_bool(self, value: bool, depth: int = 0, seen: Optional[set] = None) -> Any:
+        self.write_raw("true" if value else "false")
+
+    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:
+        self.write_raw("null")
+
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        import base64
+
+        encoded = base64.b64encode(value).decode("ascii")
+        self.write_raw(json.dumps(encoded))
+
+    def dump_list(
+        self, value: list[Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        # Should normally not be called directly if orchestration is used
+        from .internal import dump as _dump
+
+        self.begin_list()
+        for item in value:
+            self.list_item(item, _dump, depth + 1, seen)
+        return self.end_list()
+
+    def dump_dict(
+        self, value: dict[str, Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        # Should normally not be called directly if orchestration is used
+        from .internal import dump as _dump
+
+        self.begin_struct(dict)
+        for k, v in value.items():
+            self.field(str(k), v, _dump, depth + 1, seen)
+        return self.end_struct()
+
+    def begin_struct(self, cls: Type) -> Any:
+        super().begin_struct(cls)
+        self.write_raw("{")
+        return None
+
+    def end_struct(self) -> Any:
+        self.write_raw("}")
+        return super().end_struct()
+
+    def field(
+        self,
+        name: str,
+        value: Any,
+        handler: Any,
+        depth: int = 0,
+        seen: Optional[set] = None,
+    ) -> None:
+        if not self._first_item_stack[-1]:
+            self.write_raw(",")
+        self._first_item_stack[-1] = False
+
+        self.write_raw(json.dumps(name))
+        self.write_raw(":")
+        handler(value, self, depth, seen)
+
+    def begin_list(self) -> None:
+        super().begin_list()
+        self.write_raw("[")
+
+    def end_list(self) -> Any:
+        self.write_raw("]")
+        return super().end_list()
+
+    def list_item(
+        self,
+        value: Any,
+        handler: Any,
+        depth: int = 0,
+        seen: Optional[set] = None,
+    ) -> None:
+        if not self._first_item_stack[-1]:
+            self.write_raw(",")
+        self._first_item_stack[-1] = False
+
+        handler(value, self, depth, seen)
 
 
 # --- JSON Loader Implementation ---

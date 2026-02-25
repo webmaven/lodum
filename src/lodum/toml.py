@@ -13,26 +13,38 @@ try:
     import tomli_w
 except ImportError:
     tomli_w = None  # type: ignore
-from typing import Any, Dict, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Optional, Type, TypeVar, Union, IO
+from pathlib import Path
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import dump, load, DEFAULT_MAX_SIZE, generate_schema
+from .internal import (
+    dump as dump_internal,
+    load as load_internal,
+    DEFAULT_MAX_SIZE,
+    generate_schema,
+    _resolve_source,
+    _resolve_target,
+)
 
 T = TypeVar("T")
 
 # --- Public API ---
 
 
-def dumps(obj: Any) -> str:
+def dump(
+    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs
+) -> Optional[str]:
     """
-    Encodes a Python object to a TOML string.
+    Encodes a Python object to TOML.
 
     Args:
-        obj: The object to encode. Must be lodum-enabled or a supported type.
+        obj: The object to encode.
+        target: Optional file-like object or Path to write to.
+        **kwargs: Additional arguments for tomli_w.dump(s).
 
     Returns:
-        A TOML string representation of the object.
+        The TOML string if target is None, otherwise None.
 
     Raises:
         ImportError: If tomli-w is not installed.
@@ -42,18 +54,30 @@ def dumps(obj: Any) -> str:
             "tomli-w is required for TOML serialization. Install it with 'pip install lodum[toml]'."
         )
     dumper = TomlDumper()
-    dumped_data = dump(obj, dumper)
-    return tomli_w.dumps(dumped_data)
+    dumped_data = dump_internal(obj, dumper)
+
+    with _resolve_target(target, "w") as out:
+        if out is None:
+            return tomli_w.dumps(dumped_data, **kwargs)
+        tomli_w.dump(dumped_data, out, **kwargs)
+        return None
 
 
-def loads(cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
+def dumps(obj: Any, **kwargs) -> str:
+    """Legacy alias for dump(obj)."""
+    return dump(obj, **kwargs)  # type: ignore
+
+
+def load(
+    cls: Type[T], source: Union[str, IO[Any], Path], max_size: int = DEFAULT_MAX_SIZE
+) -> T:
     """
-    Decodes a TOML string into a Python object of the specified type.
+    Decodes TOML from a string, stream, or file into a Python object.
 
     Args:
         cls: The class to instantiate.
-        toml_string: The TOML data to decode.
-        max_size: Maximum allowed size of the input string in bytes.
+        source: TOML string, file-like object, or Path.
+        max_size: Maximum allowed size for string input.
 
     Returns:
         An instance of cls populated with the decoded data.
@@ -62,23 +86,33 @@ def loads(cls: Type[T], toml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T
         DeserializationError: If the input is invalid or exceeds max_size.
         ImportError: If tomllib (or tomli) is not installed.
     """
-    if len(toml_string) > max_size:
-        raise DeserializationError(
-            f"Input size ({len(toml_string)}) exceeds maximum allowed ({max_size})"
-        )
-
     if tomllib is None:
         raise ImportError(
             "tomllib (or tomli) is required for TOML deserialization. Install it with 'pip install lodum[toml]'."
         )
+
     try:
-        data = tomllib.loads(toml_string)
+        with _resolve_source(source, "rb") as src:
+            if isinstance(src, str):
+                if len(src) > max_size:
+                    raise DeserializationError(
+                        f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
+                    )
+                data = tomllib.loads(src)
+            else:
+                data = tomllib.load(src)
     except Exception as e:
         if isinstance(e, DeserializationError):
-            raise e
+            raise
         raise DeserializationError(f"Failed to parse TOML: {e}")
+
     loader = TomlLoader(data)
-    return load(cls, loader)
+    return load_internal(cls, loader)
+
+
+def loads(cls: Type[T], toml_string: str, **kwargs) -> T:
+    """Legacy alias for load(cls, source)."""
+    return load(cls, toml_string, **kwargs)
 
 
 def schema(cls: Type[Any]) -> Dict[str, Any]:
@@ -90,7 +124,9 @@ def schema(cls: Type[Any]) -> Dict[str, Any]:
 
 
 class TomlDumper(BaseDumper):
-    def dump_bytes(self, value: bytes) -> Any:
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         import base64
 
         return base64.b64encode(value).decode("ascii")

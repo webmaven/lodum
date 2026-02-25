@@ -18,7 +18,7 @@ def test_load_stream_success():
     data = b'[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]'
     stream = io.BytesIO(data)
 
-    users = list(json.load_stream(User, stream))
+    users = list(json.stream(User, stream))
 
     assert len(users) == 2
     assert users[0].id == 1
@@ -31,7 +31,7 @@ def test_load_stream_empty_array():
     data = b"[]"
     stream = io.BytesIO(data)
 
-    users = list(json.load_stream(User, stream))
+    users = list(json.stream(User, stream))
     assert len(users) == 0
 
 
@@ -39,7 +39,7 @@ def test_load_stream_malformed_json():
     data = b'[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"'  # Missing closing brace and bracket
     stream = io.BytesIO(data)
 
-    iterator = json.load_stream(User, stream)
+    iterator = json.stream(User, stream)
     assert next(iterator).id == 1
     with pytest.raises(DeserializationError, match="Streaming JSON error"):
         next(iterator)
@@ -67,7 +67,7 @@ def test_load_stream_lazy_evaluation():
     )
     stream = TrackingStream(data)
 
-    iterator = json.load_stream(User, stream)
+    iterator = json.stream(User, stream)
 
     # After first next(), we should have read only a small portion of the stream
     next(iterator)
@@ -91,4 +91,23 @@ def test_load_stream_no_ijson(monkeypatch):
 
     stream = io.BytesIO(b"[]")
     with pytest.raises(RuntimeError, match="Streaming support requires 'ijson'"):
-        list(json.load_stream(User, stream))
+        list(json.stream(User, stream))
+
+
+def test_json_loader_error_cases():
+    from lodum.json import JsonLoader
+    from lodum.exception import DeserializationError
+    import pytest
+
+    loader = JsonLoader(None)
+    with pytest.raises(DeserializationError, match="Expected list"):
+        list(loader.load_list())
+
+    with pytest.raises(DeserializationError, match="Expected dict"):
+        list(loader.load_dict())
+
+    with pytest.raises(DeserializationError, match="Expected str"):
+        loader.load_bytes_value(123)
+
+    with pytest.raises(DeserializationError, match="Failed to decode base64"):
+        loader.load_bytes_value("not base64!")

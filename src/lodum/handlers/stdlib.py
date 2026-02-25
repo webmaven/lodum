@@ -21,17 +21,17 @@ T = TypeVar("T")
 
 
 def _dump_bytes(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return d.dump_bytes(obj)
+    return d.dump_bytes(obj, depth, seen)
 
 
 def _dump_bytearray(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
-    return d.dump_bytes(bytes(obj))
+    return d.dump_bytes(bytes(obj), depth, seen)
 
 
 def _dump_datetime(
     obj: datetime.datetime, d: Dumper, depth: int, seen: Optional[set]
 ) -> str:
-    return d.dump_str(obj.isoformat())
+    return d.dump_str(obj.isoformat(), depth, seen)
 
 
 def _dump_enum(obj: enum.Enum, d: Dumper, depth: int, seen: Optional[set]) -> Any:
@@ -41,15 +41,15 @@ def _dump_enum(obj: enum.Enum, d: Dumper, depth: int, seen: Optional[set]) -> An
 
 
 def _dump_uuid(obj: uuid.UUID, d: Dumper, depth: int, seen: Optional[set]) -> str:
-    return d.dump_str(str(obj))
+    return d.dump_str(str(obj), depth, seen)
 
 
 def _dump_decimal(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
-    return d.dump_str(str(obj))
+    return d.dump_str(str(obj), depth, seen)
 
 
 def _dump_path(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
-    return d.dump_str(str(obj))
+    return d.dump_str(str(obj), depth, seen)
 
 
 def _load_datetime(

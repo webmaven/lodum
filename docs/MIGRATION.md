@@ -4,6 +4,27 @@ This guide helps you migrate from other popular Python serialization libraries t
 
 ## Migrating from previous Lodum versions
 
+### Stateful Dumper Orchestration (v0.3.0)
+
+In v0.3.0, the `Dumper` protocol was significantly expanded to support O(1) memory streaming. If you have implemented a custom `Dumper`, you must update its methods:
+
+1.  **Updated Signatures**: All `dump_*` methods now receive `depth: int` and `seen: Optional[set]` as positional or keyword arguments.
+2.  **New Methods**: You should implement the new orchestration methods (`begin_struct`, `field`, `end_struct`, `begin_list`, `list_item`, `end_list`) to take advantage of the AST compiler's new data-shaping logic.
+
+**Before (v0.2.0):**
+```python
+class MyDumper(BaseDumper):
+    def dump_bytes(self, value: bytes) -> str:
+        return value.hex()
+```
+
+**After (v0.3.0):**
+```python
+class MyDumper(BaseDumper):
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: Optional[set] = None) -> str:
+        return value.hex()
+```
+
 ### Exception Standardization (v0.2.0)
 
 In versions prior to v0.2.0, the YAML and Pickle loaders raised `TypeError` when a field's type did not match the expected type during deserialization. This has been standardized to `lodum.exception.DeserializationError` to match the behavior of other formats like JSON and MsgPack.

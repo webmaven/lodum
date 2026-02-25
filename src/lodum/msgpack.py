@@ -5,70 +5,126 @@ try:
     import msgpack  # type: ignore[import-untyped]
 except ImportError:
     msgpack = None  # type: ignore
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Iterator, Optional, Type, TypeVar, Union, IO
+from pathlib import Path
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import dump, load, DEFAULT_MAX_SIZE
+from .internal import (
+    dump as dump_internal,
+    load as load_internal,
+    DEFAULT_MAX_SIZE,
+    _resolve_source,
+    _resolve_target,
+)
 
 T = TypeVar("T")
 
 # --- Public API ---
 
 
-def dumps(obj: Any) -> bytes:
+def dump(
+    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs
+) -> Optional[bytes]:
     """
-    Encodes a Python object to MsgPack bytes.
+    Encodes a Python object to MsgPack.
 
     Args:
-        obj: The object to encode. Must be lodum-enabled or a supported type.
+        obj: The object to encode.
+        target: Optional file-like object or Path to write to.
+        **kwargs: Additional arguments for msgpack.packb.
 
     Returns:
-        The MsgPack-encoded bytes.
-
-    Raises:
-        ImportError: If msgpack is not installed.
+        The MsgPack bytes if target is None, otherwise None.
     """
     if msgpack is None:
         raise ImportError(
             "msgpack is required for MsgPack serialization. Install it with 'pip install lodum[msgpack]'."
         )
     dumper = MsgPackDumper()
-    dumped_data = dump(obj, dumper)
-    return msgpack.packb(dumped_data, use_bin_type=True)
+    dumped_data = dump_internal(obj, dumper)
+
+    kwargs.setdefault("use_bin_type", True)
+
+    with _resolve_target(target, "wb") as out:
+        if out is None:
+            return msgpack.packb(dumped_data, **kwargs)
+        out.write(msgpack.packb(dumped_data, **kwargs))
+        return None
 
 
-def loads(cls: Type[T], packed_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
+def dumps(obj: Any, **kwargs) -> bytes:
+    """Legacy alias for dump(obj)."""
+    return dump(obj, **kwargs)  # type: ignore
+
+
+def load(
+    cls: Type[T],
+    source: Union[bytes, IO[bytes], Path],
+    max_size: int = DEFAULT_MAX_SIZE,
+) -> T:
     """
-    Decodes MsgPack bytes into a Python object of the specified type.
+    Decodes MsgPack from bytes, stream, or file into a Python object.
 
     Args:
         cls: The class to instantiate.
-        packed_bytes: The MsgPack data to decode.
-        max_size: Maximum allowed size of the input bytes.
+        source: MsgPack bytes, file-like object, or Path.
+        max_size: Maximum allowed size for bytes input.
 
     Returns:
-        An instance of cls populated with the decoded data.
-
-    Raises:
-        DeserializationError: If the input is invalid or exceeds max_size.
-        ImportError: If msgpack is not installed.
+        An instance of cls.
     """
-    if len(packed_bytes) > max_size:
-        raise DeserializationError(
-            f"Input size ({len(packed_bytes)}) exceeds maximum allowed ({max_size})"
-        )
-
     if msgpack is None:
         raise ImportError(
             "msgpack is required for MsgPack deserialization. Install it with 'pip install lodum[msgpack]'."
         )
+
     try:
-        data = msgpack.unpackb(packed_bytes, raw=False)
+        with _resolve_source(source, "rb") as src:
+            if isinstance(src, (bytes, bytearray)):
+                if len(src) > max_size:
+                    raise DeserializationError(
+                        f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
+                    )
+                data = msgpack.unpackb(src, raw=False)
+            else:
+                data = msgpack.unpack(src, raw=False)
     except Exception as e:
+        if isinstance(e, DeserializationError):
+            raise
         raise DeserializationError(f"Failed to parse MsgPack: {e}")
+
     loader = MsgPackLoader(data)
-    return load(cls, loader)
+    return load_internal(cls, loader)
+
+
+def loads(cls: Type[T], packed_bytes: bytes, **kwargs) -> T:
+    """Legacy alias for load(cls, source)."""
+    return load(cls, packed_bytes, **kwargs)
+
+
+def stream(cls: Type[T], source: Union[IO[bytes], Path]) -> Iterator[T]:
+    """
+    Lazily decodes a stream of MsgPack objects.
+    Supports concatenated MsgPack objects (ND-MsgPack style).
+
+    Args:
+        cls: The class to instantiate for each item.
+        source: A binary stream, file-like object, or Path.
+
+    Returns:
+        An iterator yielding instances of `cls`.
+    """
+    if msgpack is None:
+        raise ImportError(
+            "msgpack is required for MsgPack deserialization. Install it with 'pip install lodum[msgpack]'."
+        )
+
+    with _resolve_source(source, "rb") as src:
+        # Use Unpacker for streaming multiple objects
+        unpacker = msgpack.Unpacker(src, raw=False)
+        for data in unpacker:
+            yield load_internal(cls, MsgPackLoader(data))
 
 
 # --- MsgPack Dumper Implementation ---

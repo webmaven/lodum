@@ -1,74 +1,143 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import io
+
 try:
     import cbor2
 except ImportError:
     cbor2 = None  # type: ignore
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Iterator, Optional, Type, TypeVar, Union, IO
+from pathlib import Path
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import dump, load, DEFAULT_MAX_SIZE
+from .internal import (
+    dump as dump_internal,
+    load as load_internal,
+    DEFAULT_MAX_SIZE,
+    _resolve_source,
+    _resolve_target,
+)
 
 T = TypeVar("T")
 
 # --- Public API ---
 
 
-def dumps(obj: Any) -> bytes:
+def dump(
+    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs
+) -> Optional[bytes]:
     """
-    Encodes a Python object to CBOR bytes.
+    Encodes a Python object to CBOR.
 
     Args:
-        obj: The object to encode. Must be lodum-enabled or a supported type.
+        obj: The object to encode.
+        target: Optional file-like object or Path to write to.
+        **kwargs: Additional arguments for cbor2.dump(s).
 
     Returns:
-        The CBOR-encoded bytes.
-
-    Raises:
-        ImportError: If cbor2 is not installed.
+        The CBOR bytes if target is None, otherwise None.
     """
     if cbor2 is None:
         raise ImportError(
             "cbor2 is required for CBOR serialization. Install it with 'pip install lodum[cbor]'."
         )
     dumper = CborDumper()
-    dumped_data = dump(obj, dumper)
-    return cbor2.dumps(dumped_data)
+    dumped_data = dump_internal(obj, dumper)
+
+    with _resolve_target(target, "wb") as out:
+        if out is None:
+            return cbor2.dumps(dumped_data, **kwargs)
+        cbor2.dump(dumped_data, out, **kwargs)
+        return None
 
 
-def loads(cls: Type[T], cbor_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
+def dumps(obj: Any, **kwargs) -> bytes:
+    """Legacy alias for dump(obj)."""
+    return dump(obj, **kwargs)  # type: ignore
+
+
+def load(
+    cls: Type[T],
+    source: Union[bytes, IO[bytes], Path],
+    max_size: int = DEFAULT_MAX_SIZE,
+) -> T:
     """
-    Decodes CBOR bytes into a Python object of the specified type.
+    Decodes CBOR from bytes, stream, or file into a Python object.
 
     Args:
         cls: The class to instantiate.
-        cbor_bytes: The CBOR data to decode.
-        max_size: Maximum allowed size of the input bytes.
+        source: CBOR bytes, file-like object, or Path.
+        max_size: Maximum allowed size for bytes input.
 
     Returns:
-        An instance of cls populated with the decoded data.
-
-    Raises:
-        DeserializationError: If the input is invalid or exceeds max_size.
-        ImportError: If cbor2 is not installed.
+        An instance of cls.
     """
-    if len(cbor_bytes) > max_size:
-        raise DeserializationError(
-            f"Input size ({len(cbor_bytes)}) exceeds maximum allowed ({max_size})"
-        )
-
     if cbor2 is None:
         raise ImportError(
             "cbor2 is required for CBOR deserialization. Install it with 'pip install lodum[cbor]'."
         )
+
     try:
-        data = cbor2.loads(cbor_bytes)
+        with _resolve_source(source, "rb") as src:
+            if isinstance(src, (bytes, bytearray)):
+                if len(src) > max_size:
+                    raise DeserializationError(
+                        f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
+                    )
+                data = cbor2.loads(src)
+            elif hasattr(src, "read"):
+                data = cbor2.load(src)  # type: ignore[arg-type]
+            else:
+                raise DeserializationError(f"Unsupported source type: {type(src)}")
     except Exception as e:
+        if isinstance(e, DeserializationError):
+            raise
         raise DeserializationError(f"Failed to parse CBOR: {e}")
+
     loader = CborLoader(data)
-    return load(cls, loader)
+    return load_internal(cls, loader)
+
+
+def loads(cls: Type[T], cbor_bytes: bytes, **kwargs) -> T:
+    """Legacy alias for load(cls, source)."""
+    return load(cls, cbor_bytes, **kwargs)
+
+
+def stream(cls: Type[T], source: Union[IO[bytes], Path]) -> Iterator[T]:
+    """
+    Lazily decodes a stream of CBOR objects.
+    Supports concatenated CBOR objects.
+
+    Args:
+        cls: The class to instantiate for each item.
+        source: A binary stream, file-like object, or Path.
+
+    Returns:
+        An iterator yielding instances of `cls`.
+    """
+    if cbor2 is None:
+        raise ImportError(
+            "cbor2 is required for CBOR deserialization. Install it with 'pip install lodum[cbor]'."
+        )
+
+    with _resolve_source(source, "rb") as src:
+        if isinstance(src, (bytes, bytearray)):
+            src = io.BytesIO(src)
+
+        if not hasattr(src, "read"):
+            raise DeserializationError(
+                f"Unsupported source type for streaming: {type(src)}"
+            )
+
+        decoder = cbor2.CBORDecoder(src)  # type: ignore[arg-type]
+        try:
+            while True:
+                data = decoder.decode()
+                yield load_internal(cls, CborLoader(data))
+        except (EOFError, cbor2.CBORDecodeEOF):
+            pass
 
 
 # --- CBOR Dumper Implementation ---

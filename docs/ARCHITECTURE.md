@@ -84,15 +84,30 @@ In environments where native threading is limited or unavailable (e.g., Pyodide/
 
 ### The `Dumper` Protocol
 
-A `Dumper` knows how to take primitive types and write them to a specific format.
+The `Dumper` protocol handles the conversion of Python data into a target representation. In `v0.3.0`, this protocol was expanded to support **Stateful Orchestration**.
+
+Instead of the compiler generating intermediate dictionaries or lists, it now acts as a structural driver that informs the dumper about the object's topology:
 
 ```python
 class Dumper(Protocol):
-    def dump_int(self, v: int) -> Any: ...
-    def dump_str(self, v: str) -> Any: ...
+    # Primitives
+    def dump_int(self, v: int, depth: int, seen: set) -> Any: ...
+    
+    # Struct Orchestration
     def begin_struct(self, cls: Type) -> Any: ...
-    def end_struct(self) -> None: ...
+    def field(self, name: str, value: Any, handler: Callable, depth: int, seen: set) -> None: ...
+    def end_struct(self) -> Any: ...
+
+    # Collection Orchestration
+    def begin_list(self) -> None: ...
+    def list_item(self, value: Any, handler: Callable, depth: int, seen: set) -> None: ...
+    def end_list(self) -> Any: ...
 ```
+
+#### Dual-Mode Execution
+This orchestration enables two distinct modes of operation:
+1. **IR Mode (`BaseDumper`)**: Build a standard Python dictionary/list representation. This is used by `dumps()` for formats like JSON or MsgPack that consume a Python object.
+2. **Streaming Mode (`StreamingDumper`)**: Write tokens directly to an IO stream. This enables **O(1) memory serialization** for extremely large object graphs, as no intermediate structure is ever fully materialized.
 
 ### The `Loader` Protocol
 

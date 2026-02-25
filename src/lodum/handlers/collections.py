@@ -22,26 +22,33 @@ from ..exception import DeserializationError
 T = TypeVar("T")
 
 
-def _dump_sequence(
-    obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
-) -> List[Any]:
+def _dump_sequence(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
     from ..internal import dump
 
-    return [dump(item, dumper, depth + 1, seen) for item in obj]
+    dumper.begin_list()
+    for item in obj:
+        dumper.list_item(item, dump, depth + 1, seen)
+    return dumper.end_list()
 
 
 def _dump_dict(
     obj: Dict[Any, Any], dumper: Dumper, depth: int, seen: Optional[set]
-) -> Dict[str, Any]:
+) -> Any:
     from ..internal import dump
 
-    return {str(k): dump(v, dumper, depth + 1, seen) for k, v in obj.items()}
+    dumper.begin_struct(dict)
+    for k, v in obj.items():
+        dumper.field(str(k), v, dump, depth + 1, seen)
+    return dumper.end_struct()
 
 
 def _dump_array(obj: array.array, d: Dumper, depth: int, seen: Optional[set]) -> Any:
     from ..internal import dump
 
-    return [dump(item, d, depth + 1, seen) for item in obj]
+    d.begin_list()
+    for item in obj:
+        d.list_item(item, dump, depth + 1, seen)
+    return d.end_list()
 
 
 def _load_list(
