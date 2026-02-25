@@ -254,28 +254,36 @@
 
             const suites = rawData.entries;
             
-            // 1. Data Transformation
+            // 1. Data Transformation (Deterministic Commit Ordering)
             const commitMap = new Map();
             Object.values(suites).forEach(points => {
                 points.forEach(p => {
                     const sha = p.commit.id.substring(0, 7);
+                    // Use commit timestamp for true temporal ordering, fallback to run date
+                    const time = new Date(p.commit.timestamp).getTime() || p.date;
                     if (!commitMap.has(sha)) {
-                        commitMap.set(sha, { sha, date: p.date, msg: p.commit.message });
+                        commitMap.set(sha, { sha, date: time, msg: p.commit.message });
+                    } else if (time > commitMap.get(sha).date) {
+                        // Keep the freshest metadata for this SHA
+                        commitMap.set(sha, { sha, date: time, msg: p.commit.message });
                     }
                 });
             });
-            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
-            const categories = sortedCommits.map(c => c.sha);
-            const latestSha = categories[categories.length - 1];
 
-            // Robust Baseline Search
+            // Sort by commit date ascending
+            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
+            const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
+
+            // Find Baseline (v0.3.0) by scanning all metadata
             let v030Sha = null;
-            Object.values(suites).forEach(points => {
-                const p = points.find(p => p.commit.message.includes('v0.3.0'));
-                if (p) v030Sha = p.commit.id.substring(0, 7);
+            sortedCommits.forEach(c => {
+                if (c.msg.includes('v0.3.0')) v030Sha = c.sha;
             });
-            const baselineSha = v030Sha || categories[0];
-            console.log('Lodum Dashboard: Baseline SHA (v0.3.0):', baselineSha);
+            const baselineSha = v030Sha || sortedCommits[0]?.sha;
+            
+            console.log('Lodum Dashboard: Initialized.');
+            console.log(' - Latest SHA:', latestSha);
+            console.log(' - Baseline SHA (v0.3.0):', baselineSha);
 
             const getVal = (suitePattern, benchPattern, sha) => {
                 const suiteKey = Object.keys(suites).find(k => k.includes(suitePattern));
@@ -313,8 +321,6 @@
                         else if (delta > 5) colorClass = 'cell-warn';
                     }
 
-                    console.log(`Heatmap Debug [${p.label} ${s}]: current=${current}, base=${base}, delta=${delta}%`);
-
                     const cell = document.createElement('div');
                     cell.className = `heatmap-cell ${colorClass}`;
                     cell.innerHTML = `<span class="heatmap-label">${p.label} ${s}</span>${current ? (delta > 0 ? '+' : '') + delta.toFixed(0) + '%' : 'N/A'}`;
@@ -331,13 +337,13 @@
 
             if (latestDelta > 50) {
                 healthTitle.textContent = "Critical Regression Detected";
-                healthAdvice.textContent = "The move to Stateful Orchestration has introduced significant overhead. Priority: Wrap __init__ to resolve Field defaults and implement an AST Recursion Helper.";
+                healthAdvice.textContent = "Significant overhead detected. Priority: Wrap __init__ to resolve Field defaults and implement an AST Recursion Helper.";
             } else if (latestDelta > 10) {
                 healthTitle.textContent = "Performance Warning";
-                healthAdvice.textContent = "Minor slowdowns detected. Consider optimizing the list_item dispatch loop for primitive sequences.";
+                healthAdvice.textContent = "Minor slowdowns detected. Consider optimizing the list_item dispatch loop.";
             } else {
                 healthTitle.textContent = "System Healthy";
-                healthAdvice.textContent = "Performance is within nominal ranges compared to v0.3.0. Next: Focus on Memory-Aware features.";
+                healthAdvice.textContent = "Performance is within nominal ranges compared to v0.3.0.";
             }
 
             // 4. Efficiency Frontier
@@ -370,9 +376,14 @@
                 const series = [];
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
+                // Filtering Strategy: Only show SHAs that have at least ONE point for the selected scenario
+                // across any of the platforms we track. This significantly reduces gaps.
+                const activeCategories = sortedCommits.filter(c => {
+                    return envs.some(env => getVal(env.id, benchName, c.sha) !== null);
+                });
+
                 envs.forEach(env => {
-                    const data = sortedCommits.map(c => getVal(env.id, benchName, c.sha));
-                    console.log(`Trend Debug [${env.label} ${scenario}]:`, data);
+                    const data = activeCategories.map(c => getVal(env.id, benchName, c.sha));
                     series.push({
                         name: `Lodum (${env.label})`,
                         data: data,
@@ -388,7 +399,7 @@
                     series: series,
                     chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
                     stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
-                    xaxis: { categories: categories },
+                    xaxis: { categories: activeCategories.map(c => c.sha) },
                     yaxis: { title: { text: 'Execution Time (us)' } },
                     tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } },
                     noData: { text: 'Loading benchmark data...' }
@@ -398,9 +409,9 @@
 
                 const brushOptions = {
                     series: series,
-                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, categories.length - 10), max: categories.length - 1 } } },
+                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, activeCategories.length - 10), max: activeCategories.length - 1 } } },
                     colors: series.map(s => s.color),
-                    xaxis: { categories: categories, labels: { show: false } },
+                    xaxis: { categories: activeCategories.map(c => c.sha), labels: { show: false } },
                     yaxis: { labels: { show: false } }
                 };
                 brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
@@ -408,11 +419,10 @@
             };
 
             // Initial render
-            console.log('Lodum Dashboard: Starting Initial Render for latest commit:', latestSha);
             updateTrendCharts('simple');
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
-            // 4. Calculate KPIs (Latest commit)
+            // 5. Calculate Summary KPIs (Latest commit)
             const getKPI = (id, text) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = text;
@@ -420,30 +430,20 @@
 
             const lodumVal = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
             const mmVal = getVal('ubuntu-latest', 'JSON Serialization Marshmallow simple', latestSha);
-            if (lodumVal && mmVal) {
-                getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
-            }
+            if (lodumVal && mmVal) getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
 
             const stdTime = getVal('ubuntu-latest', 'Lodum Standard (loads) Time', latestSha);
             const streamTime = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Time', latestSha);
             const stdMem = getVal('ubuntu-latest', 'Lodum Standard (loads) Memory', latestSha);
             const streamMem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', latestSha);
 
-            if (stdMem && streamMem) {
-                getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
-            }
-            
-            if (streamTime) {
-                const throughput = 45 / streamTime;
-                getKPI('kpi-throughput', throughput.toFixed(1) + ' MB/s');
-            }
+            if (stdMem && streamMem) getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
+            if (streamTime) getKPI('kpi-throughput', (45 / streamTime).toFixed(1) + ' MB/s');
 
             const wasmVal = getVal('Pyodide', 'JSON Serialization Lodum simple', latestSha);
-            if (lodumVal && wasmVal) {
-                getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
-            }
+            if (lodumVal && wasmVal) getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
 
-            // 5. Streaming Chart
+            // 6. Detailed Charts (Bottom Grid)
             if (stdTime && streamTime) {
                 const streamOptions = {
                     series: [
@@ -459,7 +459,6 @@
                 new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
             }
 
-            // 6. Cold Start Chart
             const coldSimple = getVal('ubuntu-latest', 'JSON Serialization Lodum simple (Cold Start)', latestSha);
             const warmSimple = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
             if (coldSimple && warmSimple) {
