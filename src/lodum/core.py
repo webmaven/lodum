@@ -6,6 +6,7 @@ import functools
 from .concurrency import Lock, local
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterator,
     List,
@@ -14,7 +15,9 @@ from typing import (
     TypeVar,
     Protocol,
     TYPE_CHECKING,
+    Union,
     Union as TypingUnion,
+    IO,
 )
 
 if TYPE_CHECKING:
@@ -64,6 +67,11 @@ def set_context(context: Context) -> None:
     _active_context.current = context
 
 
+def set_context(context: Context) -> None:
+    """Sets the active context for the current thread."""
+    _active_context.current = context
+
+
 def reset_context() -> Context:
     """Resets the active context to a fresh one and returns it."""
     from .internal import _register_builtin_handlers
@@ -86,12 +94,9 @@ def lodum(
     tag_value: Optional[str] = None,
 ) -> Any:
     """
-    A class decorator that marks a class as lodum-enabled and processes field metadata.
-
-    Args:
-        cls: The class to decorate.
-        tag: An optional field name to use as a tag for identifying the class in a Union.
-        tag_value: An optional value for the tag field. Defaults to the class name.
+    A class decorator that marks a class as lodum-enabled.
+    Field metadata is processed lazily during first serialization/deserialization
+    to correctly handle forward references and circular dependencies.
     """
 
     def decorator(c: T) -> T:
@@ -99,50 +104,6 @@ def lodum(
         setattr(c, "_lodum_tag", tag)
         setattr(c, "_lodum_tag_value", tag_value or c.__name__)
 
-        original_init = c.__init__
-        init_sig = inspect.signature(original_init)
-        fields: Dict[str, Field] = {}
-
-        for param in init_sig.parameters.values():
-            if param.name == "self":
-                continue
-
-            is_field_spec = isinstance(param.default, Field)
-
-            if is_field_spec:
-                field_info = param.default
-            else:
-                # Create a default Field for params without one, preserving its default value
-                default = (
-                    param.default if param.default is not param.empty else _MISSING
-                )
-                field_info = Field(default=default)
-
-            field_info.name = param.name
-            field_info.type = param.annotation
-            fields[param.name] = field_info
-
-        setattr(c, "_lodum_fields", fields)
-
-        @functools.wraps(original_init)
-        def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
-            bound_args = init_sig.bind(self, *args, **kwargs)
-            bound_args.apply_defaults()
-
-            resolved_args = {}
-            for name, value in bound_args.arguments.items():
-                if name == "self":
-                    continue
-
-                if isinstance(value, Field):
-                    if value.has_default:
-                        resolved_args[name] = value.get_default()
-                else:
-                    resolved_args[name] = value
-
-            original_init(self, **resolved_args)
-
-        c.__init__ = new_init  # type: ignore[method-assign]
         register_type(c)
         return c
 
@@ -156,15 +117,45 @@ class Dumper(Protocol):
     Defines the interface for a data format dumper (encoder).
     """
 
-    def dump_int(self, value: int) -> Any: ...
-    def dump_str(self, value: str) -> Any: ...
-    def dump_float(self, value: float) -> Any: ...
-    def dump_bool(self, value: bool) -> Any: ...
-    def dump_bytes(self, value: bytes) -> Any: ...
-    def dump_list(self, value: List[Any]) -> Any: ...
-    def dump_dict(self, value: Dict[str, Any]) -> Any: ...
+    def dump_int(self, value: int, depth: int, seen: Optional[set]) -> Any: ...
+    def dump_str(self, value: str, depth: int, seen: Optional[set]) -> Any: ...
+    def dump_float(self, value: float, depth: int, seen: Optional[set]) -> Any: ...
+    def dump_bool(self, value: bool, depth: int, seen: Optional[set]) -> Any: ...
+    def dump_bytes(self, value: bytes, depth: int, seen: Optional[set]) -> Any: ...
+    def dump_list(self, value: List[Any], depth: int, seen: Optional[set]) -> Any: ...
+    def dump_dict(
+        self, value: Dict[str, Any], depth: int, seen: Optional[set]
+    ) -> Any: ...
     def begin_struct(self, cls: Type) -> Any: ...
     def end_struct(self) -> Any: ...
+    def field(
+        self,
+        name: str,
+        value: Any,
+        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        depth: int,
+        seen: Optional[set],
+    ) -> None:
+        """Processes a single struct field."""
+        ...
+
+    def begin_list(self) -> None:
+        """Starts a sequence/list."""
+        ...
+
+    def end_list(self) -> None:
+        """Ends a sequence/list."""
+        ...
+
+    def list_item(
+        self,
+        value: Any,
+        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        depth: int,
+        seen: Optional[set],
+    ) -> None:
+        """Processes a single list item."""
+        ...
 
 
 class BaseDumper:
@@ -172,32 +163,116 @@ class BaseDumper:
     Base implementation of the Dumper protocol to reduce duplication.
     """
 
-    def dump_int(self, value: int) -> Any:
+    def __init__(self) -> None:
+        self._struct_stack: List[Dict[str, Any]] = []
+        self._list_stack: List[List[Any]] = []
+
+    def dump_int(self, value: int, depth: int, seen: Optional[set]) -> Any:
         return value
 
-    def dump_str(self, value: str) -> Any:
+    def dump_str(self, value: str, depth: int, seen: Optional[set]) -> Any:
         return value
 
-    def dump_float(self, value: float) -> Any:
+    def dump_float(self, value: float, depth: int, seen: Optional[set]) -> Any:
         return value
 
-    def dump_bool(self, value: bool) -> Any:
+    def dump_bool(self, value: bool, depth: int, seen: Optional[set]) -> Any:
         return value
 
-    def dump_bytes(self, value: bytes) -> Any:
+    def dump_bytes(self, value: bytes, depth: int, seen: Optional[set]) -> Any:
         return value
 
-    def dump_list(self, value: List[Any]) -> Any:
+    def dump_list(self, value: List[Any], depth: int, seen: Optional[set]) -> Any:
         return value
 
-    def dump_dict(self, value: Dict[str, Any]) -> Any:
+    def dump_dict(self, value: Dict[str, Any], depth: int, seen: Optional[set]) -> Any:
         return value
 
     def begin_struct(self, cls: Type) -> Any:
-        return {}
+        self._struct_stack.append({})
+        return self._struct_stack[-1]
 
     def end_struct(self) -> Any:
-        pass
+        return self._struct_stack.pop()
+
+    def field(
+        self,
+        name: str,
+        value: Any,
+        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        depth: int,
+        seen: Optional[set],
+    ) -> None:
+        res = handler(value, self, depth, seen)
+        self._struct_stack[-1][name] = res
+
+    def begin_list(self) -> None:
+        self._list_stack.append([])
+
+    def end_list(self) -> Any:
+        return self._list_stack.pop()
+
+    def list_item(
+        self,
+        value: Any,
+        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        depth: int,
+        seen: Optional[set],
+    ) -> None:
+        res = handler(value, self, depth, seen)
+        self._list_stack[-1].append(res)
+
+
+class StreamingDumper(Dumper):
+    """
+    Base class for dumpers that write directly to an IO target.
+    """
+
+    def __init__(self, target: IO[Any]) -> None:
+        self._target = target
+        self._depth = 0
+        self._first_item_stack: List[bool] = [True]
+
+    def write_raw(self, chunk: Any) -> None:
+        """Writes pre-encoded data directly to the stream."""
+        self._target.write(chunk)
+
+    def begin_struct(self, cls: Type) -> None:
+        self._depth += 1
+        self._first_item_stack.append(True)
+        return None
+
+    def end_struct(self) -> None:
+        self._depth -= 1
+        self._first_item_stack.pop()
+        return None
+
+    def field(
+        self,
+        name: str,
+        value: Any,
+        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        depth: int,
+        seen: Optional[set],
+    ) -> None:
+        handler(value, self, depth, seen)
+
+    def begin_list(self) -> None:
+        self._depth += 1
+        self._first_item_stack.append(True)
+
+    def end_list(self) -> None:
+        self._depth -= 1
+        self._first_item_stack.pop()
+
+    def list_item(
+        self,
+        value: Any,
+        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        depth: int,
+        seen: Optional[set],
+    ) -> None:
+        handler(value, self, depth, seen)
 
 
 class Loader(Protocol):
@@ -231,10 +306,10 @@ class BaseLoader:
         return self._data
 
     def mark(self) -> Any:
-        return None
+        return self._data
 
     def rewind(self, marker: Any) -> None:
-        pass
+        self._data = marker
 
     def load_int(self) -> int:
         val = self.load_any()
