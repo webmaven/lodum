@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772065173784,
+  "lastUpdate": 1772065177067,
   "repoUrl": "https://github.com/webmaven/lodum",
   "entries": {
     "Lodum Performance Index - ubuntu-latest": [
@@ -49325,6 +49325,508 @@ window.BENCHMARK_DATA = {
             "name": "(windows-latest) Pydantic v2 (validate_json) Memory",
             "value": 358.4690990447998,
             "unit": "MB"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Michael R. Bernstein",
+            "username": "webmaven",
+            "email": "zopemaven@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "02078c1364af3cc7a497df8c63090ea52531ed46",
+          "message": "Merge pull request #74 from webmaven/feature/custom-benchmark-dashboard\n\nfeat: Custom Interactive Performance Dashboard",
+          "timestamp": "2026-02-23T15:45:11Z",
+          "url": "https://github.com/webmaven/lodum/commit/02078c1364af3cc7a497df8c63090ea52531ed46"
+        },
+        "date": 1772065175957,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "(windows-latest) JSON Serialization Lodum simple",
+            "value": 4.732439820167765,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum simple (Cold Start)",
+            "value": 567.3189999981787,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum complex",
+            "value": 7.748330814441636,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum complex (Cold Start)",
+            "value": 898.1450000078439,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum nested",
+            "value": 21.429521749998532,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Lodum nested (Cold Start)",
+            "value": 627.6310000146168,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Pydantic (v2) simple",
+            "value": 1.423879861111664,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Pydantic (v2) complex",
+            "value": 1.9072649055562607,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Pydantic (v2) nested",
+            "value": 3.5567207111111228,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Marshmallow simple",
+            "value": 7.2870557833333685,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Marshmallow complex",
+            "value": 15.705288399999873,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Serialization Marshmallow nested",
+            "value": 42.84389975555657,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum simple",
+            "value": 11.895186833337826,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum simple (Cold Start)",
+            "value": 1537.3770000053355,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum complex",
+            "value": 25.128491214289284,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum complex (Cold Start)",
+            "value": 1921.2719999757155,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum nested",
+            "value": 74.09607749999785,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Lodum nested (Cold Start)",
+            "value": 1390.3830000003836,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Pydantic (v2) simple",
+            "value": 1.469039444443412,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Pydantic (v2) complex",
+            "value": 2.3911850444443576,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Pydantic (v2) nested",
+            "value": 6.360317577780192,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Marshmallow simple",
+            "value": 17.80687678888968,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Marshmallow complex",
+            "value": 40.72305930000044,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) JSON Deserialization Marshmallow nested",
+            "value": 127.04332092777398,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum simple",
+            "value": 3.2151143996545217,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum simple (Cold Start)",
+            "value": 38.302000007206516,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum complex",
+            "value": 5.240039093399726,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum complex (Cold Start)",
+            "value": 18.14399999489069,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum nested",
+            "value": 17.12324071428384,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Lodum nested (Cold Start)",
+            "value": 44.43299999934425,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Native msgpack (dict) simple",
+            "value": 0.711815029411323,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Native msgpack (dict) complex",
+            "value": 1.163070329413074,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Serialization Native msgpack (dict) nested",
+            "value": 1.9935557235300356,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum simple",
+            "value": 10.186400939986132,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum simple (Cold Start)",
+            "value": 53.04799998384624,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum complex",
+            "value": 22.240595642860026,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum complex (Cold Start)",
+            "value": 56.28499999943415,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum nested",
+            "value": 69.78877900000059,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Lodum nested (Cold Start)",
+            "value": 98.48300001635835,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Native msgpack (dict) simple",
+            "value": 0.48290518823522427,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Native msgpack (dict) complex",
+            "value": 1.0041882000007178,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) MsgPack Deserialization Native msgpack (dict) nested",
+            "value": 2.1774501764719605,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum simple",
+            "value": 6.614551790478493,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum simple (Cold Start)",
+            "value": 59.20999998920706,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum complex",
+            "value": 9.592470716870036,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum complex (Cold Start)",
+            "value": 27.22000002108871,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum nested",
+            "value": 23.611133999996323,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Lodum nested (Cold Start)",
+            "value": 52.106999987699965,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Native cbor2 (dict) simple",
+            "value": 4.186143758823679,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Native cbor2 (dict) complex",
+            "value": 5.562398770588489,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Serialization Native cbor2 (dict) nested",
+            "value": 8.424710111763373,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum simple",
+            "value": 11.946293642856583,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum simple (Cold Start)",
+            "value": 68.00599999223778,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum complex",
+            "value": 24.75572599999983,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum complex (Cold Start)",
+            "value": 52.06700001281206,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum nested",
+            "value": 75.38124057142527,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Lodum nested (Cold Start)",
+            "value": 100.67700000604418,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Native cbor2 (dict) simple",
+            "value": 1.6832919882363024,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Native cbor2 (dict) complex",
+            "value": 2.4755538647070807,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) CBOR Deserialization Native cbor2 (dict) nested",
+            "value": 4.27499937058893,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum simple",
+            "value": 356.2327222142829,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum simple (Cold Start)",
+            "value": 649.9569999789401,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum complex",
+            "value": 835.0348587142865,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum complex (Cold Start)",
+            "value": 897.9270000111228,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum nested",
+            "value": 2104.6519027142826,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Serialization Lodum nested (Cold Start)",
+            "value": 2180.1620000019284,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum simple",
+            "value": 460.7612629285711,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum simple (Cold Start)",
+            "value": 755.6829999657566,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum complex",
+            "value": 1201.4095172499992,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum complex (Cold Start)",
+            "value": 1283.7240000180827,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum nested",
+            "value": 1173.481156071432,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) YAML Deserialization Lodum nested (Cold Start)",
+            "value": 1242.8489999933845,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum simple",
+            "value": 8.785482337292375,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum simple (Cold Start)",
+            "value": 56.664999988242926,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum complex",
+            "value": 27.2981658571447,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum complex (Cold Start)",
+            "value": 78.47599999877275,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum nested",
+            "value": 62.14910278572461,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Serialization Lodum nested (Cold Start)",
+            "value": 104.0629999806697,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum simple",
+            "value": 30.53884392857396,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum simple (Cold Start)",
+            "value": 122.45800002119722,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum complex",
+            "value": 83.84690064286815,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum complex (Cold Start)",
+            "value": 131.19400000505266,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum nested",
+            "value": 214.0099284999987,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) TOML Deserialization Lodum nested (Cold Start)",
+            "value": 267.88799999621915,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) simple",
+            "value": 4.489110075249465,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) simple (Cold Start)",
+            "value": 61.08400003768111,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) complex",
+            "value": 6.676211472216203,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) complex (Cold Start)",
+            "value": 25.57700003080754,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) nested",
+            "value": 22.659604000003647,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Serialization Lodum (Safe) nested (Cold Start)",
+            "value": 71.86400000591675,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) simple",
+            "value": 3.6406091378364813,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) simple (Cold Start)",
+            "value": 42.909000001145614,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) complex",
+            "value": 4.430116958878814,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) complex (Cold Start)",
+            "value": 16.12999994904385,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) nested",
+            "value": 7.896161556258602,
+            "unit": "us"
+          },
+          {
+            "name": "(windows-latest) Pickle Deserialization Lodum (Safe) nested (Cold Start)",
+            "value": 21.580000009180367,
+            "unit": "us"
           }
         ]
       }
