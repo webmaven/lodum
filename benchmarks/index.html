@@ -259,12 +259,10 @@
             Object.values(suites).forEach(points => {
                 points.forEach(p => {
                     const sha = p.commit.id.substring(0, 7);
-                    // Use commit timestamp for true temporal ordering, fallback to run date
                     const time = new Date(p.commit.timestamp).getTime() || p.date;
                     if (!commitMap.has(sha)) {
                         commitMap.set(sha, { sha, date: time, msg: p.commit.message });
                     } else if (time > commitMap.get(sha).date) {
-                        // Keep the freshest metadata for this SHA
                         commitMap.set(sha, { sha, date: time, msg: p.commit.message });
                     }
                 });
@@ -274,10 +272,23 @@
             const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
             const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
 
-            // Find Baseline (v0.3.0) by scanning all metadata
+            // Find Baseline (v0.3.0) and Releases
             let v030Sha = null;
-            sortedCommits.forEach(c => {
+            const releaseAnnotations = [];
+            sortedCommits.forEach((c, idx) => {
                 if (c.msg.includes('v0.3.0')) v030Sha = c.sha;
+                
+                const releaseMatch = c.msg.match(/v\d\.\d\.\d/);
+                if (releaseMatch) {
+                    releaseAnnotations.push({
+                        x: c.sha,
+                        borderColor: '#fbc929',
+                        label: {
+                            style: { color: '#fff', background: '#fbc929' },
+                            text: releaseMatch[0]
+                        }
+                    });
+                }
             });
             const baselineSha = v030Sha || sortedCommits[0]?.sha;
             
@@ -392,6 +403,7 @@
                 const mainOptions = {
                     series: series,
                     chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
+                    annotations: { xaxis: releaseAnnotations },
                     stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
                     xaxis: { 
                         type: 'category',
@@ -403,19 +415,23 @@
                     grid: { padding: { left: 30, right: 30 } },
                     noData: { text: 'Loading benchmark data...' }
                 };
-                mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
+                mainChart = new ApexCharts(document.querySelector("#main-trend-container"), mainOptions);
                 mainChart.render();
 
                 const brushOptions = {
                     series: series,
-                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, activeCategories.length - 10), max: activeCategories.length - 1 } } },
+                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, sortedCommits.length - 10), max: sortedCommits.length - 1 } } },
                     colors: series.map(s => s.color),
-                    xaxis: { categories: activeCategories.map(c => c.sha), labels: { show: false } },
+                    xaxis: { categories: sortedCommits.map(c => c.sha), labels: { show: false } },
                     yaxis: { labels: { show: false } }
                 };
                 brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
                 brushChart.render();
             };
+
+            // Fix container ID mismatch
+            const mainContainer = document.querySelector("#main-chart");
+            if (mainContainer) mainContainer.id = "main-trend-container";
 
             // Initial render
             updateTrendCharts('simple');
