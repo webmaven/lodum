@@ -373,17 +373,11 @@
             let mainChart, brushChart;
 
             const updateTrendCharts = (scenario) => {
-                const series = [];
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
-                // Filtering Strategy: Only show SHAs that have at least ONE point for the selected scenario
-                // across any of the platforms we track. This significantly reduces gaps.
-                const activeCategories = sortedCommits.filter(c => {
-                    return envs.some(env => getVal(env.id, benchName, c.sha) !== null);
-                });
-
+                const series = [];
                 envs.forEach(env => {
-                    const data = activeCategories.map(c => getVal(env.id, benchName, c.sha));
+                    const data = sortedCommits.map(c => getVal(env.id, benchName, c.sha));
                     series.push({
                         name: `Lodum (${env.label})`,
                         data: data,
@@ -399,9 +393,14 @@
                     series: series,
                     chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
                     stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
-                    xaxis: { categories: activeCategories.map(c => c.sha) },
+                    xaxis: { 
+                        type: 'category',
+                        categories: sortedCommits.map(c => c.sha),
+                        labels: { show: true }
+                    },
                     yaxis: { title: { text: 'Execution Time (us)' } },
                     tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } },
+                    grid: { padding: { left: 30, right: 30 } },
                     noData: { text: 'Loading benchmark data...' }
                 };
                 mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
