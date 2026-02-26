@@ -281,8 +281,11 @@
                 });
             });
 
-            // Sort by commit date ascending
-            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
+            // Sort by commit date ascending, use SHA as tie-breaker for absolute determinism
+            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => {
+                if (a.date !== b.date) return a.date - b.date;
+                return a.sha.localeCompare(b.sha);
+            });
             const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
 
             // Unique Release Markers
@@ -299,7 +302,7 @@
                     if (!markedVersions.has(version)) {
                         markedVersions.add(version);
                         releaseAnnotations.push({
-                            x: c.sha, // Annotation will use the full SHA
+                            x: c.shortSha, // Align with category label
                             borderColor: '#fbc929',
                             label: {
                                 style: { color: '#fff', background: '#fbc929' },
@@ -429,7 +432,7 @@
                     series: series,
                     chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
                     stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
-                    annotations: { xaxis: releaseAnnotations.filter(a => activeCategories.some(c => c.sha === a.x)) },
+                    annotations: { xaxis: releaseAnnotations.filter(a => activeCategories.some(c => c.shortSha === a.x)) },
                     xaxis: { 
                         type: 'category',
                         categories: activeCategories.map(c => c.shortSha),
