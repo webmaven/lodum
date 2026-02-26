@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772085432924,
+  "lastUpdate": 1772112258974,
   "repoUrl": "https://github.com/webmaven/lodum",
   "entries": {
     "Lodum Performance Index - ubuntu-latest": [
@@ -96682,4 +96682,4 @@ window.BENCHMARK_DATA = {
       }
     ]
   }
-}
+};

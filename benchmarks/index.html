@@ -40,6 +40,13 @@
 
         h1 { margin: 0; font-size: 1.8rem; }
 
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
         .health-card {
             background: #fffbeb;
             border: 1px solid #fef3c7;
@@ -90,13 +97,6 @@
         .cell-neutral { background: #f9fafb; color: #374151; }
         .cell-warn { background: #fffbeb; color: #92400e; }
         .cell-bad { background: #fef2f2; color: #991b1b; }
-
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
 
         .kpi-card {
             background: var(--card-bg);
@@ -254,17 +254,18 @@
 
             const suites = rawData.entries;
             
-            // 1. Data Transformation (Group by SHA, sort by deterministic commit timestamp)
+            // 1. Data Transformation (Group by FULL SHA, sort by deterministic commit timestamp)
             const commitMap = new Map();
             Object.entries(suites).forEach(([suiteName, points]) => {
                 points.forEach(p => {
-                    const sha = p.commit.id.substring(0, 7);
+                    const sha = p.commit.id; // Full 40-char SHA
                     // Strictly prioritize commit timestamp, fallback to run date
                     const timestamp = p.commit.timestamp ? Date.parse(p.commit.timestamp) : p.date;
                     
                     if (!commitMap.has(sha)) {
                         commitMap.set(sha, { 
                             sha, 
+                            shortSha: sha.substring(0, 7),
                             date: timestamp, 
                             msg: p.commit.message,
                             data: {} // suiteName -> point
@@ -298,7 +299,7 @@
                     if (!markedVersions.has(version)) {
                         markedVersions.add(version);
                         releaseAnnotations.push({
-                            x: c.sha,
+                            x: c.sha, // Annotation will use the full SHA
                             borderColor: '#fbc929',
                             label: {
                                 style: { color: '#fff', background: '#fbc929' },
@@ -324,6 +325,8 @@
                 return bench ? bench.value : null;
             };
 
+            const baselineShaFinal = baselineSha;
+
             // 2. Heatmap Generation
             const heatmapGrid = document.getElementById('regression-heatmap');
             const scenarios = ['simple', 'complex', 'nested'];
@@ -337,7 +340,7 @@
                 scenarios.forEach(s => {
                     const benchName = `JSON Serialization Lodum ${s}`;
                     const current = getVal(p.id, benchName, latestSha);
-                    const base = getVal(p.id, benchName, baselineSha);
+                    const base = getVal(p.id, benchName, baselineShaFinal);
                     
                     let delta = 0;
                     let colorClass = 'cell-neutral';
@@ -359,7 +362,7 @@
             const healthTitle = document.getElementById('health-title');
             const healthAdvice = document.getElementById('health-advice');
             const currentComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', latestSha);
-            const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineSha);
+            const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineShaFinal);
             const latestDelta = (currentComplex && baseComplex) ? ((currentComplex / baseComplex) - 1) * 100 : 0;
 
             if (latestDelta > 50) {
@@ -402,8 +405,8 @@
             const updateTrendCharts = (scenario) => {
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
-                // Filtering Strategy: Only show SHAs that have at least ONE point for the selected scenario
-                // across any of the platforms we track. This significantly reduces gaps.
+                // Filtering Strategy: For each update, find the set of SHAs that have data
+                // for at least ONE of the platforms we display.
                 const activeCategories = sortedCommits.filter(c => {
                     return envs.some(env => getVal(env.id, benchName, c.sha) !== null);
                 });
@@ -429,7 +432,7 @@
                     annotations: { xaxis: releaseAnnotations.filter(a => activeCategories.some(c => c.sha === a.x)) },
                     xaxis: { 
                         type: 'category',
-                        categories: activeCategories.map(c => c.sha),
+                        categories: activeCategories.map(c => c.shortSha),
                         labels: { show: true }
                     },
                     yaxis: { title: { text: 'Execution Time (us)' } },
@@ -444,7 +447,7 @@
                     series: series,
                     chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, activeCategories.length - 10), max: activeCategories.length - 1 } } },
                     colors: series.map(s => s.color),
-                    xaxis: { categories: activeCategories.map(c => c.sha), labels: { show: false } },
+                    xaxis: { type: 'category', categories: activeCategories.map(c => c.shortSha), labels: { show: false } },
                     yaxis: { labels: { show: false } }
                 };
                 brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
