@@ -98,7 +98,7 @@
         .cell-warn { background: #fffbeb; color: #92400e; }
         .cell-bad { background: #fef2f2; color: #991b1b; }
 
-        .chart-card {
+        .kpi-card {
             background: var(--card-bg);
             padding: 20px;
             border-radius: 12px;
@@ -254,40 +254,56 @@
 
             const suites = rawData.entries;
             
-            // 1. Data Transformation (Deterministic Commit Ordering)
+            // 1. Data Transformation (Group by SHA, sort by minimum timestamp)
             const commitMap = new Map();
-            Object.values(suites).forEach(points => {
+            Object.entries(suites).forEach(([suiteName, points]) => {
                 points.forEach(p => {
                     const sha = p.commit.id.substring(0, 7);
                     const time = new Date(p.commit.timestamp).getTime() || p.date;
+                    
                     if (!commitMap.has(sha)) {
-                        commitMap.set(sha, { sha, date: time, msg: p.commit.message });
-                    } else if (time > commitMap.get(sha).date) {
-                        commitMap.set(sha, { sha, date: time, msg: p.commit.message });
+                        commitMap.set(sha, { 
+                            sha, 
+                            date: time, 
+                            msg: p.commit.message,
+                            data: {} // suiteName -> point
+                        });
                     }
+                    
+                    const c = commitMap.get(sha);
+                    // Use earliest timestamp found across platforms
+                    if (time < c.date) c.date = time;
+                    c.data[suiteName] = p;
                 });
             });
 
             // Sort by commit date ascending
             const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
+            const categories = sortedCommits.map(c => c.sha);
             const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
 
-            // Find Baseline (v0.3.0) and Releases
+            // Find Baseline (v0.3.0) and Unique Release Markers
             let v030Sha = null;
             const releaseAnnotations = [];
-            sortedCommits.forEach((c, idx) => {
-                if (c.msg.includes('v0.3.0')) v030Sha = c.sha;
-                
+            const markedVersions = new Set();
+
+            sortedCommits.forEach((c) => {
                 const releaseMatch = c.msg.match(/v\d\.\d\.\d/);
                 if (releaseMatch) {
-                    releaseAnnotations.push({
-                        x: c.sha,
-                        borderColor: '#fbc929',
-                        label: {
-                            style: { color: '#fff', background: '#fbc929' },
-                            text: releaseMatch[0]
-                        }
-                    });
+                    const version = releaseMatch[0];
+                    if (version === 'v0.3.0') v030Sha = c.sha;
+                    
+                    if (!markedVersions.has(version)) {
+                        markedVersions.add(version);
+                        releaseAnnotations.push({
+                            x: c.sha,
+                            borderColor: '#fbc929',
+                            label: {
+                                style: { color: '#fff', background: '#fbc929' },
+                                text: version
+                            }
+                        });
+                    }
                 }
             });
             const baselineSha = v030Sha || sortedCommits[0]?.sha;
@@ -297,16 +313,16 @@
             console.log(' - Baseline SHA (v0.3.0):', baselineSha);
 
             const getVal = (suitePattern, benchPattern, sha) => {
-                const suiteKey = Object.keys(suites).find(k => k.includes(suitePattern));
+                const c = commitMap.get(sha);
+                if (!c) return null;
+                const suiteKey = Object.keys(c.data).find(k => k.includes(suitePattern));
                 if (!suiteKey) return null;
-                const suite = suites[suiteKey];
-                const point = suite.find(p => p.commit.id.substring(0, 7) === sha);
-                if (!point) return null;
+                const point = c.data[suiteKey];
                 const bench = point.benches.find(b => b.name.includes(benchPattern));
                 return bench ? bench.value : null;
             };
 
-            const baselineShaFinal = baselineSha; // Alias for closure scope
+            const baselineShaFinal = baselineSha;
 
             // 2. Heatmap Generation
             const heatmapGrid = document.getElementById('regression-heatmap');
@@ -385,7 +401,6 @@
 
             const updateTrendCharts = (scenario) => {
                 const benchName = `JSON Serialization Lodum ${scenario}`;
-                
                 const series = [];
                 envs.forEach(env => {
                     const data = sortedCommits.map(c => getVal(env.id, benchName, c.sha));
@@ -407,7 +422,7 @@
                     stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
                     xaxis: { 
                         type: 'category',
-                        categories: sortedCommits.map(c => c.sha),
+                        categories: categories,
                         labels: { show: true }
                     },
                     yaxis: { title: { text: 'Execution Time (us)' } },
@@ -415,23 +430,19 @@
                     grid: { padding: { left: 30, right: 30 } },
                     noData: { text: 'Loading benchmark data...' }
                 };
-                mainChart = new ApexCharts(document.querySelector("#main-trend-container"), mainOptions);
+                mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
                 mainChart.render();
 
                 const brushOptions = {
                     series: series,
                     chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, sortedCommits.length - 10), max: sortedCommits.length - 1 } } },
                     colors: series.map(s => s.color),
-                    xaxis: { categories: sortedCommits.map(c => c.sha), labels: { show: false } },
+                    xaxis: { categories: categories, labels: { show: false } },
                     yaxis: { labels: { show: false } }
                 };
                 brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
                 brushChart.render();
             };
-
-            // Fix container ID mismatch
-            const mainContainer = document.querySelector("#main-chart");
-            if (mainContainer) mainContainer.id = "main-trend-container";
 
             // Initial render
             updateTrendCharts('simple');
