@@ -253,8 +253,10 @@
             if (!rawData) return;
 
             const suites = rawData.entries;
+            const history = rawData.history || [];
+            const tagMap = rawData.tags || {};
             
-            // 1. Data Transformation (Group by FULL SHA, sort by deterministic commit timestamp)
+            // 1. Data Transformation (Group by FULL SHA)
             const commitMap = new Map();
             Object.entries(suites).forEach(([suiteName, points]) => {
                 points.forEach(p => {
@@ -274,54 +276,45 @@
                     }
                     
                     const c = commitMap.get(sha);
-                    // Keep the point with the most benches for this suite
                     if (!c.data[suiteName] || (p.benches && p.benches.length > (c.data[suiteName].benches || []).length)) {
                         c.data[suiteName] = p;
-                    }
-                    
-                    // Prioritize commit timestamp for ordering
-                    if (p.commit.timestamp) {
-                        c.date = Date.parse(p.commit.timestamp);
                     }
                 });
             });
 
-            // Sort by commit date ascending, use SHA as tie-breaker for absolute determinism
+            // Sort by history index if available, else by timestamp
             const sortedCommits = Array.from(commitMap.values()).sort((a, b) => {
-                if (a.date !== b.date) return a.date - b.date;
-                return a.sha.localeCompare(b.sha);
+                const idxA = history.indexOf(a.sha);
+                const idxB = history.indexOf(b.sha);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                return a.date - b.date;
             });
             const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
 
-            // Unique Release Markers (Improved)
+            // Unique Release Markers (using history index)
             const releaseAnnotations = [];
-            const markedVersions = new Set();
             let v030Sha = null;
 
-            sortedCommits.forEach((c) => {
-                // Look for release patterns like "release: v0.3.0" or "Prep v0.2.0"
-                const releaseMatch = c.msg.match(/v\d+\.\d+\.\d+/);
-                if (releaseMatch) {
-                    const version = releaseMatch[0];
-                    if (version === 'v0.3.0') v030Sha = c.sha;
+            history.forEach((sha, idx) => {
+                if (tagMap[sha]) {
+                    const version = tagMap[sha];
+                    if (version === 'v0.3.0') v030Sha = sha;
                     
-                    if (!markedVersions.has(version)) {
-                        markedVersions.add(version);
-                        releaseAnnotations.push({
-                            x: c.shortSha,
-                            borderColor: '#fbc929',
-                            label: {
-                                style: { color: '#fff', background: '#fbc929' },
-                                text: version
-                            }
-                        });
-                    }
+                    releaseAnnotations.push({
+                        x: idx,
+                        borderColor: '#fbc929',
+                        label: {
+                            style: { color: '#fff', background: '#fbc929' },
+                            text: version
+                        }
+                    });
                 }
             });
             const baselineSha = v030Sha || sortedCommits[0]?.sha;
             
             console.log('Lodum Dashboard: Initialized.');
-            console.log(' - Total Unique Commits:', sortedCommits.length);
+            console.log(' - Total History Commits:', history.length);
+            console.log(' - Benchmark Points:', sortedCommits.length);
             console.log(' - Latest SHA:', latestSha);
             console.log(' - Baseline SHA:', baselineSha);
 
@@ -335,7 +328,6 @@
                 return bench ? bench.value : null;
             };
 
-            // Helper to find the latest available value for a metric
             const getLatestVal = (suitePattern, benchPattern) => {
                 for (let i = sortedCommits.length - 1; i >= 0; i--) {
                     const val = getVal(suitePattern, benchPattern, sortedCommits[i].sha);
@@ -343,8 +335,6 @@
                 }
                 return null;
             };
-
-            const baselineShaFinal = baselineSha;
 
             // 2. Heatmap Generation
             const heatmapGrid = document.getElementById('regression-heatmap');
@@ -359,7 +349,7 @@
                 scenarios.forEach(s => {
                     const benchName = `JSON Serialization Lodum ${s}`;
                     const current = getLatestVal(p.id, benchName);
-                    const base = getVal(p.id, benchName, baselineShaFinal);
+                    const base = getVal(p.id, benchName, baselineSha);
                     
                     let delta = 0;
                     let colorClass = 'cell-neutral';
@@ -377,11 +367,11 @@
                 });
             });
 
-            // 3. Actionable Advice (Based on latest available complex data)
+            // 3. Actionable Advice
             const healthTitle = document.getElementById('health-title');
             const healthAdvice = document.getElementById('health-advice');
             const currentComplex = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum complex');
-            const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineShaFinal);
+            const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineSha);
             const latestDelta = (currentComplex && baseComplex) ? ((currentComplex / baseComplex) - 1) * 100 : 0;
 
             if (latestDelta > 50) {
@@ -424,16 +414,14 @@
             const updateTrendCharts = (scenario) => {
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
-                // Show all commits that have data for at least ONE platform, or are recent
-                const activeCategories = sortedCommits.filter((c, idx) => {
-                    const hasAny = envs.some(env => getVal(env.id, benchName, c.sha) !== null);
-                    const isRecent = idx > sortedCommits.length - 20;
-                    return hasAny || isRecent;
-                });
-
                 const series = [];
                 envs.forEach(env => {
-                    const data = activeCategories.map(c => getVal(env.id, benchName, c.sha));
+                    const data = sortedCommits.map(c => {
+                        const x = history.indexOf(c.sha);
+                        const y = getVal(env.id, benchName, c.sha);
+                        return x !== -1 ? [x, y] : null;
+                    }).filter(p => p !== null);
+
                     series.push({
                         name: `Lodum (${env.label})`,
                         data: data,
@@ -450,14 +438,38 @@
                     chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false } },
                     stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray) },
                     markers: { size: 4 },
-                    annotations: { xaxis: releaseAnnotations.filter(a => activeCategories.some(c => c.shortSha === a.x)) },
+                    annotations: { xaxis: releaseAnnotations },
                     xaxis: { 
-                        type: 'category',
-                        categories: activeCategories.map(c => c.shortSha),
-                        labels: { show: true, rotate: -45, maxHeight: 60 }
+                        type: 'numeric',
+                        min: 0,
+                        max: history.length - 1,
+                        tickAmount: 10,
+                        labels: { 
+                            show: true, 
+                            rotate: -45, 
+                            maxHeight: 60,
+                            formatter: (val) => {
+                                const idx = Math.round(val);
+                                if (idx < 0 || idx >= history.length) return "";
+                                const sha = history[idx];
+                                return tagMap[sha] || sha.substring(0, 7);
+                            }
+                        }
                     },
                     yaxis: { title: { text: 'Execution Time (us)' } },
-                    tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } },
+                    tooltip: { 
+                        shared: true, 
+                        x: { 
+                            formatter: (val) => {
+                                const idx = Math.round(val);
+                                if (idx < 0 || idx >= history.length) return "Unknown";
+                                const sha = history[idx];
+                                const c = commitMap.get(sha);
+                                return (tagMap[sha] ? `[${tagMap[sha]}] ` : "") + sha.substring(0, 7) + (c ? ": " + c.msg.substring(0, 50) : "");
+                            }
+                        },
+                        y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } 
+                    },
                     grid: { padding: { left: 30, right: 30 } },
                     noData: { text: 'Loading benchmark data...' }
                 };
@@ -466,9 +478,9 @@
 
                 const brushOptions = {
                     series: series,
-                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, activeCategories.length - 15), max: activeCategories.length - 1 } } },
+                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, history.length - 50), max: history.length - 1 } } },
                     colors: series.map(s => s.color),
-                    xaxis: { type: 'category', categories: activeCategories.map(c => c.shortSha), labels: { show: false } },
+                    xaxis: { type: 'numeric', min: 0, max: history.length - 1, labels: { show: false } },
                     yaxis: { labels: { show: false } },
                     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } }
                 };
