@@ -122,19 +122,21 @@
 
         .chart-card {
             background: var(--card-bg);
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             margin-bottom: 30px;
+            border: 1px solid #f3f4f6;
         }
 
         .chart-title {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            color: #374151;
         }
 
         .legend-indicator {
@@ -412,20 +414,41 @@
                 healthAdvice.textContent = "Performance is within nominal ranges compared to v0.3.0.";
             }
 
-            // 4. Efficiency Frontier
+            // 4. Efficiency Frontier (Evolution Path)
+            const frontierData = sortedCommits.map(c => {
+                const time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha) || getVal('ubuntu-latest', 'load_stream) Time', c.sha);
+                const mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha) || getVal('ubuntu-latest', 'load_stream) Memory', c.sha);
+                return (time !== null && mem !== null) ? { x: time, y: mem, sha: c.sha, shortSha: c.shortSha } : null;
+            }).filter(p => p !== null);
+
             const frontierOptions = {
                 series: [{
-                    name: 'Commits',
-                    data: sortedCommits.map(c => {
-                        const time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha) || getVal('ubuntu-latest', 'load_stream) Time', c.sha);
-                        const mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha) || getVal('ubuntu-latest', 'load_stream) Memory', c.sha);
-                        return (time !== null && mem !== null) ? [time, mem] : null;
-                    }).filter(p => p !== null)
+                    name: 'Evolution Path',
+                    data: frontierData.map(p => ({ x: p.x, y: p.y }))
                 }],
-                chart: { type: 'scatter', height: 250, toolbar: { show: false } },
-                xaxis: { title: { text: 'Time (s)' }, labels: { formatter: v => v.toFixed(1) + 's' } },
-                yaxis: { title: { text: 'Memory (MB)' } },
-                colors: ['#fbc929'],
+                chart: { type: 'line', height: 250, toolbar: { show: false } },
+                stroke: { width: 2, curve: 'straight', dashArray: 0 },
+                markers: { 
+                    size: frontierData.map(p => tagMap[p.sha] ? 6 : 3),
+                    colors: frontierData.map(p => tagMap[p.sha] ? '#fbc929' : '#d1d5db'),
+                    strokeWidth: 0
+                },
+                xaxis: { 
+                    title: { text: 'Time (s)', style: { color: '#6b7280', fontSize: '10px' } },
+                    labels: { style: { fontSize: '10px' }, formatter: v => v.toFixed(1) + 's' } 
+                },
+                yaxis: { 
+                    title: { text: 'Memory (MB)', style: { color: '#6b7280', fontSize: '10px' } },
+                    labels: { style: { fontSize: '10px' } } 
+                },
+                colors: ['#e5e7eb'], // Path color is subtle
+                tooltip: {
+                    custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                        const p = frontierData[dataPointIndex];
+                        const tag = tagMap[p.sha] ? `<b style="color:#fbc929">[${tagMap[p.sha]}]</b> ` : '';
+                        return `<div style="padding:10px; font-size:12px;">${tag}${p.shortSha}<br/>Time: ${p.x.toFixed(2)}s<br/>Memory: ${p.y.toFixed(1)}MB</div>`;
+                    }
+                },
                 noData: { text: 'No streaming data available' }
             };
             new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions).render();

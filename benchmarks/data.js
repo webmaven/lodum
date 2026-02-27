@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772187222685,
+  "lastUpdate": 1772202965337,
   "repoUrl": "https://github.com/webmaven/lodum",
   "entries": {
     "Lodum Performance Index - ubuntu-latest": [
@@ -68601,7 +68601,8 @@ window.BENCHMARK_DATA = {
     "0f2a9d761381002cc4604805d360c157e4b1dbd4",
     "b540077ec27514b180acb0070d7cf9712d5bc900",
     "d157b6a93c5c1338ca7f70ecfb36c7da101a5de9",
-    "d9a44a9caf30b4d438c2abbf3eb33bd4ac18b877"
+    "d9a44a9caf30b4d438c2abbf3eb33bd4ac18b877",
+    "1bdb5adfc47e2ae3621576813688d07e5448ecc5"
   ],
   "tags": {
     "9265587501b6597cd995730e37fc95f64ddca79f": "v0.1.0",
