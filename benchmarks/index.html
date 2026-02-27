@@ -8,161 +8,202 @@
     <style>
         :root {
             --lodum-yellow: #fbc929;
-            --lodum-yellow-dark: #d9a300;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --bg-main: #ffffff;
-            --bg-muted: #f9fafb;
-            --border-color: #e5e7eb;
+            --marshmallow-gray: #505256;
+            --pydantic-blue: #4f46e5;
             --linux-color: #fbc929;
             --windows-color: #3b82f6;
             --pyodide-color: #10b981;
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-color: #111827;
         }
 
         body {
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
-            padding: 40px 20px;
-            line-height: 1.5;
+            padding: 20px;
         }
 
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
         header {
-            border-bottom: 2px solid var(--lodum-yellow);
-            padding-bottom: 20px;
-            margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
+            margin-bottom: 30px;
         }
 
-        h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.025em; }
-        
-        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 5px; }
+        h1 { margin: 0; font-size: 1.8rem; }
 
-        .card {
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .kpi-grid {
+        .kpi-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
 
-        .kpi-card {
-            border-left: 4px solid var(--lodum-yellow);
-            padding: 15px 20px;
-            background: var(--bg-muted);
-            border-radius: 0 12px 12px 0;
-        }
-
-        .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
-        .kpi-label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-
-        .glossary {
-            font-size: 0.9rem;
-            color: var(--text-main);
-            background: var(--bg-muted);
-            padding: 30px;
+        .health-card {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            padding: 20px;
             border-radius: 12px;
-            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
         }
 
-        .glossary h3 { margin-top: 0; font-size: 1.1rem; }
-        .glossary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        
-        .metric-def { margin-bottom: 15px; }
-        .metric-name { font-weight: 700; color: var(--lodum-yellow-dark); }
-        .metric-direction { font-style: italic; color: var(--text-muted); font-size: 0.8rem; }
+        .health-icon { font-size: 1.5rem; }
+        .health-content h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #92400e; }
+        .health-content p { margin: 0; font-size: 0.95rem; color: #b45309; line-height: 1.5; }
+
+        .heatmap-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .heatmap-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
 
         .heatmap-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .heatmap-cell {
-            padding: 12px;
+            padding: 15px 10px;
             border-radius: 8px;
             text-align: center;
-            font-size: 0.8rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .cell-label { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
-        .cell-value { font-weight: 800; font-size: 1rem; }
-
-        .cell-good { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-        .cell-warn { background: #fffbeb; color: #92400e; border-color: #fde68a; }
-        .cell-bad { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
-        .cell-neutral { background: var(--bg-muted); color: var(--text-muted); }
-
-        .tag-badge {
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: #eee;
-            color: #666;
+            font-size: 0.85rem;
             font-weight: 600;
         }
 
-        .grid-6-4 { display: grid; grid-template-columns: 6fr 4fr; gap: 24px; }
-        
-        @media (max-width: 900px) {
-            .grid-6-4, .glossary-grid { grid-template-columns: 1fr; }
+        .heatmap-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 4px; display: block; }
+
+        .cell-good { background: #ecfdf5; color: #065f46; }
+        .cell-neutral { background: #f9fafb; color: #374151; }
+        .cell-warn { background: #fffbeb; color: #92400e; }
+        .cell-bad { background: #fef2f2; color: #991b1b; }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--lodum-yellow);
+            margin: 10px 0;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border: 1px solid #f3f4f6;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #374151;
+        }
+
+        .legend-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
         }
 
         select {
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 6px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #d1d5db;
             background: white;
-            font-weight: 600;
+            font-size: 0.9rem;
         }
-
-        .custom-tooltip {
-            padding: 15px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            max-width: 300px;
-        }
-        .tooltip-sha { font-weight: 800; color: var(--lodum-yellow-dark); margin-bottom: 5px; display: block; }
-        .tooltip-msg { font-size: 0.85rem; color: var(--text-main); margin-bottom: 10px; white-space: normal; }
-        .tooltip-meta { font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid #eee; padding-top: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div>
-                <h1>Lodum Performance Index</h1>
-                <div class="subtitle">Continuous benchmarking for the high-performance Python serialization framework.</div>
-            </div>
-            <div style="text-align: right;">
-                <span class="tag-badge">v0.4.0-dev</span><br/>
-                <a href="https://github.com/webmaven/lodum" style="font-size: 0.85rem; color: var(--text-muted);">View Repository</a><br/>
-                <span id="last-updated" style="font-size: 0.75rem; color: var(--text-muted);"></span>
+            <h1>Lodum Performance Index</h1>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <span id="latest-version" style="font-size: 0.9rem; color: #6b7280; background: #eee; padding: 4px 10px; border-radius: 20px;">v0.4.0-dev</span>
+                <a href="https://github.com/webmaven/lodum" id="repository-link" style="text-decoration: none; color: #6b7280;">View on GitHub</a>
             </div>
         </header>
 
-        <div class="kpi-grid">
+        <div class="health-card" id="health-card">
+            <div class="health-icon">💡</div>
+            <div class="health-content">
+                <h3 id="health-title">Analyzing Performance Health...</h3>
+                <p id="health-advice">Comparing latest commit against v0.3.0 baseline to identify optimization opportunities.</p>
+            </div>
+        </div>
+
+        <div class="heatmap-container">
+            <div class="heatmap-card">
+                <div class="chart-title">Regression Heatmap (vs v0.3.0)</div>
+                <div class="heatmap-grid" id="regression-heatmap">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+            <div class="heatmap-card">
+                <div class="chart-title">Efficiency Frontier (Time vs Memory)</div>
+                <div id="frontier-chart"></div>
+            </div>
+        </div>
+
+        <div class="kpi-container" id="kpi-container">
             <div class="kpi-card">
                 <div class="kpi-label">Speedup vs Marshmallow</div>
                 <div class="kpi-value" id="kpi-speedup">--</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">Mem. Reduction (Streaming)</div>
+                <div class="kpi-label">Streaming Memory Reduction</div>
                 <div class="kpi-value" id="kpi-memory">--</div>
             </div>
             <div class="kpi-card">
@@ -170,74 +211,39 @@
                 <div class="kpi-value" id="kpi-wasm">--</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">XL Throughput (JSON)</div>
+                <div class="kpi-label">XL Throughput</div>
                 <div class="kpi-value" id="kpi-throughput">--</div>
             </div>
         </div>
 
-        <div class="grid-6-4">
-            <div class="card">
-                <div class="chart-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div style="font-weight: 700;">Serialization Latency (JSON)</div>
+        <div class="chart-card">
+            <div class="chart-title">
+                <div>
+                    JSON Serialization Performance 
                     <select id="scenario-selector">
-                        <option value="simple">Simple Scenario</option>
-                        <option value="complex">Complex Scenario</option>
-                        <option value="nested">Nested Scenario</option>
+                        <option value="simple">Simple</option>
+                        <option value="complex">Complex</option>
+                        <option value="nested">Nested</option>
                     </select>
                 </div>
-                <div id="main-chart"></div>
-                <div id="brush-chart"></div>
-            </div>
-            <div class="card">
-                <div style="font-weight: 700; margin-bottom: 20px;">Evolution Path (Efficiency Frontier)</div>
-                <div id="frontier-chart"></div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                    This chart maps the project's journey through the Time/Memory trade-off space. 
-                    <b>Interactive:</b> Hover over points to highlight the corresponding commit in the latency chart.
+                <div style="font-size: 0.8rem; font-weight: normal; color: #6b7280;">
+                    <span class="legend-indicator" style="background: var(--linux-color)"></span> Linux
+                    <span class="legend-indicator" style="background: var(--windows-color)"></span> Windows
+                    <span class="legend-indicator" style="background: var(--pyodide-color)"></span> WASM
                 </div>
             </div>
+            <div id="main-chart"></div>
+            <div id="brush-chart"></div>
         </div>
 
-        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-            <div class="card">
-                <div style="font-weight: 700; margin-bottom: 20px;">Binary Format Comparison (HEAD)</div>
-                <div id="format-chart"></div>
+        <div class="grid-2">
+            <div class="chart-card">
+                <div class="chart-title">XL Streaming Efficiency (Time vs Memory)</div>
+                <div id="streaming-chart"></div>
             </div>
-            <div class="card">
-                <div style="font-weight: 700; margin-bottom: 20px;">Regression Heatmap (vs v0.3.0)</div>
-                <div class="heatmap-grid" id="regression-heatmap"></div>
-            </div>
-        </div>
-
-        <div class="glossary">
-            <h3>Methodology & Data Glossary</h3>
-            <p>We measure serialization performance across multiple dimensions to ensure that improvements in speed do not come at the cost of memory efficiency or cold-start latency.</p>
-            
-            <div class="glossary-grid">
-                <div>
-                    <h4>1. Latency & Throughput</h4>
-                    <div class="metric-def">
-                        <span class="metric-name">Serialization Latency</span> <span class="metric-direction">(Lower is Better)</span>
-                        <div>Time taken to convert a Python object graph into a byte or string representation. Measured in microseconds (µs) per operation.</div>
-                    </div>
-                    <div class="metric-def">
-                        <span class="metric-name">XL Throughput</span> <span class="metric-direction">(Higher is Better)</span>
-                        <div>Processing speed when handling extremely large datasets (500,000 objects). Measured in Megabytes per second (MB/s).</div>
-                    </div>
-                </div>
-                <div>
-                    <h4>2. Memory & Efficiency</h4>
-                    <div class="metric-def">
-                        <span class="metric-name">Peak Memory Usage</span> <span class="metric-direction">(Lower is Better)</span>
-                        <div>Maximum RAM consumed during serialization. <b>Streaming mode</b> targets O(1) memory usage regardless of dataset size.</div>
-                    </div>
-                    <h4>3. Data Scenarios</h4>
-                    <ul style="padding-left: 20px;">
-                        <li><b>Simple:</b> Flat objects with primitive types.</li>
-                        <li><b>Complex:</b> Objects with nested lists, maps, enums, and dates.</li>
-                        <li><b>Nested:</b> Multi-level recursive hierarchies.</li>
-                    </ul>
-                </div>
+            <div class="chart-card">
+                <div class="chart-title">Compiler Overhead (Cold Start)</div>
+                <div id="cold-start-chart"></div>
             </div>
         </div>
     </div>
@@ -252,12 +258,18 @@
             const history = rawData.history || [];
             const tagMap = rawData.tags || {};
             
-            // 1. Data Transformation
+            // 1. Data Transformation (Group by FULL SHA)
             const commitMap = new Map();
             Object.entries(suites).forEach(([suiteName, points]) => {
                 points.forEach(p => {
-                    const sha = p.commit.id;
-                    if (!sha || (history.length > 0 && !history.includes(sha))) return;
+                    const sha = p.commit.id; // Full 40-char SHA
+                    if (!sha) return;
+
+                    // Filter: Only include commits that are in the captured history
+                    if (history.length > 0 && !history.includes(sha)) {
+                        console.log(`Skipping unreachable commit: ${sha.substring(0,7)}`);
+                        return;
+                    }
 
                     const timestamp = p.commit.timestamp ? Date.parse(p.commit.timestamp) : p.date;
                     
@@ -267,7 +279,7 @@
                             shortSha: sha.substring(0, 7),
                             date: timestamp, 
                             msg: p.commit.message || "",
-                            data: {}
+                            data: {} // suiteName -> point
                         });
                     }
                     
@@ -278,6 +290,7 @@
                 });
             });
 
+            // Sort by history index if available, else by timestamp
             const sortedCommits = Array.from(commitMap.values()).sort((a, b) => {
                 const idxA = history.indexOf(a.sha);
                 const idxB = history.indexOf(b.sha);
@@ -286,9 +299,11 @@
             });
             const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
 
-            // Resolve Release Markers
+            // Unique Release Markers (using history index)
             const releaseAnnotations = [];
             let v030Sha = null;
+
+            // 1. Check tags from data.js
             Object.entries(tagMap).forEach(([sha, version]) => {
                 const idx = history.indexOf(sha);
                 if (idx !== -1) {
@@ -297,19 +312,40 @@
                         x: idx,
                         borderColor: '#fbc929',
                         label: {
-                            style: { color: '#fff', background: '#fbc929', fontWeight: 700 },
+                            style: { color: '#fff', background: '#fbc929' },
                             text: version
                         }
                     });
                 }
             });
-            const baselineSha = v030Sha || sortedCommits[0]?.sha;
 
-            // Populate metadata
-            if (rawData.lastUpdate) {
-                const date = new Date(rawData.lastUpdate);
-                document.getElementById('last-updated').textContent = `Sync: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+            // 2. Fallback: Search messages if tags aren't mapped
+            if (releaseAnnotations.length === 0) {
+                sortedCommits.forEach((c) => {
+                    const releaseMatch = c.msg.match(/v\d+\.\d+\.\d+/);
+                    if (releaseMatch) {
+                        const version = releaseMatch[0];
+                        const idx = history.indexOf(c.sha);
+                        if (idx !== -1) {
+                            releaseAnnotations.push({
+                                x: idx,
+                                borderColor: '#fbc929',
+                                label: {
+                                    style: { color: '#fff', background: '#fbc929' },
+                                    text: version
+                                }
+                            });
+                        }
+                    }
+                });
             }
+            const baselineSha = v030Sha || sortedCommits[0]?.sha;
+            
+            console.log('Lodum Dashboard: Initialized.');
+            console.log(' - Total History Commits:', history.length);
+            console.log(' - Benchmark Points:', sortedCommits.length);
+            console.log(' - Latest SHA:', latestSha);
+            console.log(' - Baseline SHA:', baselineSha);
 
             const getVal = (suitePattern, benchPattern, sha) => {
                 const c = commitMap.get(sha);
@@ -317,7 +353,7 @@
                 const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(suitePattern.toLowerCase()));
                 if (!suiteKey) return null;
                 const point = c.data[suiteKey];
-                const bench = point.benches.find(b => b.name.toLowerCase().includes(benchPattern.toLowerCase()));
+                const bench = point.benches.find(b => b.name.includes(benchPattern));
                 return bench ? bench.value : null;
             };
 
@@ -355,60 +391,70 @@
 
                     const cell = document.createElement('div');
                     cell.className = `heatmap-cell ${colorClass}`;
-                    cell.innerHTML = `<span class="cell-label">${p.label} / ${s}</span><span class="cell-value">${current ? (delta > 0 ? '+' : '') + delta.toFixed(0) + '%' : 'N/A'}</span>`;
+                    cell.innerHTML = `<span class="heatmap-label">${p.label} ${s}</span>${current ? (delta > 0 ? '+' : '') + delta.toFixed(0) + '%' : 'N/A'}`;
                     heatmapGrid.appendChild(cell);
                 });
             });
 
-            // 3. Efficiency Frontier (Evolution Path)
+            // 3. Actionable Advice
+            const healthTitle = document.getElementById('health-title');
+            const healthAdvice = document.getElementById('health-advice');
+            const currentComplex = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum complex');
+            const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineSha);
+            const latestDelta = (currentComplex && baseComplex) ? ((currentComplex / baseComplex) - 1) * 100 : 0;
+
+            if (latestDelta > 50) {
+                healthTitle.textContent = "Critical Regression Detected";
+                healthAdvice.textContent = "Significant overhead detected. Priority: Wrap __init__ to resolve Field defaults and implement an AST Recursion Helper.";
+            } else if (latestDelta > 10) {
+                healthTitle.textContent = "Performance Warning";
+                healthAdvice.textContent = "Minor slowdowns detected. Consider optimizing the list_item dispatch loop.";
+            } else {
+                healthTitle.textContent = "System Healthy";
+                healthAdvice.textContent = "Performance is within nominal ranges compared to v0.3.0.";
+            }
+
+            // 4. Efficiency Frontier (Evolution Path)
             const frontierData = sortedCommits.map(c => {
-                const time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha);
-                const mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha);
+                const time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha) || getVal('ubuntu-latest', 'load_stream) Time', c.sha);
+                const mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha) || getVal('ubuntu-latest', 'load_stream) Memory', c.sha);
                 return (time !== null && mem !== null) ? { x: time, y: mem, sha: c.sha, shortSha: c.shortSha } : null;
             }).filter(p => p !== null);
 
-            let frontierChart, mainChart;
-
             const frontierOptions = {
-                series: [{ name: 'Evolution Path', data: frontierData.map(p => ({ x: p.x, y: p.y })) }],
-                chart: { 
-                    type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
-                    events: {
-                        dataPointMouseEnter: (event, chartContext, config) => {
-                            const p = frontierData[config.dataPointIndex];
-                            if (mainChart) mainChart.addXaxisAnnotation({
-                                x: history.indexOf(p.sha),
-                                borderColor: '#ef4444',
-                                strokeDashArray: 0,
-                                label: { style: { color: '#fff', background: '#ef4444' }, text: 'Linked' }
-                            });
-                        },
-                        dataPointMouseLeave: () => { if (mainChart) mainChart.clearAnnotations(); }
-                    }
-                },
+                series: [{
+                    name: 'Evolution Path',
+                    data: frontierData.map(p => ({ x: p.x, y: p.y }))
+                }],
+                chart: { type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false } },
                 stroke: { width: 2, curve: 'straight', colors: ['#d1d5db'] },
                 markers: { 
-                    size: frontierData.map((p, i) => (tagMap[p.sha] || i === frontierData.length - 1) ? 6 : 4),
-                    colors: frontierData.map((p, i) => tagMap[p.sha] ? '#fbc929' : (i === frontierData.length - 1 ? '#ef4444' : `rgba(156, 163, 175, ${0.4 + (i / frontierData.length) * 0.6})`)),
+                    size: 4,
+                    colors: ['#fbc929'],
                     strokeWidth: 0,
                     hover: { size: 8 }
                 },
                 xaxis: { 
                     title: { text: 'Time (s) →', style: { color: '#9ca3af', fontSize: '10px' } },
                     labels: { style: { fontSize: '10px' }, formatter: v => v ? v.toFixed(1) + 's' : '' },
-                    axisBorder: { show: false }
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
                 },
                 yaxis: { 
                     title: { text: 'Memory (MB) →', style: { color: '#9ca3af', fontSize: '10px' } },
                     labels: { style: { fontSize: '10px' } },
-                    axisBorder: { show: false }
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
                 },
                 grid: { show: false },
                 annotations: {
                     points: frontierData.map(p => tagMap[p.sha] ? {
-                        x: p.x, y: p.y, marker: { size: 0 },
+                        x: p.x,
+                        y: p.y,
+                        marker: { size: 6, fillColor: '#fbc929', strokeWidth: 0 },
                         label: {
-                            borderColor: 'transparent', offsetY: -10,
+                            borderColor: 'transparent',
+                            offsetY: -10,
                             style: { color: '#374151', background: 'rgba(255,255,255,0.8)', fontSize: '10px', fontWeight: 700 },
                             text: tagMap[p.sha]
                         }
@@ -417,15 +463,14 @@
                 tooltip: {
                     custom: function({ series, seriesIndex, dataPointIndex, w }) {
                         const p = frontierData[dataPointIndex];
-                        const tag = tagMap[p.sha] ? `<span class="tag-badge" style="background:#fbc929; color:#fff;">${tagMap[p.sha]}</span> ` : '';
+                        const tag = tagMap[p.sha] ? `<b style="color:#fbc929">[${tagMap[p.sha]}]</b> ` : '';
                         const isLatest = dataPointIndex === frontierData.length - 1 ? ' <span style="color:#ef4444">(Latest)</span>' : '';
-                        return `<div class="custom-tooltip"><span class="tooltip-sha">${p.shortSha}${isLatest}</span><div class="tooltip-msg">${tag}Efficiency: ${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div></div>`;
+                        return `<div style="padding:8px; font-size:11px; background:#fff; border:1px solid #e5e7eb; border-radius:4px;">${tag}${p.shortSha}${isLatest}<br/>${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div>`;
                     }
                 },
                 noData: { text: 'No streaming data available' }
             };
-            frontierChart = new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions);
-            frontierChart.render();
+            new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions).render();
 
             const envs = [
                 { id: 'ubuntu-latest', label: 'Linux', color: '#fbc929', dash: 0 },
@@ -433,10 +478,11 @@
                 { id: 'Pyodide', label: 'WASM', color: '#10b981', dash: 2 }
             ];
 
-            let brushChart;
+            let mainChart, brushChart;
 
             const updateTrendCharts = (scenario) => {
                 const benchName = `JSON Serialization Lodum ${scenario}`;
+                
                 const series = [];
                 envs.forEach(env => {
                     const data = sortedCommits.map(c => {
@@ -445,7 +491,12 @@
                         return x !== -1 ? [x, y] : null;
                     }).filter(p => p !== null);
 
-                    series.push({ name: `Lodum (${env.label})`, data: data, color: env.color, dashArray: env.dash });
+                    series.push({
+                        name: `Lodum (${env.label})`,
+                        data: data,
+                        color: env.color,
+                        dashArray: env.dash
+                    });
                 });
 
                 if (mainChart) mainChart.destroy();
@@ -453,27 +504,19 @@
 
                 const mainOptions = {
                     series: series,
-                    chart: { 
-                        id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false },
-                        events: {
-                            dataPointMouseEnter: (event, chartContext, config) => {
-                                const sha = history[config.dataPointIndex];
-                                const fPoint = frontierData.find(p => p.sha === sha);
-                                if (fPoint && frontierChart) frontierChart.addPointAnnotation({
-                                    x: fPoint.x, y: fPoint.y, marker: { size: 10, fillColor: '#ef4444', strokeWidth: 0 },
-                                    label: { style: { color: '#fff', background: '#ef4444' }, text: 'Linked' }
-                                });
-                            },
-                            dataPointMouseLeave: () => { if (frontierChart) frontierChart.clearAnnotations(); }
-                        }
-                    },
+                    chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false } },
                     stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray), connectNulls: true },
                     markers: { size: 4 },
                     annotations: { xaxis: releaseAnnotations },
                     xaxis: { 
-                        type: 'numeric', min: 0, max: history.length - 1, tickAmount: 10,
+                        type: 'numeric',
+                        min: 0,
+                        max: history.length - 1,
+                        tickAmount: 10,
                         labels: { 
-                            show: true, rotate: -45, maxHeight: 60,
+                            show: true, 
+                            rotate: -45, 
+                            maxHeight: 60,
                             formatter: (val) => {
                                 const idx = Math.round(val);
                                 if (idx < 0 || idx >= history.length) return "";
@@ -482,24 +525,21 @@
                             }
                         }
                     },
-                    yaxis: { title: { text: 'Execution Time (us) →', style: { color: '#9ca3af', fontSize: '10px' } } },
+                    yaxis: { title: { text: 'Execution Time (us)' } },
                     tooltip: { 
                         shared: true, 
-                        custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                            const sha = history[dataPointIndex];
-                            const c = commitMap.get(sha);
-                            const tag = tagMap[sha] ? `<span class="tag-badge" style="background:#fbc929; color:#fff;">${tagMap[sha]}</span> ` : '';
-                            let content = `<div class="custom-tooltip"><span class="tooltip-sha">${sha.substring(0,7)}</span><div class="tooltip-msg">${tag}${c ? c.msg : ""}</div><div class="tooltip-meta">`;
-                            series.forEach((s, i) => {
-                                if (s[dataPointIndex] !== null) {
-                                    content += `<span style="color:${w.config.series[i].color}">●</span> ${w.config.series[i].name}: <b>${s[dataPointIndex].toFixed(2)}µs</b><br/>`;
-                                }
-                            });
-                            content += `</div></div>`;
-                            return content;
-                        }
+                        x: { 
+                            formatter: (val) => {
+                                const idx = Math.round(val);
+                                if (idx < 0 || idx >= history.length) return "Unknown";
+                                const sha = history[idx];
+                                const c = commitMap.get(sha);
+                                return (tagMap[sha] ? `[${tagMap[sha]}] ` : "") + sha.substring(0, 7) + (c ? ": " + c.msg.substring(0, 50) : "");
+                            }
+                        },
+                        y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } 
                     },
-                    grid: { borderColor: '#f3f4f6' },
+                    grid: { padding: { left: 30, right: 30 } },
                     noData: { text: 'Loading benchmark data...' }
                 };
                 mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
@@ -507,7 +547,7 @@
 
                 const brushOptions = {
                     series: series,
-                    chart: { id: 'brush-trend', height: 100, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, history.length - 10), max: history.length - 1 } } },
+                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, history.length - 50), max: history.length - 1 } } },
                     stroke: { connectNulls: true },
                     colors: series.map(s => s.color),
                     xaxis: { type: 'numeric', min: 0, max: history.length - 1, labels: { show: false } },
@@ -518,58 +558,58 @@
                 brushChart.render();
             };
 
+            // Initial render
             updateTrendCharts('simple');
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
-            // 4. Binary Format Comparison
-            const latestPoint = commitMap.get(latestSha);
-            if (latestPoint) {
-                const formats = [
-                    { name: 'JSON', pattern: 'JSON Serialization Lodum complex' },
-                    { name: 'MsgPack', pattern: 'MsgPack Serialization Lodum complex' },
-                    { name: 'CBOR', pattern: 'CBOR Serialization Lodum complex' },
-                    { name: 'Pickle', pattern: 'Pickle Serialization Lodum (Safe) complex' }
-                ];
-                const formatData = formats.map(f => {
-                    const b = latestPoint.data['Lodum Performance Index - ubuntu-latest'].benches.find(b => b.name.includes(f.pattern));
-                    return b ? b.value : 0;
-                });
-
-                const formatOptions = {
-                    series: [{ name: 'Latency (us)', data: formatData }],
-                    chart: { type: 'bar', height: 250, toolbar: { show: false } },
-                    plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true } },
-                    colors: ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'],
-                    xaxis: { categories: formats.map(f => f.name), labels: { style: { fontSize: '10px' } } },
-                    legend: { show: false },
-                    tooltip: { y: { formatter: v => v.toFixed(2) + ' µs' } }
-                };
-                new ApexCharts(document.querySelector("#format-chart"), formatOptions).render();
-            }
-
-            // 5. Calculate Summary KPIs
+            // 5. Calculate Summary KPIs (Latest available)
             const getKPI = (id, text) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = text;
             };
 
-            try {
-                const lodumVal = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple');
-                const mmVal = getLatestVal('ubuntu-latest', 'Serialization Marshmallow simple');
-                if (lodumVal && mmVal) getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
+            const lodumVal = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple');
+            const mmVal = getLatestVal('ubuntu-latest', 'JSON Serialization Marshmallow simple');
+            if (lodumVal && mmVal) getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
 
-                const stdTime = getLatestVal('ubuntu-latest', 'Standard (loads) Time');
-                const streamTime = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Time');
-                const stdMem = getLatestVal('ubuntu-latest', 'Standard (loads) Memory');
-                const streamMem = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Memory');
+            const stdTime = getLatestVal('ubuntu-latest', 'Standard (loads) Time');
+            const streamTime = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Time');
+            const stdMem = getLatestVal('ubuntu-latest', 'Standard (loads) Memory');
+            const streamMem = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Memory');
 
-                if (stdMem && streamMem) getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
-                if (streamTime) getKPI('kpi-throughput', (45 / streamTime).toFixed(1) + ' MB/s');
+            if (stdMem && streamMem) getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
+            if (streamTime) getKPI('kpi-throughput', (45 / streamTime).toFixed(1) + ' MB/s');
 
-                const wasmVal = getLatestVal('Pyodide', 'JSON Serialization Lodum simple');
-                if (lodumVal && wasmVal) getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
-            } catch (e) {
-                console.error('Error calculating KPIs:', e);
+            const wasmVal = getLatestVal('Pyodide', 'JSON Serialization Lodum simple');
+            if (lodumVal && wasmVal) getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
+
+            // 6. Detailed Charts (Bottom Grid)
+            if (stdTime && streamTime) {
+                const streamOptions = {
+                    series: [
+                        { name: 'Time (s)', type: 'column', data: [stdTime, streamTime] },
+                        { name: 'Memory (MB)', type: 'line', data: [stdMem, streamMem] }
+                    ],
+                    chart: { height: 300, type: 'line', toolbar: { show: false } },
+                    stroke: { width: [0, 4] },
+                    colors: ['#d1d5db', '#fbc929'],
+                    labels: ['Standard loads', 'Streaming load_stream'],
+                    yaxis: [{ title: { text: 'Time (s)' } }, { opposite: true, title: { text: 'Memory (MB)' } }]
+                };
+                new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
+            }
+
+            const coldSimple = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple (Cold Start)');
+            const warmSimple = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple');
+            if (coldSimple && warmSimple) {
+                const coldOptions = {
+                    series: [{ name: 'Latency (us)', data: [coldSimple, warmSimple] }],
+                    chart: { type: 'bar', height: 300, toolbar: { show: false } },
+                    plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+                    colors: ['#fbc929'],
+                    xaxis: { categories: ['Cold Start (Compiling)', 'Warm Start (Steady State)'] }
+                };
+                new ApexCharts(document.querySelector("#cold-start-chart"), coldOptions).render();
             }
         });
     </script>
