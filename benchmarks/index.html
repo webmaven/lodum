@@ -426,27 +426,53 @@
                     name: 'Evolution Path',
                     data: frontierData.map(p => ({ x: p.x, y: p.y }))
                 }],
-                chart: { type: 'line', height: 250, toolbar: { show: false } },
-                stroke: { width: 2, curve: 'straight', dashArray: 0 },
+                chart: { type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false } },
+                stroke: { width: 2, curve: 'straight', colors: ['#d1d5db'] },
                 markers: { 
-                    size: frontierData.map(p => tagMap[p.sha] ? 6 : 3),
-                    colors: frontierData.map(p => tagMap[p.sha] ? '#fbc929' : '#d1d5db'),
-                    strokeWidth: 0
+                    size: frontierData.map((p, i) => {
+                        if (tagMap[p.sha]) return 8;
+                        if (i === frontierData.length - 1) return 6;
+                        return 3;
+                    }),
+                    colors: frontierData.map((p, i) => {
+                        if (tagMap[p.sha]) return '#fbc929';
+                        if (i === frontierData.length - 1) return '#ef4444'; // Latest is red
+                        return '#9ca3af';
+                    }),
+                    strokeWidth: 0,
+                    hover: { size: 10 }
                 },
                 xaxis: { 
-                    title: { text: 'Time (s)', style: { color: '#6b7280', fontSize: '10px' } },
-                    labels: { style: { fontSize: '10px' }, formatter: v => v.toFixed(1) + 's' } 
+                    title: { text: 'Time (s)', style: { color: '#9ca3af', fontSize: '10px', fontWeight: 400 } },
+                    labels: { style: { fontSize: '10px' }, formatter: v => v.toFixed(1) + 's' },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
                 },
                 yaxis: { 
-                    title: { text: 'Memory (MB)', style: { color: '#6b7280', fontSize: '10px' } },
-                    labels: { style: { fontSize: '10px' } } 
+                    title: { text: 'Memory (MB)', style: { color: '#9ca3af', fontSize: '10px', fontWeight: 400 } },
+                    labels: { style: { fontSize: '10px' } },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
                 },
-                colors: ['#e5e7eb'], // Path color is subtle
+                grid: { borderColor: '#f3f4f6', strokeDashArray: 4 },
+                annotations: {
+                    points: frontierData.map(p => tagMap[p.sha] ? {
+                        x: p.x,
+                        y: p.y,
+                        marker: { size: 0 },
+                        label: {
+                            borderColor: 'transparent',
+                            offsetY: -10,
+                            style: { color: '#374151', background: 'transparent', fontSize: '10px', fontWeight: 700 },
+                            text: tagMap[p.sha]
+                        }
+                    } : null).filter(a => a !== null)
+                },
                 tooltip: {
                     custom: function({ series, seriesIndex, dataPointIndex, w }) {
                         const p = frontierData[dataPointIndex];
                         const tag = tagMap[p.sha] ? `<b style="color:#fbc929">[${tagMap[p.sha]}]</b> ` : '';
-                        return `<div style="padding:10px; font-size:12px;">${tag}${p.shortSha}<br/>Time: ${p.x.toFixed(2)}s<br/>Memory: ${p.y.toFixed(1)}MB</div>`;
+                        return `<div style="padding:8px; font-size:11px; background:#fff; border:1px solid #e5e7eb; border-radius:4px;">${tag}${p.shortSha}<br/>${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div>`;
                     }
                 },
                 noData: { text: 'No streaming data available' }
