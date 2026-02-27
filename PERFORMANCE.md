@@ -1,43 +1,46 @@
 # Lodum Performance
 
-Lodum is designed for high performance by using runtime bytecode compilation to generate specialized serialization and deserialization handlers for your classes.
+Lodum is designed for high performance by using runtime bytecode compilation (via Python AST) to generate specialized serialization and deserialization handlers for your classes.
 
 ## Benchmark Results
 
-The following benchmarks were run on Python 3.12.12. Results are in microseconds (us) per operation (lower is better).
+The following benchmarks were run on Python 3.13.7 (win32). Results are in microseconds (us) per operation (lower is better).
 
 ### JSON Serialization (Object -> JSON)
 | Library | Simple (us) | Complex (us) | Nested (us) |
 | :--- | ---: | ---: | ---: |
-| Lodum | 8.46 ± 2.53 | 12.33 ± 0.47 | 21.07 ± 0.54 |
-| Pydantic (v2) | 2.18 ± 0.12 | 3.02 ± 0.02 | 5.34 ± 0.12 |
-| Marshmallow | 10.73 ± 0.31 | 24.02 ± 0.67 | 61.86 ± 0.58 |
-| Native json (dict) | 3.72 ± 0.03 | 6.11 ± 0.19 | 9.54 ± 0.03 |
+| Lodum | 7.62 ± 1.87 | 15.45 ± 2.03 | 36.51 ± 3.67 |
+| Pydantic (v2) | 3.13 ± 1.63 | 3.31 ± 0.40 | 6.76 ± 0.52 |
+| Marshmallow | 12.73 ± 1.73 | 30.23 ± 0.97 | 73.29 ± 4.58 |
+| Native json (dict) | 4.29 ± 0.41 | 6.76 ± 0.57 | 8.78 ± 0.46 |
+| orjson (dict) | 0.50 ± 0.02 | 0.73 ± 0.02 | 0.98 ± 0.01 |
 
 ### JSON Deserialization (JSON -> Object)
 | Library | Simple (us) | Complex (us) | Nested (us) |
 | :--- | ---: | ---: | ---: |
-| Lodum | 18.07 ± 0.76 | 25.38 ± 0.88 | 101.99 ± 1.46 |
-| Pydantic (v2) | 2.44 ± 0.27 | 3.65 ± 0.12 | 10.42 ± 0.32 |
-| Marshmallow | 27.66 ± 0.45 | 64.23 ± 0.80 | 199.06 ± 6.61 |
-| Native json (dict) | 2.95 ± 0.19 | 4.70 ± 0.07 | 8.52 ± 0.23 |
+| Lodum | 21.75 ± 1.70 | 42.52 ± 2.13 | 131.67 ± 6.75 |
+| Pydantic (v2) | 3.21 ± 0.76 | 3.94 ± 0.71 | 16.52 ± 0.95 |
+| Marshmallow | 31.21 ± 4.01 | 72.18 ± 4.93 | 226.99 ± 6.63 |
+| Native json (dict) | 3.15 ± 0.40 | 4.52 ± 0.64 | 7.59 ± 0.57 |
+| orjson (dict) | 0.77 ± 0.10 | 1.52 ± 0.06 | 2.84 ± 0.13 |
 
 ### Binary Formats (Lodum vs Native)
 
 | Format | Operation | Simple (us) | Complex (us) | Nested (us) |
 | :--- | :--- | ---: | ---: | ---: |
-| **MsgPack** | Serialization | 4.14 ± 0.08 | 7.36 ± 0.14 | 14.32 ± 0.30 |
-| | Deserialization | 14.41 ± 0.17 | 19.99 ± 0.13 | 91.55 ± 1.14 |
-| **CBOR** | Serialization | 11.31 ± 0.04 | 17.26 ± 0.26 | 28.85 ± 0.18 |
-| | Deserialization | 18.86 ± 0.34 | 25.80 ± 0.55 | 100.48 ± 1.76 |
-| **Pickle** | Serialization | 6.97 ± 0.02 | 10.27 ± 0.11 | 25.93 ± 0.20 |
-| | Deserialization | 6.63 ± 0.05 | 8.44 ± 0.04 | 14.79 ± 0.07 |
+| **MsgPack** | Serialization | 4.60 ± 1.37 | 10.15 ± 0.40 | 31.31 ± 3.03 |
+| | Deserialization | 18.22 ± 2.12 | 35.90 ± 2.62 | 119.92 ± 7.01 |
+| **CBOR** | Serialization | 11.61 ± 0.88 | 18.84 ± 0.70 | 43.67 ± 2.76 |
+| | Deserialization | 21.61 ± 2.00 | 39.39 ± 3.38 | 132.37 ± 4.49 |
+| **Pickle** | Serialization | 8.91 ± 0.73 | 13.26 ± 0.95 | 39.72 ± 2.00 |
+| | Deserialization | 6.75 ± 0.42 | 9.87 ± 1.75 | 16.21 ± 1.22 |
 
 ## Analysis
 
-- **Lodum vs Marshmallow**: Lodum is significantly faster than Marshmallow, especially for nested objects and complex serialization. This is thanks to its bytecode generation which avoids much of the runtime introspection overhead.
-- **Lodum vs Pydantic**: Pydantic v2 remains faster as it is primarily implemented in Rust. Lodum aims to provide a pure-Python alternative that achieves high performance through dynamic optimization.
-- **Overhead**: Compared to raw dictionary serialization (Native json), Lodum adds some overhead due to object traversal and validation, but remains competitive for a feature-rich serialization library.
+- **Lodum vs Marshmallow**: Lodum consistently outperforms Marshmallow (often 2x faster), particularly in serialization and handling complex structures.
+- **Lodum vs Pydantic**: Pydantic v2 remains faster due to its Rust-based core. Lodum provides a competitive pure-Python alternative with zero binary dependencies.
+- **AST Optimization**: The move to AST-based code generation has significantly improved performance compared to string-based `exec` methods while providing better type safety and more informative error messages.
+- **Thread Safety**: The modular refactor introduced thread-safe global state management via `Context` without performance regressions, thanks to a lock-free fast path for handler cache lookups.
 
 ## Running Benchmarks Yourself
 

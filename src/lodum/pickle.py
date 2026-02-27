@@ -7,7 +7,10 @@ import io
 from typing import Any, Type, TypeVar
 
 from .core import Dumper
-from .internal import dump as validate_lodum_structure, DEFAULT_MAX_SIZE
+from .internal import (
+    dump as validate_lodum_structure,
+    DEFAULT_MAX_SIZE,
+)
 from .exception import DeserializationError
 
 T = TypeVar("T")
@@ -108,7 +111,7 @@ def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
         obj = unpickler.load()
 
     if not isinstance(obj, cls):
-        raise TypeError(
+        raise DeserializationError(
             f"Deserialized object is of type {type(obj).__name__}, but expected {cls.__name__}"
         )
 

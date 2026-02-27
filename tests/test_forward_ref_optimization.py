@@ -1,4 +1,5 @@
 from lodum import lodum, json
+from lodum.core import reset_context
 from typing import Optional
 
 
@@ -9,19 +10,15 @@ class Node:
         self.next = next
 
 
-@lodum
-class A:
-    def __init__(self, b: Optional["B"] = None):
-        self.b = b
-
-
-@lodum
-class B:
-    def __init__(self, a: Optional["A"] = None):
-        self.a = a
-
-
 def test_recursive_forward_ref():
+    reset_context()
+
+    @lodum
+    class Node:
+        def __init__(self, value: int, next: Optional["Node"] = None):
+            self.value = value
+            self.next = next
+
     data = '{"value": 1, "next": {"value": 2, "next": null}}'
     node = json.loads(Node, data)
     assert node.value == 1
@@ -34,6 +31,18 @@ def test_recursive_forward_ref():
 
 
 def test_mutual_recursive_forward_ref():
+    reset_context()
+
+    @lodum
+    class A:
+        def __init__(self, b: Optional["B"] = None):
+            self.b = b
+
+    @lodum
+    class B:
+        def __init__(self, a: Optional["A"] = None):
+            self.a = a
+
     _ = json.dumps(B(a=None))  # Register B
 
     data = '{"b": {"a": null}}'

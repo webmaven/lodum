@@ -107,3 +107,61 @@ def test_recursive_schema():
     assert s["type"] == "object"
     assert s["properties"]["children"]["type"] == "array"
     assert s["properties"]["children"]["items"]["$ref"] == "#/definitions/RecursiveNode"
+
+
+def test_corrupted_data_json():
+    with pytest.raises(DeserializationError):
+        json.loads(RobustNode, '{"value": "not an int"}')
+    with pytest.raises(DeserializationError):
+        json.loads(RobustNode, "[1, 2, 3]")  # Expected dict
+
+
+def test_corrupted_data_yaml():
+    from lodum import yaml
+
+    with pytest.raises(DeserializationError):
+        yaml.loads(RobustNode, "value: not an int")
+    with pytest.raises(DeserializationError):
+        yaml.loads(RobustNode, "- 1\n- 2")  # Expected dict
+
+
+def test_corrupted_data_msgpack():
+    from lodum import msgpack
+
+    # packed list instead of dict
+    data = msgpack.dumps([1, 2, 3])
+    with pytest.raises(DeserializationError):
+        msgpack.loads(RobustNode, data)
+
+    # invalid value type
+    data = msgpack.dumps({"value": "string", "next_node": None})
+    with pytest.raises(DeserializationError):
+        msgpack.loads(RobustNode, data)
+
+
+def test_corrupted_data_cbor():
+    from lodum import cbor
+
+    data = cbor.dumps([1, 2, 3])
+    with pytest.raises(DeserializationError):
+        cbor.loads(RobustNode, data)
+
+    data = cbor.dumps({"value": "string", "next_node": None})
+    with pytest.raises(DeserializationError):
+        cbor.loads(RobustNode, data)
+
+
+def test_corrupted_data_bson():
+    from lodum import bson
+
+    # BSON always decodes to dict, so we test field type mismatch
+    data = bson.dumps({"value": "string", "next_node": None})
+    with pytest.raises(DeserializationError):
+        bson.loads(RobustNode, data)
+
+
+def test_corrupted_data_toml():
+    from lodum import toml
+
+    with pytest.raises(DeserializationError):
+        toml.loads(RobustNode, 'value = "not an int"')

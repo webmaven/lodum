@@ -73,3 +73,18 @@ def test_msgpack_roundtrip_complex():
     assert unpacked.items == [1, 2, 3]
     assert unpacked.d == {"pi": 3.14}
     assert unpacked.s == {"a", "b"}
+
+
+def test_msgpack_top_level_primitives():
+    """Tests encoding/decoding of top-level primitives."""
+    assert msgpack.loads(int, msgpack.dumps(123)) == 123
+    assert msgpack.loads(str, msgpack.dumps("hello")) == "hello"
+    assert msgpack.loads(float, msgpack.dumps(3.14)) == 3.14
+    assert msgpack.loads(bool, msgpack.dumps(True)) is True
+    assert msgpack.loads(type(None), msgpack.dumps(None)) is None
+
+
+def test_msgpack_loads_max_size():
+    """Tests that max_size is enforced in loads."""
+    with pytest.raises(DeserializationError, match="exceeds maximum allowed"):
+        msgpack.loads(int, b"*", max_size=0)

@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import pytest
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional, Set, Union
 
 from lodum import lodum, field, yaml
+from lodum.exception import DeserializationError
 
 # --- Test Data ---
 
@@ -53,6 +55,14 @@ def test_yaml_enum():
     assert "admin" in yaml_str
     result = yaml.loads(UserRole, yaml_str)
     assert result == role
+
+
+def test_yaml_load_type_mismatch():
+    """Tests that DeserializationError is raised for type mismatches."""
+    yaml_str = "a: 'not an int'\nb: 'world'\n"
+    with pytest.raises(DeserializationError) as excinfo:
+        yaml.loads(Simple, yaml_str)
+    assert "Expected int" in str(excinfo.value)
 
 
 @lodum
@@ -172,3 +182,27 @@ def test_yaml_typing_support():
     assert result.optional_field == instance.optional_field
     assert result.union_field == instance.union_field
     assert dict(result.any_field) == instance.any_field
+
+
+def test_yaml_schema():
+    """Tests JSON Schema generation for YAML."""
+    s = yaml.schema(Complex)
+    assert s["type"] == "object"
+    assert "dt" in s["properties"]
+    assert "role" in s["properties"]
+    assert "items" in s["properties"]
+
+
+def test_yaml_top_level_primitives():
+    """Tests encoding/decoding of top-level primitives."""
+    assert yaml.loads(int, yaml.dumps(123)) == 123
+    assert yaml.loads(str, yaml.dumps("hello")) == "hello"
+    assert yaml.loads(float, yaml.dumps(3.14)) == 3.14
+    assert yaml.loads(bool, yaml.dumps(True)) is True
+    assert yaml.loads(type(None), yaml.dumps(None)) is None
+
+
+def test_yaml_loads_max_size():
+    """Tests that max_size is enforced in loads."""
+    with pytest.raises(DeserializationError, match="exceeds maximum allowed"):
+        yaml.loads(int, "123", max_size=2)
