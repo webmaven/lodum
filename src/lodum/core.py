@@ -16,6 +16,7 @@ from typing import (
 )
 
 from .field import Field, _MISSING
+from .exception import DeserializationError
 
 T = TypeVar("T", bound=Type[Any])
 
@@ -153,6 +154,8 @@ class Loader(Protocol):
     def load_list(self) -> Iterator["Loader"]: ...
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]: ...
     def load_any(self) -> Any: ...
+    def get_dict(self) -> Optional[Dict[str, Any]]: ...
+    def load_bytes_value(self, value: Any) -> bytes: ...
 
 
 class BaseLoader:
@@ -184,7 +187,15 @@ class BaseLoader:
     def load_dict(self) -> Iterator[tuple[str, "Loader"]]:
         raise NotImplementedError
 
+    def get_dict(self) -> Optional[Dict[str, Any]]:
+        if isinstance(self._data, dict):
+            return self._data
+        return None
+
     def load_bytes(self) -> bytes:
-        if not isinstance(self._data, bytes):
-            raise TypeError(f"Expected bytes, got {type(self._data).__name__}")
-        return self._data
+        return self.load_bytes_value(self._data)
+
+    def load_bytes_value(self, value: Any) -> bytes:
+        if not isinstance(value, bytes):
+            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
+        return value

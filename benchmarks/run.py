@@ -1,7 +1,7 @@
 import timeit
 import json
-import os
 import sys
+import statistics
 
 # Optional dependencies
 try:
@@ -28,12 +28,11 @@ except ImportError:
 
 try:
     import tomli_w
-    import tomli # for python < 3.11, but lodum handles it
 except ImportError:
     tomli_w = None
 
 import pickle
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 from benchmarks.models import (
     LodumSimple, LodumComplex, LodumNested,
     PydanticSimple, PydanticComplex, PydanticNested,
@@ -124,9 +123,14 @@ def bench(func):
         return None
     timer = timeit.Timer(func)
     try:
-        t = timer.timeit(number=ITERATIONS)
-        return t / ITERATIONS * 1e6 # return in microseconds
-    except Exception as e:
+        # Run 5 trials to get a measure of variance
+        times = timer.repeat(repeat=5, number=ITERATIONS)
+        us_per_op = [(t / ITERATIONS) * 1e6 for t in times]
+        return {
+            "mean": statistics.mean(us_per_op),
+            "stdev": statistics.stdev(us_per_op)
+        }
+    except Exception:
         # print(f"Error: {e}")
         return None
 
@@ -136,17 +140,19 @@ def run_group(group_name: str, benchmarks: Dict[str, Dict[str, Optional[Callable
     print("| :--- | ---: | ---: | ---: |")
 
     for lib_name, funcs in benchmarks.items():
-        simple_time = bench(funcs.get("simple"))
-        complex_time = bench(funcs.get("complex"))
-        nested_time = bench(funcs.get("nested"))
+        simple_res = bench(funcs.get("simple"))
+        complex_res = bench(funcs.get("complex"))
+        nested_res = bench(funcs.get("nested"))
 
-        if simple_time is None and complex_time is None and nested_time is None:
+        if simple_res is None and complex_res is None and nested_res is None:
             continue
 
-        def fmt(t):
-            return f"{t:.2f}" if t is not None else "N/A"
+        def fmt(res):
+            if res is None:
+                return "N/A"
+            return f"{res['mean']:.2f} ± {res['stdev']:.2f}"
 
-        print(f"| {lib_name} | {fmt(simple_time)} | {fmt(complex_time)} | {fmt(nested_time)} |")
+        print(f"| {lib_name} | {fmt(simple_res)} | {fmt(complex_res)} | {fmt(nested_res)} |")
     print()
 
 def run_all():

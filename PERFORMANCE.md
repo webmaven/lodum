@@ -9,29 +9,29 @@ The following benchmarks were run on Python 3.12.12. Results are in microseconds
 ### JSON Serialization (Object -> JSON)
 | Library | Simple (us) | Complex (us) | Nested (us) |
 | :--- | ---: | ---: | ---: |
-| Lodum | 8.24 | 31.47 | 33.58 |
-| Pydantic (v2) | 1.90 | 2.76 | 5.22 |
-| Marshmallow | 11.10 | 24.55 | 63.11 |
-| Native json (dict) | 3.85 | 5.99 | 9.67 |
+| Lodum | 8.46 ± 2.53 | 12.33 ± 0.47 | 21.07 ± 0.54 |
+| Pydantic (v2) | 2.18 ± 0.12 | 3.02 ± 0.02 | 5.34 ± 0.12 |
+| Marshmallow | 10.73 ± 0.31 | 24.02 ± 0.67 | 61.86 ± 0.58 |
+| Native json (dict) | 3.72 ± 0.03 | 6.11 ± 0.19 | 9.54 ± 0.03 |
 
 ### JSON Deserialization (JSON -> Object)
 | Library | Simple (us) | Complex (us) | Nested (us) |
 | :--- | ---: | ---: | ---: |
-| Lodum | 22.06 | 45.39 | 131.68 |
-| Pydantic (v2) | 2.88 | 4.00 | 10.58 |
-| Marshmallow | 27.64 | 65.16 | 196.23 |
-| Native json (dict) | 2.96 | 4.75 | 8.41 |
+| Lodum | 18.07 ± 0.76 | 25.38 ± 0.88 | 101.99 ± 1.46 |
+| Pydantic (v2) | 2.44 ± 0.27 | 3.65 ± 0.12 | 10.42 ± 0.32 |
+| Marshmallow | 27.66 ± 0.45 | 64.23 ± 0.80 | 199.06 ± 6.61 |
+| Native json (dict) | 2.95 ± 0.19 | 4.70 ± 0.07 | 8.52 ± 0.23 |
 
 ### Binary Formats (Lodum vs Native)
 
 | Format | Operation | Simple (us) | Complex (us) | Nested (us) |
 | :--- | :--- | ---: | ---: | ---: |
-| **MsgPack** | Serialization | 4.89 | 25.56 | 25.97 |
-| | Deserialization | 17.84 | 38.71 | 124.40 |
-| **CBOR** | Serialization | 12.51 | 37.00 | 41.75 |
-| | Deserialization | 22.41 | 44.90 | 132.87 |
-| **Pickle** | Serialization | 8.01 | 32.32 | 38.42 |
-| | Deserialization | 7.22 | 9.17 | 15.54 |
+| **MsgPack** | Serialization | 4.14 ± 0.08 | 7.36 ± 0.14 | 14.32 ± 0.30 |
+| | Deserialization | 14.41 ± 0.17 | 19.99 ± 0.13 | 91.55 ± 1.14 |
+| **CBOR** | Serialization | 11.31 ± 0.04 | 17.26 ± 0.26 | 28.85 ± 0.18 |
+| | Deserialization | 18.86 ± 0.34 | 25.80 ± 0.55 | 100.48 ± 1.76 |
+| **Pickle** | Serialization | 6.97 ± 0.02 | 10.27 ± 0.11 | 25.93 ± 0.20 |
+| | Deserialization | 6.63 ± 0.05 | 8.44 ± 0.04 | 14.79 ± 0.07 |
 
 ## Analysis
 

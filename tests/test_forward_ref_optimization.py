@@ -1,6 +1,5 @@
 from lodum import lodum, json
 from typing import Optional
-import pytest
 
 @lodum
 class Node:
