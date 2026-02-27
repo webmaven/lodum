@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import functools
-import threading
+from .concurrency import Lock, local
 from typing import (
     Any,
     Dict,
@@ -45,11 +45,11 @@ class Context:
         )
         self.dump_cache: Dict[Type[Any], "DumpHandler"] = {}
         self.load_cache: Dict[Type[Any], "LoadHandler"] = {}
-        self.cache_lock = threading.Lock()
+        self.cache_lock = Lock()
         self.name_to_type_cache: Dict[str, Type[Any]] = {}
 
 
-_active_context = threading.local()
+_active_context = local()
 
 
 def get_context() -> Context:
