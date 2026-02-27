@@ -424,37 +424,35 @@
             const frontierOptions = {
                 series: [{
                     name: 'Evolution Path',
-                    data: frontierData.map(p => ({ x: p.x, y: p.y }))
+                    data: frontierData.map((p, i) => ({ 
+                        x: p.x, 
+                        y: p.y,
+                        // Custom property for the marker color mapping
+                        fillColor: tagMap[p.sha] ? '#fbc929' : `rgba(55, 65, 81, ${0.2 + (i / frontierData.length) * 0.8})`
+                    }))
                 }],
                 chart: { type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false } },
-                stroke: { width: 2, curve: 'straight', colors: ['#d1d5db'] },
+                stroke: { width: 1.5, curve: 'straight', colors: ['#e5e7eb'] },
                 markers: { 
-                    size: frontierData.map((p, i) => {
-                        if (tagMap[p.sha]) return 8;
-                        if (i === frontierData.length - 1) return 6;
-                        return 3;
-                    }),
-                    colors: frontierData.map((p, i) => {
-                        if (tagMap[p.sha]) return '#fbc929';
-                        if (i === frontierData.length - 1) return '#ef4444'; // Latest is red
-                        return '#9ca3af';
-                    }),
+                    size: frontierData.map((p, i) => (tagMap[p.sha] || i === frontierData.length - 1) ? 6 : 3),
                     strokeWidth: 0,
-                    hover: { size: 10 }
+                    hover: { size: 8 }
                 },
+                // ApexCharts doesn't support per-point colors easily in line charts without this hack
+                fill: { type: 'solid' },
                 xaxis: { 
-                    title: { text: 'Time (s)', style: { color: '#9ca3af', fontSize: '10px', fontWeight: 400 } },
+                    title: { text: 'Time (s) →', style: { color: '#9ca3af', fontSize: '10px', fontWeight: 400 } },
                     labels: { style: { fontSize: '10px' }, formatter: v => v.toFixed(1) + 's' },
                     axisBorder: { show: false },
                     axisTicks: { show: false }
                 },
                 yaxis: { 
-                    title: { text: 'Memory (MB)', style: { color: '#9ca3af', fontSize: '10px', fontWeight: 400 } },
+                    title: { text: 'Memory (MB) →', style: { color: '#9ca3af', fontSize: '10px', fontWeight: 400 } },
                     labels: { style: { fontSize: '10px' } },
                     axisBorder: { show: false },
                     axisTicks: { show: false }
                 },
-                grid: { borderColor: '#f3f4f6', strokeDashArray: 4 },
+                grid: { show: false }, // Maximize data-to-ink ratio
                 annotations: {
                     points: frontierData.map(p => tagMap[p.sha] ? {
                         x: p.x,
@@ -463,7 +461,7 @@
                         label: {
                             borderColor: 'transparent',
                             offsetY: -10,
-                            style: { color: '#374151', background: 'transparent', fontSize: '10px', fontWeight: 700 },
+                            style: { color: '#374151', background: 'rgba(255,255,255,0.8)', fontSize: '10px', fontWeight: 700 },
                             text: tagMap[p.sha]
                         }
                     } : null).filter(a => a !== null)
@@ -472,7 +470,8 @@
                     custom: function({ series, seriesIndex, dataPointIndex, w }) {
                         const p = frontierData[dataPointIndex];
                         const tag = tagMap[p.sha] ? `<b style="color:#fbc929">[${tagMap[p.sha]}]</b> ` : '';
-                        return `<div style="padding:8px; font-size:11px; background:#fff; border:1px solid #e5e7eb; border-radius:4px;">${tag}${p.shortSha}<br/>${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div>`;
+                        const isLatest = dataPointIndex === frontierData.length - 1 ? ' <span style="color:#ef4444">(Latest)</span>' : '';
+                        return `<div style="padding:8px; font-size:11px; background:#fff; border:1px solid #e5e7eb; border-radius:4px;">${tag}${p.shortSha}${isLatest}<br/>${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div>`;
                     }
                 },
                 noData: { text: 'No streaming data available' }
