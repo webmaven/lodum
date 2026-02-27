@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 from typing import Any, Generic, List, Optional, Set, Tuple, TypeVar, Union
 import pytest
 from datetime import datetime

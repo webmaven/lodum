@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 import inspect
 import functools
 from typing import Any, Dict, List, Protocol, Type, Iterator
