@@ -263,6 +263,12 @@
                     const sha = p.commit.id; // Full 40-char SHA
                     if (!sha) return;
 
+                    // Filter: Only include commits that are in the captured history
+                    if (history.length > 0 && !history.includes(sha)) {
+                        console.log(`Skipping unreachable commit: ${sha.substring(0,7)}`);
+                        return;
+                    }
+
                     const timestamp = p.commit.timestamp ? Date.parse(p.commit.timestamp) : p.date;
                     
                     if (!commitMap.has(sha)) {
@@ -295,11 +301,11 @@
             const releaseAnnotations = [];
             let v030Sha = null;
 
-            history.forEach((sha, idx) => {
-                if (tagMap[sha]) {
-                    const version = tagMap[sha];
+            // 1. Check tags from data.js
+            Object.entries(tagMap).forEach(([sha, version]) => {
+                const idx = history.indexOf(sha);
+                if (idx !== -1) {
                     if (version === 'v0.3.0') v030Sha = sha;
-                    
                     releaseAnnotations.push({
                         x: idx,
                         borderColor: '#fbc929',
@@ -310,6 +316,27 @@
                     });
                 }
             });
+
+            // 2. Fallback: Search messages if tags aren't mapped
+            if (releaseAnnotations.length === 0) {
+                sortedCommits.forEach((c) => {
+                    const releaseMatch = c.msg.match(/v\d+\.\d+\.\d+/);
+                    if (releaseMatch) {
+                        const version = releaseMatch[0];
+                        const idx = history.indexOf(c.sha);
+                        if (idx !== -1) {
+                            releaseAnnotations.push({
+                                x: idx,
+                                borderColor: '#fbc929',
+                                label: {
+                                    style: { color: '#fff', background: '#fbc929' },
+                                    text: version
+                                }
+                            });
+                        }
+                    }
+                });
+            }
             const baselineSha = v030Sha || sortedCommits[0]?.sha;
             
             console.log('Lodum Dashboard: Initialized.');
