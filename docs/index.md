@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/webmaven/lodum/main/docs/assets/dumptruck-header-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/webmaven/lodum/main/docs/assets/dumptruck-header.png">
-  <img alt="lodum: A high-performance Python serialization framework" src="https://raw.githubusercontent.com/webmaven/lodum/main/docs/assets/dumptruck-header.png">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/dumptruck-header-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/dumptruck-header.png">
+  <img alt="lodum: A high-performance Python serialization framework" src="assets/dumptruck-header.png">
 </picture>
 
 <p align="center">
@@ -322,7 +322,7 @@ This approach eliminates the overhead of generic introspection and `getattr` cal
 - **~64% faster dumping** (serialization) than the baseline.
 - **~35% faster loading** (deserialization) than the baseline.
 
-See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
+See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
 
 ## Binary Data
 
@@ -363,16 +363,16 @@ The library is designed to be extended with support for more formats and more co
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIBUTING.md) for more information.
+Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING.md) for more information.
 
 ## Internals & Roadmap
 
-* Looking for the [API Reference](https://webmaven.github.io/lodum/api_reference)?
-* Migrating from another library? See our [Migration Guide](https://webmaven.github.io/lodum/User%20Guide/Migration).
-* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE](https://webmaven.github.io/lodum/Technical%20Specs/Architecture).
-* Adding support for a new data format? See [Implementing New Formats](https://webmaven.github.io/lodum/Technical%20Specs/Implementing%20Formats).
-* See how Lodum performs in our [PERFORMANCE](https://webmaven.github.io/lodum/User%20Guide/Performance) report.
-* Want to see where we are going? Read our [ROADMAP](https://webmaven.github.io/lodum/Project/Roadmap).
+* Looking for the [API Reference](api_reference.md)?
+* Migrating from another library? See our [Migration Guide](MIGRATION.md).
+* Interested in how `lodum` works under the hood? Check out [ARCHITECTURE](ARCHITECTURE.md).
+* Adding support for a new data format? See [Implementing New Formats](IMPLEMENTING_FORMATS.md).
+* See how Lodum performs in our [PERFORMANCE](PERFORMANCE.md) report.
+* Want to see where we are going? Read our [ROADMAP](ROADMAP.md).
 
 ## License
 
