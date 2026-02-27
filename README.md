@@ -1,8 +1,22 @@
 # lodum
 
+<p align="center">
+  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg" alt="PyPI"></a>
+  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg" alt="Python versions"></a>
+  <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg" alt="License"></a>
+</p>
+
 A Python serialization library inspired by Rust's `serde`.
 
 `lodum` is an experimental Python library designed to provide a flexible and ergonomic way to serialize and deserialize Python objects to and from various data formats. The core design is heavily inspired by the robustness and efficiency of Rust's `serde` framework.
+
+## Installation
+
+You can install `lodum` from PyPI using `pip`:
+
+```bash
+pip install lodum
+```
 
 ## Core Concepts
 
@@ -11,7 +25,7 @@ The architecture of `lodum` is built on a clear separation of concerns, just lik
 1. **Serializable Data Structures**: You define the data you want to serialize by decorating your classes with `@serializable`. This decorator introspects your class to understand its structure.
 2. **Data Formats (Serializers/Deserializers)**: The logic for converting data into a specific format (like JSON) is handled by `Serializer` and `Deserializer` implementations. This makes the core library format-agnostic.
 
-This means you can define how your data is structured once, and then easily serialize it to multiple formats (JSON, YAML, etc.) by simply using a different serializer.
+This means you can define how your data is structured once, and then easily serialize it to multiple formats by simply using a different serializer.
 
 ## Getting Started
 
@@ -22,7 +36,7 @@ Here is a quick example of how to serialize a simple Python object to JSON and d
 Use the `@serializable` decorator on your class. Make sure to include type hints, as `lodum` uses them to understand your data.
 
 ```python
-from lodum.core import serializable
+from lodum import serializable
 
 @serializable
 class User:
@@ -54,14 +68,6 @@ Use the `from_json` function to parse a JSON string and reconstruct your Python 
 
 ```python
 from lodum.json import from_json
-from lodum.yaml import to_yaml, from_yaml
-
-# You can also serialize to YAML
-yaml_string = to_yaml(user)
-print(yaml_string)
-# -> name: Alex
-# -> age: 30
-# -> is_active: true
 
 json_data = '{"name": "Barbara", "age": 25, "is_active": false}'
 
@@ -72,7 +78,44 @@ print(f"Name: {barbara.name}, Age: {barbara.age}, Active: {barbara.is_active}")
 # Output: Name: Barbara, Age: 25, Active: false
 ```
 
-This simple example demonstrates the core functionality for the initial JSON implementation.
+## Round-Trip Example
+
+`lodum` ensures that your data can be reliably converted between formats. Here's an example of a full round-trip conversion, starting with JSON, converting to YAML, and then back to JSON, verifying that the data remains consistent.
+
+```python
+import json
+from lodum import serializable
+from lodum.json import from_json, to_json
+from lodum.yaml import from_yaml, to_yaml
+
+@serializable
+class ServerConfig:
+    def __init__(self, host: str, port: int, services: list[str]):
+        self.host = host
+        self.port = port
+        self.services = services
+
+# 1. Start with a JSON string
+original_json = '{"host": "127.0.0.1", "port": 8080, "services": ["users", "products", "inventory"]}'
+
+# 2. Deserialize the JSON to a Python object
+config_from_json = from_json(ServerConfig, original_json)
+
+# 3. Serialize the object to YAML
+yaml_output = to_yaml(config_from_json)
+
+# 4. Deserialize the YAML back to a Python object
+config_from_yaml = from_yaml(ServerConfig, yaml_output)
+
+# 5. Serialize the final object back to JSON
+final_json = to_json(config_from_yaml)
+
+# 6. Verify that the final JSON matches the original
+# We load them into dictionaries to ignore any formatting differences
+assert json.loads(original_json) == json.loads(final_json)
+
+print("Round-trip conversion successful!")
+```
 
 ## Field Customization
 
@@ -123,9 +166,17 @@ user = from_json(User, user_data)
 * `serializer=callable`: A function to call to serialize the field's value.
 * `deserializer=callable`: A function to call to deserialize the field's value.
 
+## Supported Formats
+
+`lodum` is designed to be format-agnostic, and new formats can be added by implementing the `Serializer` and `Deserializer` protocols. The following formats are currently supported:
+
+* **JSON**: `lodum.json`
+* **YAML**: `lodum.yaml`
+* **Pickle**: `lodum.pickle`
+
 ## Supported Types
 
-`lodum` currently supports the following types for JSON serialization:
+`lodum` currently supports the following types for serialization:
 
 * **Primitives:** `int`, `str`, `float`, `bool`, `None`
 * **Collections:** `list`, `dict`, `tuple`, `set`
@@ -135,3 +186,11 @@ user = from_json(User, user_data)
 * **Custom Objects:** Any class decorated with `@serializable`.
 
 The library is designed to be extended with support for more formats and more complex data types in the future.
+
+## Contributing
+
+Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING.md) for more information.
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
