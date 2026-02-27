@@ -97,3 +97,10 @@ class BsonLoader(BaseLoader):
                 f"Expected dict, got {type(self._data).__name__}"
             )
         return ((k, BsonLoader(v)) for k, v in self._data.items())
+
+    def load_bytes(self) -> bytes:
+        if not isinstance(self._data, bytes):
+            raise DeserializationError(
+                f"Expected bytes, got {type(self._data).__name__}"
+            )
+        return self._data

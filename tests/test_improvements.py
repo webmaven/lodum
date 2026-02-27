@@ -5,12 +5,14 @@ import pytest
 from lodum import lodum, json
 from lodum.exception import DeserializationError
 
+
 @lodum
 class AllTypes:
     def __init__(self, u: uuid.UUID, d: Decimal, p: Path):
         self.u = u
         self.d = d
         self.p = p
+
 
 def test_new_types_roundtrip():
     u = uuid.uuid4()
@@ -25,17 +27,20 @@ def test_new_types_roundtrip():
     assert loaded.d == d
     assert loaded.p == p
 
+
 @lodum
 class Nested:
     def __init__(self, name: str, value: int):
         self.name = name
         self.value = value
 
+
 @lodum
 class Root:
     def __init__(self, nested: Nested, items: list[int]):
         self.nested = nested
         self.items = items
+
 
 def test_path_reporting():
     # Invalid type in nested object
@@ -50,16 +55,19 @@ def test_path_reporting():
         json.loads(Root, data)
     assert "items[1]" in str(excinfo.value)
 
+
 @lodum
 class DeeplyNested:
     def __init__(self, root: Root):
         self.root = root
+
 
 def test_deep_path_reporting():
     data = '{"root": {"nested": {"name": "test", "value": "fail"}, "items": []}}'
     with pytest.raises(DeserializationError) as excinfo:
         json.loads(DeeplyNested, data)
     assert "root.nested.value" in str(excinfo.value)
+
 
 def test_schema_new_types():
     schema = json.schema(AllTypes)

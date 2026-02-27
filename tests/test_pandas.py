@@ -4,6 +4,7 @@
 import pandas as pd
 from lodum import lodum, json
 
+
 @lodum
 class PandasObject:
     def __init__(self, df: pd.DataFrame, series: pd.Series):
@@ -11,9 +12,14 @@ class PandasObject:
         self.series = series
 
     def __eq__(self, other):
-        return (isinstance(other, PandasObject) and 
-                self.df.reset_index(drop=True).equals(other.df.reset_index(drop=True)) and 
-                self.series.reset_index(drop=True).equals(other.series.reset_index(drop=True)))
+        return (
+            isinstance(other, PandasObject)
+            and self.df.reset_index(drop=True).equals(other.df.reset_index(drop=True))
+            and self.series.reset_index(drop=True).equals(
+                other.series.reset_index(drop=True)
+            )
+        )
+
 
 def test_pandas_dataframe_and_series():
     df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
