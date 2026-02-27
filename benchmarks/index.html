@@ -259,7 +259,8 @@
             Object.entries(suites).forEach(([suiteName, points]) => {
                 points.forEach(p => {
                     const sha = p.commit.id; // Full 40-char SHA
-                    // Strictly prioritize commit timestamp, fallback to run date
+                    if (!sha) return;
+
                     const timestamp = p.commit.timestamp ? Date.parse(p.commit.timestamp) : p.date;
                     
                     if (!commitMap.has(sha)) {
@@ -267,17 +268,21 @@
                             sha, 
                             shortSha: sha.substring(0, 7),
                             date: timestamp, 
-                            msg: p.commit.message,
+                            msg: p.commit.message || "",
                             data: {} // suiteName -> point
                         });
                     }
                     
                     const c = commitMap.get(sha);
-                    // Always use the SHA's inherent timestamp for ordering
+                    // Keep the point with the most benches for this suite
+                    if (!c.data[suiteName] || (p.benches && p.benches.length > (c.data[suiteName].benches || []).length)) {
+                        c.data[suiteName] = p;
+                    }
+                    
+                    // Prioritize commit timestamp for ordering
                     if (p.commit.timestamp) {
                         c.date = Date.parse(p.commit.timestamp);
                     }
-                    c.data[suiteName] = p;
                 });
             });
 
@@ -288,13 +293,14 @@
             });
             const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
 
-            // Unique Release Markers
+            // Unique Release Markers (Improved)
             const releaseAnnotations = [];
             const markedVersions = new Set();
             let v030Sha = null;
 
             sortedCommits.forEach((c) => {
-                const releaseMatch = c.msg.match(/v\d\.\d\.\d/);
+                // Look for release patterns like "release: v0.3.0" or "Prep v0.2.0"
+                const releaseMatch = c.msg.match(/v\d+\.\d+\.\d+/);
                 if (releaseMatch) {
                     const version = releaseMatch[0];
                     if (version === 'v0.3.0') v030Sha = c.sha;
@@ -302,7 +308,7 @@
                     if (!markedVersions.has(version)) {
                         markedVersions.add(version);
                         releaseAnnotations.push({
-                            x: c.shortSha, // Align with category label
+                            x: c.shortSha,
                             borderColor: '#fbc929',
                             label: {
                                 style: { color: '#fff', background: '#fbc929' },
@@ -315,17 +321,27 @@
             const baselineSha = v030Sha || sortedCommits[0]?.sha;
             
             console.log('Lodum Dashboard: Initialized.');
+            console.log(' - Total Unique Commits:', sortedCommits.length);
             console.log(' - Latest SHA:', latestSha);
-            console.log(' - Baseline SHA (v0.3.0):', baselineSha);
+            console.log(' - Baseline SHA:', baselineSha);
 
             const getVal = (suitePattern, benchPattern, sha) => {
                 const c = commitMap.get(sha);
                 if (!c) return null;
-                const suiteKey = Object.keys(c.data).find(k => k.includes(suitePattern));
+                const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(suitePattern.toLowerCase()));
                 if (!suiteKey) return null;
                 const point = c.data[suiteKey];
                 const bench = point.benches.find(b => b.name.includes(benchPattern));
                 return bench ? bench.value : null;
+            };
+
+            // Helper to find the latest available value for a metric
+            const getLatestVal = (suitePattern, benchPattern) => {
+                for (let i = sortedCommits.length - 1; i >= 0; i--) {
+                    const val = getVal(suitePattern, benchPattern, sortedCommits[i].sha);
+                    if (val !== null) return val;
+                }
+                return null;
             };
 
             const baselineShaFinal = baselineSha;
@@ -342,7 +358,7 @@
             platforms.forEach(p => {
                 scenarios.forEach(s => {
                     const benchName = `JSON Serialization Lodum ${s}`;
-                    const current = getVal(p.id, benchName, latestSha);
+                    const current = getLatestVal(p.id, benchName);
                     const base = getVal(p.id, benchName, baselineShaFinal);
                     
                     let delta = 0;
@@ -361,10 +377,10 @@
                 });
             });
 
-            // 3. Actionable Advice
+            // 3. Actionable Advice (Based on latest available complex data)
             const healthTitle = document.getElementById('health-title');
             const healthAdvice = document.getElementById('health-advice');
-            const currentComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', latestSha);
+            const currentComplex = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum complex');
             const baseComplex = getVal('ubuntu-latest', 'JSON Serialization Lodum complex', baselineShaFinal);
             const latestDelta = (currentComplex && baseComplex) ? ((currentComplex / baseComplex) - 1) * 100 : 0;
 
@@ -384,16 +400,16 @@
                 series: [{
                     name: 'Commits',
                     data: sortedCommits.map(c => {
-                        const time = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Time', c.sha);
-                        const mem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', c.sha);
+                        const time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha) || getVal('ubuntu-latest', 'load_stream) Time', c.sha);
+                        const mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha) || getVal('ubuntu-latest', 'load_stream) Memory', c.sha);
                         return (time !== null && mem !== null) ? [time, mem] : null;
                     }).filter(p => p !== null)
                 }],
                 chart: { type: 'scatter', height: 250, toolbar: { show: false } },
-                xaxis: { title: { text: 'Time (s)' } },
+                xaxis: { title: { text: 'Time (s)' }, labels: { formatter: v => v.toFixed(1) + 's' } },
                 yaxis: { title: { text: 'Memory (MB)' } },
                 colors: ['#fbc929'],
-                noData: { text: 'No streaming data available yet' }
+                noData: { text: 'No streaming data available' }
             };
             new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions).render();
 
@@ -408,10 +424,11 @@
             const updateTrendCharts = (scenario) => {
                 const benchName = `JSON Serialization Lodum ${scenario}`;
                 
-                // Filtering Strategy: For each update, find the set of SHAs that have data
-                // for at least ONE of the platforms we display.
-                const activeCategories = sortedCommits.filter(c => {
-                    return envs.some(env => getVal(env.id, benchName, c.sha) !== null);
+                // Show all commits that have data for at least ONE platform, or are recent
+                const activeCategories = sortedCommits.filter((c, idx) => {
+                    const hasAny = envs.some(env => getVal(env.id, benchName, c.sha) !== null);
+                    const isRecent = idx > sortedCommits.length - 20;
+                    return hasAny || isRecent;
                 });
 
                 const series = [];
@@ -430,13 +447,14 @@
 
                 const mainOptions = {
                     series: series,
-                    chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
-                    stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
+                    chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false } },
+                    stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray) },
+                    markers: { size: 4 },
                     annotations: { xaxis: releaseAnnotations.filter(a => activeCategories.some(c => c.shortSha === a.x)) },
                     xaxis: { 
                         type: 'category',
                         categories: activeCategories.map(c => c.shortSha),
-                        labels: { show: true }
+                        labels: { show: true, rotate: -45, maxHeight: 60 }
                     },
                     yaxis: { title: { text: 'Execution Time (us)' } },
                     tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } },
@@ -448,10 +466,11 @@
 
                 const brushOptions = {
                     series: series,
-                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, activeCategories.length - 10), max: activeCategories.length - 1 } } },
+                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, activeCategories.length - 15), max: activeCategories.length - 1 } } },
                     colors: series.map(s => s.color),
                     xaxis: { type: 'category', categories: activeCategories.map(c => c.shortSha), labels: { show: false } },
-                    yaxis: { labels: { show: false } }
+                    yaxis: { labels: { show: false } },
+                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } }
                 };
                 brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
                 brushChart.render();
@@ -461,25 +480,25 @@
             updateTrendCharts('simple');
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
-            // 5. Calculate Summary KPIs (Latest commit)
+            // 5. Calculate Summary KPIs (Latest available)
             const getKPI = (id, text) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = text;
             };
 
-            const lodumVal = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
-            const mmVal = getVal('ubuntu-latest', 'JSON Serialization Marshmallow simple', latestSha);
+            const lodumVal = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple');
+            const mmVal = getLatestVal('ubuntu-latest', 'JSON Serialization Marshmallow simple');
             if (lodumVal && mmVal) getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
 
-            const stdTime = getVal('ubuntu-latest', 'Lodum Standard (loads) Time', latestSha);
-            const streamTime = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Time', latestSha);
-            const stdMem = getVal('ubuntu-latest', 'Lodum Standard (loads) Memory', latestSha);
-            const streamMem = getVal('ubuntu-latest', 'Lodum Streaming (load_stream) Memory', latestSha);
+            const stdTime = getLatestVal('ubuntu-latest', 'Standard (loads) Time');
+            const streamTime = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Time');
+            const stdMem = getLatestVal('ubuntu-latest', 'Standard (loads) Memory');
+            const streamMem = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Memory');
 
             if (stdMem && streamMem) getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
             if (streamTime) getKPI('kpi-throughput', (45 / streamTime).toFixed(1) + ' MB/s');
 
-            const wasmVal = getVal('Pyodide', 'JSON Serialization Lodum simple', latestSha);
+            const wasmVal = getLatestVal('Pyodide', 'JSON Serialization Lodum simple');
             if (lodumVal && wasmVal) getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
 
             // 6. Detailed Charts (Bottom Grid)
@@ -498,8 +517,8 @@
                 new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
             }
 
-            const coldSimple = getVal('ubuntu-latest', 'JSON Serialization Lodum simple (Cold Start)', latestSha);
-            const warmSimple = getVal('ubuntu-latest', 'JSON Serialization Lodum simple', latestSha);
+            const coldSimple = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple (Cold Start)');
+            const warmSimple = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple');
             if (coldSimple && warmSimple) {
                 const coldOptions = {
                     series: [{ name: 'Latency (us)', data: [coldSimple, warmSimple] }],
