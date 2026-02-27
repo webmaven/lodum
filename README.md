@@ -261,6 +261,44 @@ print(json.dumps(schema, indent=2))
 # }
 ```
 
+## Converting to/from Dictionaries
+
+While `lodum` is primarily used for external wire formats, it also provides ergonomic helpers for converting objects to and from plain Python primitives (dictionaries and lists) without any string encoding.
+
+### `lodum.asdict(obj)`
+Recursively converts a lodum-enabled object into standard Python primitives. This is a "Deep Normalization" that handles renaming, skipping fields, and converting complex types like Enums or Datetimes into plain values.
+
+```python
+import lodum
+
+@lodum
+class User:
+    def __init__(self, user_id: int = lodum.field(rename="id"), name: str = ""):
+        self.user_id = user_id
+        self.name = name
+
+user = User(user_id=1, name="Alex")
+data = lodum.asdict(user)
+print(data)
+# Output: {"id": 1, "name": "Alex"}
+```
+
+### `lodum.fromdict(cls, data)`
+Hydrates a lodum-enabled class from a dictionary. Unlike standard dictionary assignment, this performs full type validation and automatically instantiates nested objects.
+
+```python
+new_user = lodum.fromdict(User, {"id": 2, "name": "Sam"})
+```
+
+### Supported Collection Wrappers
+`lodum` automatically normalizes and hydrates various standard library collection wrappers, converting them to/from standard `list` and `dict` during serialization:
+- `collections.deque`
+- `collections.UserList`
+- `collections.UserDict`
+- `collections.Counter`
+- `collections.defaultdict`
+- `collections.OrderedDict`
+
 ## Performance
 
 `lodum` is designed for high performance. When you first use a `@lodum`-enabled class, the library analyzes its structure and generates specialized Python bytecode for serialization and deserialization using an internal Abstract Syntax Tree (AST) compiler. 

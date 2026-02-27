@@ -506,6 +506,15 @@ def _register_builtin_handlers(ctx: Context) -> None:
 
     # Collections
     ctx.registry.register(
+        collections.deque, TypeHandler(_dump_sequence, _load_list, _schema_list)
+    )
+    ctx.registry.register(
+        collections.UserList, TypeHandler(_dump_sequence, _load_list, _schema_list)
+    )
+    ctx.registry.register(
+        collections.UserDict, TypeHandler(_dump_dict, _load_dict, _schema_dict)
+    )
+    ctx.registry.register(
         collections.defaultdict,
         TypeHandler(_dump_dict, _load_defaultdict, _schema_dict),
     )
