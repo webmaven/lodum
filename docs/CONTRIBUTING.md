@@ -35,11 +35,68 @@ There are many ways to contribute, from writing tutorials or blog posts, improvi
 
 - Open a new issue and provide a clear description of the enhancement you'd like to see, why it's useful, and if possible, a suggestion for how it could be implemented.
 
+### Tracking Project Progress
+
+`lodum` uses GitHub Issues and a Project Board to manage its development roadmap, features, and bugs. This system helps ensure clarity, accountability, and efficient progress.
+
+**Issue Labels:**
+We categorize issues using `type:` and `status:` labels:
+*   `type: epic`: Major roadmap items or significant features.
+*   `type: story`: Smaller, actionable tasks contributing to an epic.
+*   `type: bug`: Issues identifying defects.
+*   `type: chore`: Maintenance tasks, refactoring, or non-feature work.
+*   `status: backlog`: Tasks awaiting prioritization.
+*   `status: ready`: Tasks ready to be picked up by a developer.
+*   `status: in-progress`: Tasks actively being worked on.
+*   `status: in-review`: Tasks with an open Pull Request awaiting review.
+*   `status: done`: Completed tasks (typically auto-closed by PR merges).
+
+**Project Board:**
+You can view the overall project status and progress on our [GitHub Project Board](https://github.com/users/webmaven/projects/1). This Kanban board visualizes the flow of tasks through various stages.
+
 ### Pull Requests
 
 - Open a new GitHub pull request with the patch.
 - Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
+- **Link to Issues**: All Pull Requests must be explicitly linked to one or more GitHub Issues they resolve or implement. Use closing keywords (e.g., `Closes #<issue_number>`, `Fixes #<issue_number>`, `Resolves #<issue_number>`) in your PR description. This automatically closes the associated issue upon merging the PR and ensures proper traceability.
 - Before submitting, please ensure that your code follows the existing style of the project, and that all tests pass.
+
+### Submitting Implementation Plans
+
+For significant new features, architectural changes, or complex bug fixes, we encourage contributors to submit a detailed implementation plan *before* writing code. This ensures alignment, architectural soundness, and helps prevent "vague plans" that can lead to "messy code."
+
+A good implementation plan should be submitted as a separate Markdown document (e.g., in the `docs/plans/` directory if it's a major roadmap item) or included directly in a GitHub issue description. It should cover:
+
+1.  **Overview**:
+    *   What problem does this solve, and why is it needed?
+    *   What is the goal of this change?
+
+2.  **Current State Analysis**:
+    *   Briefly describe the relevant existing code or architecture (with file:line references where applicable).
+    *   Identify affected components and current behavior.
+
+3.  **Proposed Implementation Approach**:
+    *   High-level strategy or design.
+    *   Break down the work into logical, atomic phases (e.g., Schema -> Backend -> UI, or smaller logical steps).
+
+4.  **Detailed Changes (per phase)**:
+    *   For each phase, specify:
+        *   **Files to be changed**: List specific file paths (e.g., `src/module/file.py`).
+        *   **Summary of changes**: Briefly describe the modifications (e.g., "Add `validate()` method handling X").
+        *   *(Optional: Code snippets)*: Include small, illustrative code snippets if they significantly clarify the change.
+
+5.  **Verification Strategy (per phase)**:
+    *   For each phase, outline how the changes will be verified:
+        *   **Automated Tests**: Specify commands to run (e.g., `PYTHONPATH=src pytest tests/my_feature.py`).
+        *   **Manual Verification**: Provide clear, reproducible steps (e.g., "Click X, expect Y").
+
+6.  **Architectural Risks/Considerations**:
+    *   Identify potential side effects, dependency issues, performance risks, or violations of existing project conventions.
+
+7.  **Out of Scope**:
+    *   Explicitly state what this plan does *not* cover to prevent scope creep.
+
+Submitting a plan allows for early feedback and ensures that the proposed solution aligns with `lodum`'s architectural principles and quality standards.
 
 ## Running Tests
 
@@ -71,7 +128,7 @@ Before submitting a pull request, please run the following checks to ensure code
 ## Styleguides
 
 - We use [Ruff](https://github.com/astral-sh/ruff) for code formatting and linting. Please run it on your code before submitting a pull request.
-- We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for all Python code.
+- We follow [PEP 8](https://www.python.org/dev/psps/pep-0008/) for all Python code.
 
 ## Core Development Guidelines
 
