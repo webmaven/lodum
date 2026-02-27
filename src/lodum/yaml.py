@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import io
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Type, TypeVar
 
 try:
     from ruamel.yaml import YAML
@@ -13,7 +13,8 @@ except ImportError:
     yaml_available = False
 
 from .core import Loader, BaseDumper
-from .internal import dump, load
+from .internal import dump, load, DEFAULT_MAX_SIZE
+from .exception import DeserializationError
 
 T = TypeVar("T")
 yaml: Any = None
@@ -42,10 +43,15 @@ def dumps(obj: Any) -> str:
         return string_stream.getvalue()
 
 
-def loads(cls: Type[T], yaml_string: str) -> T:
+def loads(cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """
     Decodes a YAML string to a Python object.
     """
+    if len(yaml_string) > max_size:
+        raise DeserializationError(
+            f"Input size ({len(yaml_string)}) exceeds maximum allowed ({max_size})"
+        )
+
     if not yaml_available:
         raise ImportError(
             "ruamel.yaml is required for YAML deserialization. Install it with 'pip install lodum[yaml]'."
@@ -65,7 +71,7 @@ class YamlDumper(BaseDumper):
     Encodes Python objects into a YAML-compatible intermediate representation.
     """
 
-    def begin_struct(self, cls: Type) -> dict:
+    def begin_struct(self, cls: Type[Any]) -> Dict[str, Any]:
         return {}
 
     def end_struct(self) -> None:

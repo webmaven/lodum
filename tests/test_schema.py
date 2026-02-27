@@ -77,3 +77,31 @@ def test_union_schema():
     types = [t["type"] for t in schema["properties"]["val"]["anyOf"]]
     assert "integer" in types
     assert "string" in types
+
+
+def test_rename_schema():
+    @lodum
+    class RenameModel:
+        def __init__(self, old_name: int = field(rename="new_name")):
+            self.old_name = old_name
+
+    schema = json.schema(RenameModel)
+    assert "new_name" in schema["properties"]
+    assert "old_name" not in schema["properties"]
+
+
+def test_complex_nesting_schema():
+    @lodum
+    class Nested:
+        def __init__(self, data: Dict[str, List[Optional[int]]]):
+            self.data = data
+
+    schema = json.schema(Nested)
+    prop = schema["properties"]["data"]
+    assert prop["type"] == "object"
+    array_schema = prop["additionalProperties"]
+    assert array_schema["type"] == "array"
+    any_of = array_schema["items"]["anyOf"]
+    types = [t["type"] for t in any_of]
+    assert "integer" in types
+    assert "null" in types

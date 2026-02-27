@@ -9,7 +9,7 @@ from typing import Any, Iterator, Type, TypeVar
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
-from .internal import dump, load
+from .internal import dump, load, DEFAULT_MAX_SIZE
 
 T = TypeVar("T")
 
@@ -27,8 +27,13 @@ def dumps(obj: Any) -> bytes:
     return cbor2.dumps(dumped_data)
 
 
-def loads(cls: Type[T], cbor_bytes: bytes) -> T:
+def loads(cls: Type[T], cbor_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
     """Decodes CBOR bytes to a Python object (loads)."""
+    if len(cbor_bytes) > max_size:
+        raise DeserializationError(
+            f"Input size ({len(cbor_bytes)}) exceeds maximum allowed ({max_size})"
+        )
+
     if cbor2 is None:
         raise ImportError(
             "cbor2 is required for CBOR deserialization. Install it with 'pip install lodum[cbor]'."
