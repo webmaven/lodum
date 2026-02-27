@@ -435,6 +435,7 @@
                 stroke: { width: 1.5, curve: 'straight', colors: ['#e5e7eb'] },
                 markers: { 
                     size: frontierData.map((p, i) => (tagMap[p.sha] || i === frontierData.length - 1) ? 6 : 3),
+                    colors: frontierData.map((p, i) => tagMap[p.sha] ? '#fbc929' : (i === frontierData.length - 1 ? '#ef4444' : `rgba(156, 163, 175, ${0.3 + (i / frontierData.length) * 0.7})`)),
                     strokeWidth: 0,
                     hover: { size: 8 }
                 },
