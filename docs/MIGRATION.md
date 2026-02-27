@@ -26,9 +26,9 @@ except DeserializationError:
     # handle error
 ```
 
-### Centralized Schema API (v0.3.0)
+### Centralized Schema API (v0.2.0)
 
-Starting with v0.3.0, the primary way to generate a JSON Schema from a `@lodum` class is through the top-level `lodum.schema()` function. Format-specific schema functions (like `lodum.msgpack.schema()`) have been removed from binary formats to reduce API surface area and architectural redundancy.
+Starting with v0.2.0, the primary way to generate a JSON Schema from a `@lodum` class is through the top-level `lodum.schema()` function. Format-specific schema functions (like `lodum.msgpack.schema()`) have been removed from binary formats to reduce API surface area and architectural redundancy.
 
 **Before:**
 ```python

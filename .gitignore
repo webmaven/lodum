@@ -134,3 +134,4 @@ node_modules/
 
 # Pyre type checker
 .pyre/
+docs/api/

@@ -100,29 +100,50 @@ Submitting a plan allows for early feedback and ensures that the proposed soluti
 
 ## Running Tests
 
-We use `pytest` for testing. You can run the full test suite locally:
+We use `pytest` for native testing and a Node.js-based runner for Pyodide (WASM) testing.
 
+### Native Tests
+Run the full test suite locally:
 ```bash
 PYTHONPATH=src pytest
 ```
+
+### Pyodide (WASM) Tests
+To ensure compatibility with browser environments, we run tests in Pyodide via Node.js.
+
+1.  **Install Node.js dependencies:**
+    ```bash
+    npm install
+    ```
+
+2.  **Build the distribution wheel:**
+    The Pyodide runner requires a built wheel to install the package in the virtual WASM environment.
+    ```bash
+    python3 -m build
+    ```
+
+3.  **Run the Pyodide tests:**
+    ```bash
+    # Run standard sequential tests
+    node run_pyodide_node.js
+
+    # Run with simulated shared memory (concurrency testing)
+    PYODIDE_SHARED_MEMORY=1 node run_pyodide_node.js
+    ```
 
 ## Pre-commit Checks
 
 Before submitting a pull request, please run the following checks to ensure code quality:
 
-1.  **Linting:**
+1.  **Linting & Formatting:**
     ```bash
-    ruff check src/lodum
+    ruff check src tests benchmarks
+    ruff format --check src tests benchmarks
     ```
 
-2.  **Formatting:**
+2.  **Type Checking:**
     ```bash
-    ruff format --check src/lodum
-    ```
-
-3.  **Type Checking:**
-    ```bash
-    mypy src/lodum
+    mypy src tests
     ```
 
 ## Styleguides
@@ -148,7 +169,7 @@ Lodum uses a `Context` object to manage global state. All handlers must be state
 When a new version of `lodum` is ready for release, follow these steps:
 
 1.  **Prepare the Release Branch**:
-    - Create a new branch `feature/issue-XX-release-prep` (replacing XX with the release tracking issue number).
+    - Create a new branch `release/vX.Y.Z`.
 2.  **Update Version**:
     - Update `__version__` in `src/lodum/__init__.py`.
     - Update the `version` field in `pyproject.toml`.
@@ -156,16 +177,19 @@ When a new version of `lodum` is ready for release, follow these steps:
     - Add a new section to `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
     - Set the release date.
 4.  **Final Checks**:
-    - Run the full test suite: `PYTHONPATH=src pytest`.
-    - Build the documentation: `hatch run docs-build`.
-    - Ensure all branding assets (headers, social previews) are correct.
+    - Ensure CI is passing on the release branch (includes native and Pyodide tests).
+    - Ensure all branding assets are correct.
 5.  **Merge and Tag**:
-    - Merge the release branch into `main`.
-    - Create a signed Git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
-    - Push the tag: `git push origin vX.Y.Z`.
-6.  **Publish to PyPI**:
-    - Build the distribution: `python3 -m build`.
-    - Upload to PyPI: `twine upload dist/*`.
+    - Merge the release branch into `main` via Pull Request.
+    - Create and push a signed Git tag:
+      ```bash
+      git tag -a vX.Y.Z -m "Release vX.Y.Z"
+      git push origin vX.Y.Z
+      ```
+6.  **Automated Deployment**:
+    - Pushing the tag triggers the **Release Workflow**, which automatically:
+        - Builds and uploads the package to **PyPI**.
+        - Deploys versioned documentation and updates the **latest** alias.
 
 ## License
 

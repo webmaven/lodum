@@ -33,6 +33,10 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+extra:
+  version:
+    provider: mike
+
 repo_url: https://github.com/webmaven/lodum
 repo_name: webmaven/lodum
 
@@ -41,6 +45,7 @@ nav:
   - News: NEWS.md
   - User Guide:
     - Getting Started: GETTING_STARTED.md
+    - Interactive Demo: demo.md
     - Field Customization: FIELD_CUSTOMIZATION.md
     - Validation: VALIDATION.md
     - Performance: PERFORMANCE.md
