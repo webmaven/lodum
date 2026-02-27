@@ -13,16 +13,33 @@ T = TypeVar("T")
 
 # --- Safe Encoding ---
 
+
 class ValidationDumper(Dumper):
     """A no-op dumper used only for validation."""
-    def dump_int(self, value: int) -> None: pass
-    def dump_str(self, value: str) -> None: pass
-    def dump_float(self, value: float) -> None: pass
-    def dump_bool(self, value: bool) -> None: pass
-    def dump_list(self, value: list) -> None: pass
-    def dump_dict(self, value: dict) -> None: pass
-    def begin_struct(self, cls: Type) -> dict: return {} # Return a dummy dict
-    def end_struct(self) -> None: pass
+
+    def dump_int(self, value: int) -> None:
+        pass
+
+    def dump_str(self, value: str) -> None:
+        pass
+
+    def dump_float(self, value: float) -> None:
+        pass
+
+    def dump_bool(self, value: bool) -> None:
+        pass
+
+    def dump_list(self, value: list) -> None:
+        pass
+
+    def dump_dict(self, value: dict) -> None:
+        pass
+
+    def begin_struct(self, cls: Type) -> dict:
+        return {}  # Return a dummy dict
+
+    def end_struct(self) -> None:
+        pass
 
 
 def dumps(obj: Any) -> bytes:
@@ -36,10 +53,12 @@ def dumps(obj: Any) -> bytes:
 
 # --- Safe Decoding ---
 
+
 class SafeUnpickler(pickle.Unpickler):
     """
     A custom unpickler that only allows safe, lodum-enabled classes to be loaded.
     """
+
     def find_class(self, module_name: str, class_name: str) -> Type:
         if "os" in module_name or "sys" in module_name or "subprocess" in module_name:
             raise pickle.UnpicklingError(f"Unsafe module '{module_name}' is forbidden.")
@@ -49,10 +68,12 @@ class SafeUnpickler(pickle.Unpickler):
 
         cls = super().find_class(module_name, class_name)
 
-        if getattr(cls, '_lodum_enabled', False):
+        if getattr(cls, "_lodum_enabled", False):
             return cls
 
-        raise pickle.UnpicklingError(f"Attempted to unpickle a non-lodum type: {module_name}.{class_name}")
+        raise pickle.UnpicklingError(
+            f"Attempted to unpickle a non-lodum type: {module_name}.{class_name}"
+        )
 
 
 def loads(cls: Type[T], data: bytes) -> T:
@@ -64,6 +85,8 @@ def loads(cls: Type[T], data: bytes) -> T:
         obj = unpickler.load()
 
     if not isinstance(obj, cls):
-        raise TypeError(f"Deserialized object is of type {type(obj).__name__}, but expected {cls.__name__}")
+        raise TypeError(
+            f"Deserialized object is of type {type(obj).__name__}, but expected {cls.__name__}"
+        )
 
     return obj

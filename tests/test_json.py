@@ -348,8 +348,7 @@ def test_incorrect_type_in_struct_deserialization():
     json_str = '{"a": "this should be an int", "b": "thirty"}'
     with pytest.raises(DeserializationError) as exc_info:
         json.loads(Simple, json_str)
-    assert "Error decoding field 'a'" in str(exc_info.value)
-    assert "Expected int, got str" in str(exc_info.value)
+    assert "Error at a: Expected int, got str" in str(exc_info.value)
 
 def test_deserialize_wrong_main_type():
     json_list = '[{"a": "Alice", "b": 30}]'
