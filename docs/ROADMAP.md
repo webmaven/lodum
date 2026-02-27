@@ -10,7 +10,15 @@ This document outlines the planned future enhancements for `lodum`. Our goal is 
 - **Centralized Schema API**: Promoted `lodum.schema()` as the primary entry point for JSON Schema generation.
 - **Extended Type Support**: Added native support for `numpy`, `pandas`, `polars`, and numerous standard library types.
 
-## 1. Short-Term Goals (v0.4.0)
+## 1. Current Milestone (v0.2.0 - First Public Release)
+
+- [ ] Complete Community & Governance docs (CoC, Security, Templates)
+- [ ] Ensure 100% Test Coverage
+- [ ] Final Performance Benchmarking & Analysis
+- [ ] API Reference Documentation
+- [ ] PyPI Readiness & Release Process
+
+## 2. Short-Term Goals (v0.3.0+)
 
 ### Streaming Support ([Plan](../plans/streaming_support.md))
 

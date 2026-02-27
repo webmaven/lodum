@@ -17,7 +17,18 @@ T = TypeVar("T")
 
 
 def dumps(obj: Any) -> bytes:
-    """Encodes a Python object to BSON bytes (dumps)."""
+    """
+    Encodes a Python object to BSON bytes.
+
+    Args:
+        obj: The object to encode. Must be lodum-enabled or a supported type.
+
+    Returns:
+        The BSON-encoded bytes.
+
+    Raises:
+        ImportError: If bson (pymongo) is not installed.
+    """
     if bson is None:
         raise ImportError(
             "bson (pymongo) is required for BSON serialization. Install it with 'pip install lodum[bson]'."
@@ -31,7 +42,21 @@ def dumps(obj: Any) -> bytes:
 
 
 def loads(cls: Type[T], bson_bytes: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
-    """Decodes BSON bytes to a Python object (loads)."""
+    """
+    Decodes BSON bytes into a Python object of the specified type.
+
+    Args:
+        cls: The class to instantiate.
+        bson_bytes: The BSON data to decode.
+        max_size: Maximum allowed size of the input bytes.
+
+    Returns:
+        An instance of cls populated with the decoded data.
+
+    Raises:
+        DeserializationError: If the input is invalid or exceeds max_size.
+        ImportError: If bson (pymongo) is not installed.
+    """
     if len(bson_bytes) > max_size:
         raise DeserializationError(
             f"Input size ({len(bson_bytes)}) exceeds maximum allowed ({max_size})"

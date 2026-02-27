@@ -1,21 +1,37 @@
-# lodum
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dumptruck-header-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/dumptruck-header.png">
+  <img alt="lodum: A high-performance Python serialization framework" src="docs/assets/dumptruck-header.png">
+</picture>
 
 <p align="center">
-  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg" alt="PyPI"></a>
-  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg" alt="Python versions"></a>
-  <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg" alt="License"></a>
+  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg?style=flat-square&color=blue" alt="PyPI"></a>
+  <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg?style=flat-square&logo=python&logoColor=white" alt="Python versions"></a>
+  <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg?style=flat-square&color=green" alt="License"></a>
+  <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/github/actions/workflow/status/webmaven/lodum/ci.yml?branch=main&style=flat-square&logo=github" alt="CI Status"></a>
+  <a href="https://codecov.io/gh/webmaven/lodum"><img src="https://img.shields.io/codecov/c/github/webmaven/lodum?style=flat-square&logo=codecov" alt="Coverage"></a>
 </p>
 
-`Lodum` is a framework for **lo**ading and **dum**ping Python data structures efficiently and ergonomically.
+`lodum` is a high-performance framework for **lo**ading and **dum**ping Python data structures efficiently and ergonomically. 
 
-The core design is heavily inspired by the robustness and efficiency of Rust's `serde` framework.
+> **Think of it as `serde` for Python.**
+
+## ⚡ Why `lodum`?
+
+| Feature | Description |
+| :--- | :--- |
+| **🚀 Fast** | **~64% faster** dumps than standard introspection using AST bytecode generation. |
+| **🛡️ Safe** | Secure-by-default design. Blocks arbitrary code execution in `pickle`. |
+| **📦 Universal** | One API for **JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle**. |
+| **🧩 Extensible** | Native support for `numpy`, `pandas`, and `polars` without extra glue code. |
+| **✅ Validated** | Built-in validators (`Range`, `Length`) and schema generation. |
 
 ## Installation
 
-You can install `lodum` from PyPI using `pip`:
-
 ```bash
 pip install lodum
+# Or with all optional dependencies (YAML, TOML, binary formats, Pandas, etc.)
+pip install "lodum[all]"
 ```
 
 ## Core Concepts
@@ -352,6 +368,7 @@ Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIB
 
 ## Internals & Roadmap
 
+* Looking for the [API Reference](docs/api/index.html)?
 * Migrating from another library? See our [Migration Guide](docs/MIGRATION.md).
 * Interested in how `lodum` works under the hood? Check out [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 * Adding support for a new data format? See [Implementing New Formats](docs/IMPLEMENTING_FORMATS.md).

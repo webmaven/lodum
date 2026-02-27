@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import enum
 import pytest
 import datetime
 import uuid
@@ -31,16 +32,12 @@ def test_error_uuid_invalid():
 
 
 def test_error_enum_empty():
-    import enum
-
     class RealEmpty(enum.Enum):
         pass
 
     with pytest.raises(DeserializationError, match="Cannot load into empty Enum"):
         json.loads(RealEmpty, '"anything"')
 
-
-import enum
 
 class Color(enum.Enum):
     RED = "red"

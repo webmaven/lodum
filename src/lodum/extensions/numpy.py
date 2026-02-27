@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
+#
+# SPDX-License-Identifier: Apache-2.0
 from typing import Any, Dict, List, Optional, Type
 import numpy as np
 from ..core import Dumper, Loader
