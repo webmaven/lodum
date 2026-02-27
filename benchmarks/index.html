@@ -43,15 +43,6 @@
         
         .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 5px; }
 
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin: 40px 0 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
         .card {
             background: var(--bg-main);
             border: 1px solid var(--border-color);
@@ -137,6 +128,18 @@
             background: white;
             font-weight: 600;
         }
+
+        .custom-tooltip {
+            padding: 15px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+        }
+        .tooltip-sha { font-weight: 800; color: var(--lodum-yellow-dark); margin-bottom: 5px; display: block; }
+        .tooltip-msg { font-size: 0.85rem; color: var(--text-main); margin-bottom: 10px; white-space: normal; }
+        .tooltip-meta { font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid #eee; padding-top: 8px; }
     </style>
 </head>
 <body>
@@ -190,14 +193,20 @@
                 <div id="frontier-chart"></div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                     This chart maps the project's journey through the Time/Memory trade-off space. 
-                    <b>Lighter markers</b> are older; the <b>Red marker</b> is the latest commit.
+                    <b>Interactive:</b> Hover over points to highlight the corresponding commit in the latency chart.
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div style="font-weight: 700; margin-bottom: 20px;">Regression Heatmap (Current vs v0.3.0 Baseline)</div>
-            <div class="heatmap-grid" id="regression-heatmap"></div>
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div class="card">
+                <div style="font-weight: 700; margin-bottom: 20px;">Binary Format Comparison (HEAD)</div>
+                <div id="format-chart"></div>
+            </div>
+            <div class="card">
+                <div style="font-weight: 700; margin-bottom: 20px;">Regression Heatmap (vs v0.3.0)</div>
+                <div class="heatmap-grid" id="regression-heatmap"></div>
+            </div>
         </div>
 
         <div class="glossary">
@@ -209,30 +218,24 @@
                     <h4>1. Latency & Throughput</h4>
                     <div class="metric-def">
                         <span class="metric-name">Serialization Latency</span> <span class="metric-direction">(Lower is Better)</span>
-                        <div>Time taken to convert a Python object graph into a byte or string representation. Measured in microseconds (µs) per operation over 2,000 iterations.</div>
+                        <div>Time taken to convert a Python object graph into a byte or string representation. Measured in microseconds (µs) per operation.</div>
                     </div>
                     <div class="metric-def">
                         <span class="metric-name">XL Throughput</span> <span class="metric-direction">(Higher is Better)</span>
-                        <div>The effective processing speed when handling extremely large datasets (500,000 objects). Measured in Megabytes per second (MB/s).</div>
-                    </div>
-                    <h4>2. Memory & Efficiency</h4>
-                    <div class="metric-def">
-                        <span class="metric-name">Peak Memory Usage</span> <span class="metric-direction">(Lower is Better)</span>
-                        <div>The maximum RAM consumed during the serialization/deserialization process. <b>Streaming mode</b> targets O(1) memory usage regardless of dataset size.</div>
+                        <div>Processing speed when handling extremely large datasets (500,000 objects). Measured in Megabytes per second (MB/s).</div>
                     </div>
                 </div>
                 <div>
-                    <h4>3. Collected Formats (Full Suite)</h4>
-                    <p>While the charts primarily display JSON, we collect high-precision data for the following formats on every commit:</p>
+                    <h4>2. Memory & Efficiency</h4>
+                    <div class="metric-def">
+                        <span class="metric-name">Peak Memory Usage</span> <span class="metric-direction">(Lower is Better)</span>
+                        <div>Maximum RAM consumed during serialization. <b>Streaming mode</b> targets O(1) memory usage regardless of dataset size.</div>
+                    </div>
+                    <h4>3. Data Scenarios</h4>
                     <ul style="padding-left: 20px;">
-                        <li><b>Binary:</b> MsgPack, CBOR, BSON, Pickle (Safe mode).</li>
-                        <li><b>Text:</b> JSON, YAML, TOML.</li>
-                    </ul>
-                    <h4>4. Data Scenarios</h4>
-                    <ul style="padding-left: 20px;">
-                        <li><b>Simple:</b> Flat objects with primitive types (int, str, bool).</li>
-                        <li><b>Complex:</b> Objects containing nested lists, maps, enums, and dates.</li>
-                        <li><b>Nested:</b> Multi-level hierarchies of recursive @lodum objects.</li>
+                        <li><b>Simple:</b> Flat objects with primitive types.</li>
+                        <li><b>Complex:</b> Objects with nested lists, maps, enums, and dates.</li>
+                        <li><b>Nested:</b> Multi-level recursive hierarchies.</li>
                     </ul>
                 </div>
             </div>
@@ -364,13 +367,29 @@
                 return (time !== null && mem !== null) ? { x: time, y: mem, sha: c.sha, shortSha: c.shortSha } : null;
             }).filter(p => p !== null);
 
+            let frontierChart, mainChart;
+
             const frontierOptions = {
                 series: [{ name: 'Evolution Path', data: frontierData.map(p => ({ x: p.x, y: p.y })) }],
-                chart: { type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false } },
+                chart: { 
+                    type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
+                    events: {
+                        dataPointMouseEnter: (event, chartContext, config) => {
+                            const p = frontierData[config.dataPointIndex];
+                            if (mainChart) mainChart.addXaxisAnnotation({
+                                x: history.indexOf(p.sha),
+                                borderColor: '#ef4444',
+                                strokeDashArray: 0,
+                                label: { style: { color: '#fff', background: '#ef4444' }, text: 'Linked' }
+                            });
+                        },
+                        dataPointMouseLeave: () => { if (mainChart) mainChart.clearAnnotations(); }
+                    }
+                },
                 stroke: { width: 2, curve: 'straight', colors: ['#d1d5db'] },
                 markers: { 
-                    size: frontierData.map((p, i) => (tagMap[p.sha] || i === frontierData.length - 1) ? 6 : 3),
-                    colors: frontierData.map((p, i) => tagMap[p.sha] ? '#fbc929' : (i === frontierData.length - 1 ? '#ef4444' : `rgba(156, 163, 175, ${0.3 + (i / frontierData.length) * 0.7})`)),
+                    size: frontierData.map((p, i) => (tagMap[p.sha] || i === frontierData.length - 1) ? 6 : 4),
+                    colors: frontierData.map((p, i) => tagMap[p.sha] ? '#fbc929' : (i === frontierData.length - 1 ? '#ef4444' : `rgba(156, 163, 175, ${0.4 + (i / frontierData.length) * 0.6})`)),
                     strokeWidth: 0,
                     hover: { size: 8 }
                 },
@@ -398,14 +417,15 @@
                 tooltip: {
                     custom: function({ series, seriesIndex, dataPointIndex, w }) {
                         const p = frontierData[dataPointIndex];
-                        const tag = tagMap[p.sha] ? `<b style="color:#fbc929">[${tagMap[p.sha]}]</b> ` : '';
+                        const tag = tagMap[p.sha] ? `<span class="tag-badge" style="background:#fbc929; color:#fff;">${tagMap[p.sha]}</span> ` : '';
                         const isLatest = dataPointIndex === frontierData.length - 1 ? ' <span style="color:#ef4444">(Latest)</span>' : '';
-                        return `<div style="padding:10px; font-size:11px; background:#fff; border:1px solid #e5e7eb; border-radius:4px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">${tag}${p.shortSha}${isLatest}<br/>${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div>`;
+                        return `<div class="custom-tooltip"><span class="tooltip-sha">${p.shortSha}${isLatest}</span><div class="tooltip-msg">${tag}Efficiency: ${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div></div>`;
                     }
                 },
                 noData: { text: 'No streaming data available' }
             };
-            new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions).render();
+            frontierChart = new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions);
+            frontierChart.render();
 
             const envs = [
                 { id: 'ubuntu-latest', label: 'Linux', color: '#fbc929', dash: 0 },
@@ -413,7 +433,7 @@
                 { id: 'Pyodide', label: 'WASM', color: '#10b981', dash: 2 }
             ];
 
-            let mainChart, brushChart;
+            let brushChart;
 
             const updateTrendCharts = (scenario) => {
                 const benchName = `JSON Serialization Lodum ${scenario}`;
@@ -425,12 +445,7 @@
                         return x !== -1 ? [x, y] : null;
                     }).filter(p => p !== null);
 
-                    series.push({
-                        name: `Lodum (${env.label})`,
-                        data: data,
-                        color: env.color,
-                        dashArray: env.dash
-                    });
+                    series.push({ name: `Lodum (${env.label})`, data: data, color: env.color, dashArray: env.dash });
                 });
 
                 if (mainChart) mainChart.destroy();
@@ -438,7 +453,20 @@
 
                 const mainOptions = {
                     series: series,
-                    chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false } },
+                    chart: { 
+                        id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false },
+                        events: {
+                            dataPointMouseEnter: (event, chartContext, config) => {
+                                const sha = history[config.dataPointIndex];
+                                const fPoint = frontierData.find(p => p.sha === sha);
+                                if (fPoint && frontierChart) frontierChart.addPointAnnotation({
+                                    x: fPoint.x, y: fPoint.y, marker: { size: 10, fillColor: '#ef4444', strokeWidth: 0 },
+                                    label: { style: { color: '#fff', background: '#ef4444' }, text: 'Linked' }
+                                });
+                            },
+                            dataPointMouseLeave: () => { if (frontierChart) frontierChart.clearAnnotations(); }
+                        }
+                    },
                     stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray), connectNulls: true },
                     markers: { size: 4 },
                     annotations: { xaxis: releaseAnnotations },
@@ -457,16 +485,19 @@
                     yaxis: { title: { text: 'Execution Time (us) →', style: { color: '#9ca3af', fontSize: '10px' } } },
                     tooltip: { 
                         shared: true, 
-                        x: { 
-                            formatter: (val) => {
-                                const idx = Math.round(val);
-                                if (idx < 0 || idx >= history.length) return "Unknown";
-                                const sha = history[idx];
-                                const c = commitMap.get(sha);
-                                return (tagMap[sha] ? `[${tagMap[sha]}] ` : "") + sha.substring(0, 7) + (c ? ": " + c.msg.substring(0, 50) : "");
-                            }
-                        },
-                        y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } 
+                        custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                            const sha = history[dataPointIndex];
+                            const c = commitMap.get(sha);
+                            const tag = tagMap[sha] ? `<span class="tag-badge" style="background:#fbc929; color:#fff;">${tagMap[sha]}</span> ` : '';
+                            let content = `<div class="custom-tooltip"><span class="tooltip-sha">${sha.substring(0,7)}</span><div class="tooltip-msg">${tag}${c ? c.msg : ""}</div><div class="tooltip-meta">`;
+                            series.forEach((s, i) => {
+                                if (s[dataPointIndex] !== null) {
+                                    content += `<span style="color:${w.config.series[i].color}">●</span> ${w.config.series[i].name}: <b>${s[dataPointIndex].toFixed(2)}µs</b><br/>`;
+                                }
+                            });
+                            content += `</div></div>`;
+                            return content;
+                        }
                     },
                     grid: { borderColor: '#f3f4f6' },
                     noData: { text: 'Loading benchmark data...' }
@@ -490,7 +521,33 @@
             updateTrendCharts('simple');
             document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
 
-            // 4. Calculate Summary KPIs
+            // 4. Binary Format Comparison
+            const latestPoint = commitMap.get(latestSha);
+            if (latestPoint) {
+                const formats = [
+                    { name: 'JSON', pattern: 'JSON Serialization Lodum complex' },
+                    { name: 'MsgPack', pattern: 'MsgPack Serialization Lodum complex' },
+                    { name: 'CBOR', pattern: 'CBOR Serialization Lodum complex' },
+                    { name: 'Pickle', pattern: 'Pickle Serialization Lodum (Safe) complex' }
+                ];
+                const formatData = formats.map(f => {
+                    const b = latestPoint.data['Lodum Performance Index - ubuntu-latest'].benches.find(b => b.name.includes(f.pattern));
+                    return b ? b.value : 0;
+                });
+
+                const formatOptions = {
+                    series: [{ name: 'Latency (us)', data: formatData }],
+                    chart: { type: 'bar', height: 250, toolbar: { show: false } },
+                    plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true } },
+                    colors: ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'],
+                    xaxis: { categories: formats.map(f => f.name), labels: { style: { fontSize: '10px' } } },
+                    legend: { show: false },
+                    tooltip: { y: { formatter: v => v.toFixed(2) + ' µs' } }
+                };
+                new ApexCharts(document.querySelector("#format-chart"), formatOptions).render();
+            }
+
+            // 5. Calculate Summary KPIs
             const getKPI = (id, text) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = text;
