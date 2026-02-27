@@ -436,7 +436,7 @@
                 const mainOptions = {
                     series: series,
                     chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false } },
-                    stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray) },
+                    stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray), connectNulls: true },
                     markers: { size: 4 },
                     annotations: { xaxis: releaseAnnotations },
                     xaxis: { 
@@ -479,6 +479,7 @@
                 const brushOptions = {
                     series: series,
                     chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, history.length - 50), max: history.length - 1 } } },
+                    stroke: { connectNulls: true },
                     colors: series.map(s => s.color),
                     xaxis: { type: 'numeric', min: 0, max: history.length - 1, labels: { show: false } },
                     yaxis: { labels: { show: false } },
