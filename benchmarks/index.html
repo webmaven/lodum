@@ -325,12 +325,16 @@
             const frontierData = sortedCommits.map(c => {
                 let time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha);
                 let mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha);
+                
+                // Fallback to Standard memory if Streaming is missing (for historical milestones)
                 if (time === null) time = getVal('ubuntu-latest', 'Standard (loads) Time', c.sha);
                 if (mem === null) mem = getVal('ubuntu-latest', 'Standard (loads) Memory', c.sha);
+                
                 if (time === null) {
                     time = getVal('windows-latest', 'Streaming (load_stream) Time', c.sha);
                     mem = getVal('windows-latest', 'Streaming (load_stream) Memory', c.sha);
                 }
+                
                 return (time !== null && mem !== null) ? { x: time, y: mem, sha: c.sha, shortSha: c.shortSha } : null;
             }).filter(p => p !== null);
 
