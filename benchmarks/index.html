@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: 1.1.7 - Interaction Hardening - Cache Buster: 1772308000 -->
+    <!-- Version: 1.1.8 - Overhaul Restoration - Cache Buster: 1772309000 -->
     <title>Lodum Performance Dashboard</title>
     <script>
+        // SHIM: Force non-passive listeners globally to silence ApexCharts errors
         (function() {
             const original = EventTarget.prototype.addEventListener;
             EventTarget.prototype.addEventListener = function(type, listener, options) {
@@ -50,7 +51,7 @@
     </style>
 </head>
 <body>
-    <div id="status-bar">Ready</div>
+    <div id="status-bar">Dashboard Loading...</div>
     <div class="container">
         <header>
             <h1>Lodum Performance Index</h1>
@@ -62,13 +63,15 @@
             <div class="kpi-card"><div class="kpi-label">WASM Efficiency</div><div class="kpi-value" id="kpi-wasm">--</div></div>
             <div class="kpi-card"><div class="kpi-label">XL Throughput</div><div class="kpi-value" id="kpi-throughput">--</div></div>
         </div>
+
         <div class="grid-main">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <b>Serialization Latency (JSON)</b>
                     <select id="scenario-selector"><option value="simple">Simple</option><option value="complex">Complex</option><option value="nested">Nested</option></select>
                 </div>
-                <div id="main-chart" class="chart-container"></div><div id="brush-chart" class="chart-container"></div>
+                <div id="main-chart" class="chart-container"></div>
+                <div id="brush-chart" class="chart-container"></div>
             </div>
             <div>
                 <div class="card"><b>Evolution Path</b><div id="frontier-chart" class="chart-container"></div></div>
@@ -119,6 +122,7 @@
                 Sync.hoverSha = sha;
                 document.getElementById('status-bar').innerText = 'Event [' + source + ']: ' + sha.substring(0,7);
                 
+                // Use IDs matches in HTML and Chart constructors
                 if (source !== 'trend') {
                     const idx = Sync.history.indexOf(sha);
                     if (idx !== -1) ApexCharts.exec('trend', 'addXaxisAnnotation', { id: 'sync', x: idx, borderColor: '#ef4444', label: { text: 'Linked', style: { color: '#fff', background: '#ef4444' } } });
@@ -171,6 +175,7 @@
                 return (t && m) ? { x: t, y: m, sha: c.id, short: c.short } : null;
             }).filter(p => p !== null);
 
+            // Render Frontier
             new ApexCharts(document.querySelector("#frontier-chart"), {
                 series: [{ name: 'Path', data: Sync.frontierPoints.map(p => ({ x: p.x, y: p.y, sha: p.sha })) }],
                 chart: { id: 'frontier', type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
@@ -190,11 +195,12 @@
                 markers: { size: 6, hover: { size: 10 } },
                 tooltip: { custom: ({ series, seriesIndex, dataPointIndex, w }) => {
                     const p = Sync.frontierPoints[dataPointIndex];
+                    if (!p) return '';
                     return '<div class="custom-tooltip"><b>' + p.short + '</b><br/>' + p.x.toFixed(3) + 's / ' + p.y.toFixed(1) + 'MB</div>';
                 }}
             }).render();
 
-            let mainChart;
+            let mainChart, brushChart;
             const updateTrend = (scenario) => {
                 const series = ['ubuntu-latest', 'windows-latest', 'Pyodide'].map(pid => ({
                     name: pid.includes('ubuntu')?'Linux':(pid.includes('win')?'Windows':'WASM'),
@@ -205,6 +211,8 @@
                     })
                 }));
                 if (mainChart) mainChart.destroy();
+                if (brushChart) brushChart.destroy();
+
                 mainChart = new ApexCharts(document.querySelector("#main-chart"), {
                     series: series,
                     chart: { id: 'trend', type: 'line', height: 300, toolbar: { show: false }, animations: { enabled: false },
@@ -223,19 +231,27 @@
                     xaxis: { type: 'numeric', min: 0, max: Sync.history.length - 1, labels: { formatter: v => Sync.history[Math.round(v)]?.substring(0,7) || '' } },
                     markers: { size: 5, hover: { size: 10 } },
                     tooltip: { shared: true, custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-                        const sha = Sync.history[dataPointIndex];
-                        if (!sha) return '';
-                        const c = Sync.commitMap.get(sha);
+                        const pt = w.config.series[0].data[dataPointIndex] || w.config.series[seriesIndex].data[dataPointIndex];
+                        if (!pt) return '';
+                        const c = Sync.commitMap.get(pt.sha);
                         if (!c) return '';
                         let html = '<div class="custom-tooltip"><b>' + c.short + '</b><br/>' + (c.msg || "").substring(0,100) + '<hr/>';
                         w.config.series.forEach((s, i) => {
-                            const p = s.data.find(x => x.x === dataPointIndex);
+                            const p = s.data.find(x => x.sha === pt.sha);
                             if (p && p.y != null) html += '<div><span style="color:' + s.color + '">●</span> ' + s.name + ': <b>' + p.y.toFixed(2) + 'µs</b></div>';
                         });
                         return html + '</div>';
                     }}
                 });
                 mainChart.render();
+
+                brushChart = new ApexCharts(document.querySelector("#brush-chart"), {
+                    series: series,
+                    chart: { id: 'brush', height: 80, type: 'area', brush: { target: 'trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, Sync.history.length - 8), max: Sync.history.length - 1 } } },
+                    colors: series.map(s => s.color), fill: { opacity: 0.2 },
+                    xaxis: { type: 'numeric', labels: { show: false } }, yaxis: { labels: { show: false } }
+                });
+                brushChart.render();
             };
             updateTrend('simple');
             document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
