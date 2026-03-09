@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lodum"
+version = "0.4.0.dev0"
+description = "A Python serialization/deserialization library (AKA LOad/DUMp) inspired by Rust's serde."
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "Michael R. Bernstein", email = "zopemaven@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["ruamel.yaml>=0.18.0"]
+msgpack = ["msgpack"]
+toml = ["tomli-w", "tomli; python_version < '3.11'"]
+cbor = ["cbor2"]
+bson = ["pymongo"]
+numpy = ["numpy"]
+pandas = ["pandas"]
+polars = ["polars"]
+ijson = ["ijson"]
+all = [
+    "ruamel.yaml>=0.18.0",
+    "msgpack",
+    "tomli-w",
+    "tomli; python_version < '3.11'",
+    "cbor2",
+    "pymongo",
+    "numpy",
+    "pandas",
+    "polars",
+    "ijson",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/webmaven/lodum"
+"Bug Tracker" = "https://github.com/webmaven/lodum/issues"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "mkdocs-material",
+  "mkdocstrings[python]",
+  "mkdocs-git-revision-date-localized-plugin",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest"
+lint = "ruff check src tests benchmarks"
+format = "ruff format src tests benchmarks"
+typecheck = "mypy src tests"
+docs-build = "mkdocs build"
+docs-serve = "mkdocs serve"

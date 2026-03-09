@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[all]"
+        pip install pytest pytest-cov ruff mypy pandas-stubs
+    - name: Lint with ruff
+      run: |
+        ruff check src tests benchmarks --fix
+        ruff format src tests benchmarks
+    - name: Type check with mypy
+      run: |
+        mypy src tests
+    - name: Run tests
+      run: |
+        PYTHONPATH=src pytest --cov=lodum --cov-report=term-missing --ignore=tests/test_numpy.py --ignore=tests/test_pandas.py --ignore=tests/test_polars.py
+
+  test-pyodide:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+        npm install
+    - name: Build wheel
+      run: python -m build
+    - name: Run Pyodide tests (Standard)
+      run: node run_pyodide_node.js
+    - name: Run Pyodide tests (Shared Memory)
+      run: PYODIDE_SHARED_MEMORY=1 node run_pyodide_node.js
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+    - name: Install build tool
+      run: python -m pip install build
+    - name: Build package
+      run: python -m build

@@ -1,0 +1,8 @@
+{
+  "JSON Serialization Lodum simple": {"mean": 7.62, "stdev": 1.87},
+  "JSON Serialization Lodum complex": {"mean": 15.45, "stdev": 2.03},
+  "JSON Serialization Lodum nested": {"mean": 36.51, "stdev": 3.67},
+  "JSON Deserialization Lodum simple": {"mean": 21.75, "stdev": 1.70},
+  "JSON Deserialization Lodum complex": {"mean": 42.52, "stdev": 2.13},
+  "JSON Deserialization Lodum nested": {"mean": 131.67, "stdev": 6.75}
+}

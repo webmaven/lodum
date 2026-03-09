@@ -1,0 +1,141 @@
+from typing import List, Dict
+
+try:
+    # Try the modern public API
+    from lodum import lodum  # type: ignore
+except (ImportError, AttributeError):
+    try:
+        # Try the v0.2.0 internal location
+        from lodum.core import lodum  # type: ignore
+    except (ImportError, AttributeError):
+        try:
+            # Fallback for v0.1.0 where it was named 'serializable'
+            from lodum.core import serializable as lodum  # type: ignore
+        except (ImportError, AttributeError):
+            # Last resort: try direct import of core
+            import lodum.core  # type: ignore
+
+            if hasattr(lodum.core, "lodum"):  # type: ignore
+                lodum = lodum.core.lodum  # type: ignore
+            elif hasattr(lodum.core, "serializable"):  # type: ignore
+                lodum = lodum.core.serializable  # type: ignore
+            else:
+                raise ImportError("Could not find lodum or serializable decorator")
+from pydantic import BaseModel
+from marshmallow import Schema, fields, post_load
+
+# --- Lodum Models ---
+
+
+@lodum
+class LodumSimple:
+    def __init__(self, name: str, age: int, active: bool):
+        self.name = name
+        self.age = age
+        self.active = active
+
+
+@lodum
+class LodumComplex:
+    def __init__(
+        self,
+        id: int,
+        name: str,
+        tags: List[str],
+        metadata: Dict[str, str],
+        score: float,
+    ):
+        self.id = id
+        self.name = name
+        self.tags = tags
+        self.metadata = metadata
+        self.score = score
+
+
+@lodum
+class LodumNested:
+    def __init__(self, id: int, simple: LodumSimple, children: List[LodumSimple]):
+        self.id = id
+        self.simple = simple
+        self.children = children
+
+
+# --- Pydantic Models ---
+
+
+class PydanticSimple(BaseModel):
+    name: str
+    age: int
+    active: bool
+
+
+class PydanticComplex(BaseModel):
+    id: int
+    name: str
+    tags: List[str]
+    metadata: Dict[str, str]
+    score: float
+
+
+class PydanticNested(BaseModel):
+    id: int
+    simple: PydanticSimple
+    children: List[PydanticSimple]
+
+
+# --- Marshmallow Schemas ---
+
+
+class MarshmallowSimple:
+    def __init__(self, name, age, active):
+        self.name = name
+        self.age = age
+        self.active = active
+
+
+class MarshmallowSimpleSchema(Schema):
+    name = fields.Str()
+    age = fields.Int()
+    active = fields.Bool()
+
+    @post_load
+    def make_obj(self, data, **kwargs):
+        return MarshmallowSimple(**data)
+
+
+class MarshmallowComplex:
+    def __init__(self, id, name, tags, metadata, score):
+        self.id = id
+        self.name = name
+        self.tags = tags
+        self.metadata = metadata
+        self.score = score
+
+
+class MarshmallowComplexSchema(Schema):
+    id = fields.Int()
+    name = fields.Str()
+    tags = fields.List(fields.Str())
+    metadata = fields.Dict(keys=fields.Str(), values=fields.Str())
+    score = fields.Float()
+
+    @post_load
+    def make_obj(self, data, **kwargs):
+        return MarshmallowComplex(**data)
+
+
+class MarshmallowNested:
+    def __init__(self, id, simple, children):
+        self.id = id
+        self.simple = simple
+        self.children = children
+
+
+class MarshmallowNestedSchema(Schema):
+    id = fields.Int()
+    simple = fields.Nested(MarshmallowSimpleSchema)
+    children = fields.List(fields.Nested(MarshmallowSimpleSchema))
+
+    @post_load
+    def make_obj(self, data, **kwargs):
+        return MarshmallowNested(**data)
