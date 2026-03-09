@@ -3,500 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Version: 1.1.7 - Interaction Hardening - Cache Buster: 1772308000 -->
     <title>Lodum Performance Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        (function() {
+            const original = EventTarget.prototype.addEventListener;
+            EventTarget.prototype.addEventListener = function(type, listener, options) {
+                if (['touchstart', 'touchmove', 'wheel', 'mousewheel'].includes(type)) {
+                    if (typeof options === 'object') options.passive = false;
+                    else if (typeof options === 'boolean') options = { capture: options, passive: false };
+                    else options = { passive: false };
+                }
+                return original.call(this, type, listener, options);
+            };
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
     <style>
         :root {
             --lodum-yellow: #fbc929;
-            --lodum-yellow-dark: #d9a300;
             --text-main: #1f2937;
-            --text-muted: #6b7280;
             --bg-main: #ffffff;
             --bg-muted: #f9fafb;
             --border-color: #e5e7eb;
-            --linux-color: #fbc929;
-            --windows-color: #3b82f6;
-            --pyodide-color: #10b981;
         }
-
-        body {
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            margin: 0;
-            padding: 40px 20px;
-            line-height: 1.5;
-        }
-
-        .container { max-width: 1100px; margin: 0 auto; }
-
-        header {
-            border-bottom: 2px solid var(--lodum-yellow);
-            padding-bottom: 20px;
-            margin-bottom: 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.025em; }
-        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 5px; }
-
-        .card {
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .kpi-card {
-            border-left: 4px solid var(--lodum-yellow);
-            padding: 15px 20px;
-            background: var(--bg-muted);
-            border-radius: 0 12px 12px 0;
-        }
-
-        .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
-        .kpi-label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-
-        .heatmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .heatmap-cell {
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.8rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.2s ease;
-        }
-
-        .cell-label { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
-        .cell-value { font-weight: 800; font-size: 1rem; }
-
-        .cell-good { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-        .cell-warn { background: #fffbeb; color: #92400e; border-color: #fde68a; }
-        .cell-bad { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
-        .cell-neutral { background: var(--bg-muted); color: var(--text-muted); }
-
-        .tag-badge {
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: #eee;
-            color: #666;
-            font-weight: 600;
-        }
-
-        .grid-6-4 { display: grid; grid-template-columns: 6fr 4fr; gap: 24px; }
-        
-        .glossary {
-            font-size: 0.9rem;
-            background: var(--bg-muted);
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .custom-tooltip {
-            padding: 15px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            max-width: 350px;
-        }
-        .tooltip-sha { font-weight: 800; color: var(--lodum-yellow-dark); margin-bottom: 5px; display: block; }
-        .tooltip-msg { font-size: 0.85rem; color: var(--text-main); margin-bottom: 10px; white-space: normal; line-height: 1.4; }
-        .tooltip-meta { font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid #eee; padding-top: 8px; }
-
-        #hover-details {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: var(--bg-muted);
-            border: 1px dashed var(--border-color);
-        }
-
-        @media (max-width: 900px) { .grid-6-4 { grid-template-columns: 1fr; } }
+        body { font-family: Inter, sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.4; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { border-bottom: 2px solid var(--lodum-yellow); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .card { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: var(--bg-muted); border-left: 4px solid var(--lodum-yellow); padding: 15px; border-radius: 0 8px 8px 0; }
+        .kpi-value { font-size: 1.5rem; font-weight: 800; }
+        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+        .grid-main { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; }
+        .heatmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .heatmap-cell { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; font-size: 0.8rem; }
+        .cell-label { display: block; font-size: 0.6rem; color: #666; margin-bottom: 2px; }
+        .cell-value { font-weight: 700; }
+        .cell-good { background: #ecfdf5; color: #065f46; }
+        .cell-bad { background: #fef2f2; color: #991b1b; }
+        .cell-warn { background: #fffbeb; color: #92400e; }
+        .apexcharts-tooltip, .custom-tooltip { pointer-events: none !important; user-select: none !important; }
+        .custom-tooltip { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-width: 300px; }
+        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; z-index: 9999; border-radius: 4px; border: 1px solid #0a0; }
+        .chart-container { touch-action: none !important; }
     </style>
 </head>
 <body>
+    <div id="status-bar">Ready</div>
     <div class="container">
         <header>
-            <div>
-                <h1>Lodum Performance Index</h1>
-                <div class="subtitle">Continuous benchmarking for the high-performance Python serialization framework.</div>
-            </div>
-            <div style="text-align: right;">
-                <span class="tag-badge">v0.4.0-dev</span><br/>
-                <a href="https://github.com/webmaven/lodum" style="font-size: 0.85rem; color: var(--text-muted);">View Repository</a><br/>
-                <span id="last-updated" style="font-size: 0.75rem; color: var(--text-muted);"></span>
-            </div>
+            <h1>Lodum Performance Index</h1>
+            <div style="text-align: right;"><span id="last-updated" style="font-size: 0.7rem; color: #666;"></span></div>
         </header>
-
         <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-label">Speedup vs Marshmallow</div>
-                <div class="kpi-value" id="kpi-speedup">--</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Mem. Reduction (Streaming)</div>
-                <div class="kpi-value" id="kpi-memory">--</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">WASM Efficiency</div>
-                <div class="kpi-value" id="kpi-wasm">--</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">XL Throughput (JSON)</div>
-                <div class="kpi-value" id="kpi-throughput">--</div>
-            </div>
+            <div class="kpi-card"><div class="kpi-label">Speedup vs MM</div><div class="kpi-value" id="kpi-speedup">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Mem. Reduction</div><div class="kpi-value" id="kpi-memory">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">WASM Efficiency</div><div class="kpi-value" id="kpi-wasm">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">XL Throughput</div><div class="kpi-value" id="kpi-throughput">--</div></div>
         </div>
-
-        <div class="grid-6-4">
+        <div class="grid-main">
             <div class="card">
-                <div class="chart-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div style="font-weight: 700;">Serialization Latency (JSON)</div>
-                    <select id="scenario-selector">
-                        <option value="simple">Simple Scenario</option>
-                        <option value="complex">Complex Scenario</option>
-                        <option value="nested">Nested Scenario</option>
-                    </select>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <b>Serialization Latency (JSON)</b>
+                    <select id="scenario-selector"><option value="simple">Simple</option><option value="complex">Complex</option><option value="nested">Nested</option></select>
                 </div>
-                <div id="main-chart"></div>
-                <div id="brush-chart"></div>
+                <div id="main-chart" class="chart-container"></div><div id="brush-chart" class="chart-container"></div>
             </div>
             <div>
-                <div class="card">
-                    <div style="font-weight: 700; margin-bottom: 20px;">Evolution Path (Efficiency Frontier)</div>
-                    <div id="frontier-chart"></div>
-                </div>
-                <div class="card">
-                    <div style="font-weight: 700; margin-bottom: 10px;" id="heatmap-title">Regression Heatmap (vs v0.3.0)</div>
-                    <div class="heatmap-grid" id="regression-heatmap"></div>
-                    <div id="hover-details">Hover or click a data point to see commit details.</div>
-                </div>
+                <div class="card"><b>Evolution Path</b><div id="frontier-chart" class="chart-container"></div></div>
+                <div class="card"><b>Regression vs v0.3.0</b><div class="heatmap-grid" id="regression-heatmap"></div><div id="hover-details" style="font-size: 0.75rem; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 10px;">Hover a point to explore.</div></div>
             </div>
         </div>
-
-        <div class="glossary">
-            <h3>Methodology & Data Glossary</h3>
-            <p>We measure serialization performance across multiple dimensions to ensure improvements in speed don't sacrifice efficiency. All data is collected on standardized AMD EPYC runners.</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
-                <div>
-                    <div class="metric-def">
-                        <span class="metric-name">Serialization Latency</span> <span class="metric-direction">(Lower is Better)</span>
-                        <div>Time to convert Python object graph to JSON/Binary. Measured in µs per op.</div>
-                    </div>
-                    <div class="metric-def">
-                        <span class="metric-name">XL Throughput</span> <span class="metric-direction">(Higher is Better)</span>
-                        <div>Processing speed for 500k objects in MB/s.</div>
-                    </div>
-                </div>
-                <div>
-                    <div class="metric-def">
-                        <span class="metric-name">Peak Memory Usage</span> <span class="metric-direction">(Lower is Better)</span>
-                        <div>Max RAM used. Streaming mode targets O(1) memory.</div>
-                    </div>
-                    <div class="metric-def">
-                        <span class="metric-name">Supported Formats</span>
-                        <div>JSON, YAML, TOML, MsgPack, CBOR, BSON, Pickle.</div>
-                    </div>
-                </div>
-            </div>
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card"><b>Binary Formats (HEAD)</b><div id="format-chart" class="chart-container"></div></div>
+            <div class="card" style="background: var(--bg-muted);"><b>Glossary</b><div style="font-size: 0.8rem; margin-top: 10px;"><b>Latency</b>: us/op. <b>RAM</b>: Peak MB. <b>Streaming</b>: O(1) mode.</div></div>
         </div>
     </div>
-
     <script src="./data.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const rawData = window.BENCHMARK_DATA;
-            if (!rawData) return;
-
-            const suites = rawData.entries;
-            const history = rawData.history || [];
-            const tagMap = rawData.tags || {};
+        const Sync = {
+            sha: null,
+            hoverSha: null,
+            history: [],
+            commitMap: new Map(),
+            frontierPoints: [],
+            baselineSha: null,
             
-            const commitMap = new Map();
-            Object.entries(suites).forEach(([suiteName, points]) => {
-                points.forEach(p => {
-                    const sha = p.commit.id;
-                    if (!sha || (history.length > 0 && !history.includes(sha))) return;
-                    const timestamp = p.commit.timestamp ? Date.parse(p.commit.timestamp) : p.date;
-                    if (!commitMap.has(sha)) {
-                        commitMap.set(sha, { 
-                            sha, shortSha: sha.substring(0, 7),
-                            date: timestamp, msg: p.commit.message || "",
-                            data: {}
+            init: () => {
+                const data = window.BENCHMARK_DATA;
+                Sync.history = data.history || [];
+                Object.entries(data.entries).forEach(([suite, points]) => {
+                    points.forEach(p => {
+                        const id = p.commit.id;
+                        if (!id || !Sync.history.includes(id)) return;
+                        if (!Sync.commitMap.has(id)) Sync.commitMap.set(id, { id, short: id.substring(0,7), msg: p.commit.message, data: {} });
+                        const c = Sync.commitMap.get(id);
+                        if (!c.data[suite] || (p.benches && p.benches.length > (c.data[suite].benches || []).length)) c.data[suite] = p;
+                    });
+                });
+                Sync.baselineSha = Object.keys(data.tags || {}).find(k => data.tags[k] === 'v0.3.0') || Sync.history[0];
+                Sync.sha = Sync.history[Sync.history.length - 1];
+            },
+            
+            getVal: (sha, pid, bench) => {
+                const c = Sync.commitMap.get(sha); if (!c) return null;
+                const suite = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
+                if (!suite) return null;
+                const b = c.data[suite].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
+                return b ? b.value : null;
+            },
+            
+            update: (sha, source) => {
+                if (!sha || sha === Sync.hoverSha) return;
+                Sync.hoverSha = sha;
+                document.getElementById('status-bar').innerText = 'Event [' + source + ']: ' + sha.substring(0,7);
+                
+                if (source !== 'trend') {
+                    const idx = Sync.history.indexOf(sha);
+                    if (idx !== -1) ApexCharts.exec('trend', 'addXaxisAnnotation', { id: 'sync', x: idx, borderColor: '#ef4444', label: { text: 'Linked', style: { color: '#fff', background: '#ef4444' } } });
+                }
+                if (source !== 'frontier') {
+                    const fp = Sync.frontierPoints.find(p => p.sha === sha);
+                    if (fp) ApexCharts.exec('frontier', 'addPointAnnotation', { id: 'sync', x: fp.x, y: fp.y, marker: { size: 10, fillColor: '#ef4444' } });
+                }
+                
+                const c = Sync.commitMap.get(sha);
+                if (c) {
+                    const grid = document.getElementById('regression-heatmap');
+                    if (grid) {
+                        grid.innerHTML = '';
+                        document.getElementById('hover-details').innerHTML = '<b>' + c.short + '</b>: ' + c.msg;
+                        const platforms = {'ubuntu-latest':'Linux', 'windows-latest':'Windows', 'Pyodide':'WASM'};
+                        ['simple', 'complex', 'nested'].forEach(s => {
+                            Object.entries(platforms).forEach(([pid, label]) => {
+                                const cur = Sync.getVal(sha, pid, 'JSON Serialization Lodum ' + s);
+                                const base = Sync.getVal(Sync.baselineSha, pid, 'JSON Serialization Lodum ' + s);
+                                let delta = 0, cls = 'cell-neutral';
+                                if (cur && base) {
+                                    delta = ((cur / base) - 1) * 100;
+                                    cls = delta < -5 ? 'cell-good' : (delta > 15 ? 'cell-bad' : (delta > 5 ? 'cell-warn' : 'cell-neutral'));
+                                }
+                                const cell = document.createElement('div');
+                                cell.className = 'heatmap-cell ' + cls;
+                                cell.innerHTML = '<span class="cell-label">' + label + ' / ' + s + '</span><span class="cell-value">' + (cur ? (delta>0?'+':'') + delta.toFixed(0) + '%' : 'N/A') + '</span>';
+                                grid.appendChild(cell);
+                            });
                         });
                     }
-                    const c = commitMap.get(sha);
-                    if (!c.data[suiteName] || (p.benches && p.benches.length > (c.data[suiteName].benches || []).length)) {
-                        c.data[suiteName] = p;
-                    }
-                });
-            });
-
-            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => {
-                const idxA = history.indexOf(a.sha);
-                const idxB = history.indexOf(b.sha);
-                return (idxA !== -1 && idxB !== -1) ? idxA - idxB : a.date - b.date;
-            });
-            const latestSha = sortedCommits[sortedCommits.length - 1]?.sha;
-
-            const releaseAnnotations = [];
-            let v030Sha = null;
-            Object.entries(tagMap).forEach(([sha, version]) => {
-                const idx = history.indexOf(sha);
-                if (idx !== -1) {
-                    if (version === 'v0.3.0') v030Sha = sha;
-                    releaseAnnotations.push({
-                        x: idx, borderColor: '#fbc929',
-                        label: { style: { color: '#fff', background: '#fbc929', fontWeight: 700 }, text: version }
-                    });
                 }
-            });
-            const baselineSha = v030Sha || sortedCommits[0]?.sha;
-
-            if (rawData.lastUpdate) {
-                const date = new Date(rawData.lastUpdate);
-                document.getElementById('last-updated').textContent = `Sync: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+            },
+            
+            clear: () => {
+                Sync.hoverSha = null;
+                ApexCharts.exec('trend', 'removeAnnotation', 'sync');
+                ApexCharts.exec('frontier', 'removeAnnotation', 'sync');
+                Sync.update(Sync.sha, 'reset');
             }
+        };
 
-            const getVal = (suitePattern, benchPattern, sha) => {
-                const c = commitMap.get(sha);
-                if (!c) return null;
-                const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(suitePattern.toLowerCase()));
-                if (!suiteKey) return null;
-                const point = c.data[suiteKey];
-                const bench = point.benches.find(b => b.name.toLowerCase().includes(benchPattern.toLowerCase()));
-                return bench ? bench.value : null;
-            };
-
-            const getLatestVal = (suitePattern, benchPattern) => {
-                for (let i = sortedCommits.length - 1; i >= 0; i--) {
-                    const val = getVal(suitePattern, benchPattern, sortedCommits[i].sha);
-                    if (val !== null) return val;
-                }
-                return null;
-            };
-
-            const updateHeatmap = (sha) => {
-                const c = commitMap.get(sha);
-                if (!c) return;
-                const heatmapGrid = document.getElementById('regression-heatmap');
-                heatmapGrid.innerHTML = '';
-                document.getElementById('heatmap-title').textContent = `Regression Heatmap (Commit ${c.shortSha} vs v0.3.0)`;
-                document.getElementById('hover-details').innerHTML = `<b>${c.shortSha}</b>: ${c.msg}`;
-
-                const scenarios = ['simple', 'complex', 'nested'];
-                const platforms = [{ id: 'ubuntu-latest', label: 'Linux' }, { id: 'windows-latest', label: 'Windows' }, { id: 'Pyodide', label: 'WASM' }];
-
-                platforms.forEach(p => {
-                    scenarios.forEach(s => {
-                        const benchName = `JSON Serialization Lodum ${s}`;
-                        const current = getVal(p.id, benchName, sha);
-                        const base = getVal(p.id, benchName, baselineSha);
-                        let delta = 0, colorClass = 'cell-neutral';
-                        if (current && base) {
-                            delta = ((current / base) - 1) * 100;
-                            if (delta < -5) colorClass = 'cell-good';
-                            else if (delta > 20) colorClass = 'cell-bad';
-                            else if (delta > 5) colorClass = 'cell-warn';
-                        }
-                        const cell = document.createElement('div');
-                        cell.className = `heatmap-cell ${colorClass}`;
-                        cell.innerHTML = `<span class="cell-label">${p.label} / ${s}</span><span class="cell-value">${current ? (delta > 0 ? '+' : '') + delta.toFixed(0) + '%' : 'N/A'}</span>`;
-                        heatmapGrid.appendChild(cell);
-                    });
-                });
-            };
-
-            let selectedSha = latestSha;
-            updateHeatmap(selectedSha);
-
-            const frontierData = sortedCommits.map(c => {
-                let time = getVal('ubuntu-latest', 'Streaming (load_stream) Time', c.sha);
-                let mem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory', c.sha);
-                
-                // Fallback to Standard memory if Streaming is missing (for historical milestones)
-                if (time === null) time = getVal('ubuntu-latest', 'Standard (loads) Time', c.sha);
-                if (mem === null) mem = getVal('ubuntu-latest', 'Standard (loads) Memory', c.sha);
-                
-                if (time === null) {
-                    time = getVal('windows-latest', 'Streaming (load_stream) Time', c.sha);
-                    mem = getVal('windows-latest', 'Streaming (load_stream) Memory', c.sha);
-                }
-                
-                return (time !== null && mem !== null) ? { x: time, y: mem, sha: c.sha, shortSha: c.shortSha } : null;
+        document.addEventListener('DOMContentLoaded', () => {
+            Sync.init();
+            const sorted = Sync.history.map(sha => Sync.commitMap.get(sha)).filter(c => !!c);
+            Sync.frontierPoints = sorted.map(c => {
+                const t = Sync.getVal(c.id, 'ubuntu-latest', 'Streaming (load_stream) Time') || Sync.getVal(c.id, 'ubuntu-latest', 'Standard (loads) Time');
+                const m = Sync.getVal(c.id, 'ubuntu-latest', 'Streaming (load_stream) Memory') || Sync.getVal(c.id, 'ubuntu-latest', 'Standard (loads) Memory');
+                return (t && m) ? { x: t, y: m, sha: c.id, short: c.short } : null;
             }).filter(p => p !== null);
 
-            let frontierChart, mainChart;
-
-            const frontierOptions = {
-                series: [{ name: 'Evolution Path', data: frontierData.map(p => ({ x: p.x, y: p.y })) }],
-                chart: { 
-                    type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
+            new ApexCharts(document.querySelector("#frontier-chart"), {
+                series: [{ name: 'Path', data: Sync.frontierPoints.map(p => ({ x: p.x, y: p.y, sha: p.sha })) }],
+                chart: { id: 'frontier', type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
                     events: {
-                        dataPointMouseEnter: (event, chartContext, config) => {
-                            const p = frontierData[config.dataPointIndex];
-                            updateHeatmap(p.sha);
-                            if (mainChart) mainChart.addXaxisAnnotation({
-                                x: history.indexOf(p.sha), borderColor: '#ef4444', strokeDashArray: 0,
-                                label: { style: { color: '#fff', background: '#ef4444' }, text: 'Linked' }
-                            });
+                        dataPointMouseEnter: (e, ctx, cfg) => {
+                            const pt = cfg.w.config.series[0].data[cfg.dataPointIndex];
+                            if (pt) Sync.update(pt.sha, 'frontier');
                         },
-                        dataPointMouseLeave: () => { 
-                            if (mainChart) mainChart.clearAnnotations(); 
-                            updateHeatmap(selectedSha);
-                        },
-                        dataPointSelection: (event, chartContext, config) => {
-                            selectedSha = frontierData[config.dataPointIndex].sha;
-                            updateHeatmap(selectedSha);
+                        dataPointMouseLeave: () => Sync.clear(),
+                        click: (e, ctx, cfg) => {
+                            const pt = cfg.w.config.series[0].data[cfg.dataPointIndex];
+                            if (pt) { Sync.sha = pt.sha; Sync.update(pt.sha, 'click'); }
                         }
                     }
                 },
-                stroke: { width: 2, curve: 'straight', colors: ['#d1d5db'] },
-                markers: { 
-                    size: frontierData.map((p, i) => (tagMap[p.sha] || i === frontierData.length - 1) ? 6 : 4),
-                    colors: frontierData.map((p, i) => tagMap[p.sha] ? '#fbc929' : (i === frontierData.length - 1 ? '#ef4444' : `rgba(156, 163, 175, ${0.4 + (i / frontierData.length) * 0.6})`)),
-                    strokeWidth: 0, hover: { size: 8 }
-                },
-                xaxis: { 
-                    title: { text: 'Time (s) →', style: { color: '#9ca3af', fontSize: '10px' } },
-                    labels: { style: { fontSize: '10px' }, formatter: v => v ? v.toFixed(1) + 's' : '' },
-                    axisBorder: { show: false }
-                },
-                yaxis: { 
-                    title: { text: 'Memory (MB) →', style: { color: '#9ca3af', fontSize: '10px' } },
-                    labels: { style: { fontSize: '10px' } },
-                    axisBorder: { show: false }
-                },
-                grid: { show: false },
-                annotations: {
-                    points: frontierData.map(p => tagMap[p.sha] ? {
-                        x: p.x, y: p.y, marker: { size: 0 },
-                        label: {
-                            borderColor: 'transparent', offsetY: -10,
-                            style: { color: '#374151', background: 'rgba(255,255,255,0.8)', fontSize: '10px', fontWeight: 700 },
-                            text: tagMap[p.sha]
-                        }
-                    } : null).filter(a => a !== null)
-                },
-                tooltip: {
-                    custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                        const p = frontierData[dataPointIndex];
-                        return `<div class="custom-tooltip"><span class="tooltip-sha">${p.shortSha}</span><div class="tooltip-msg">Efficiency: ${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div></div>`;
-                    }
-                }
-            };
-            frontierChart = new ApexCharts(document.querySelector("#frontier-chart"), frontierOptions);
-            frontierChart.render();
+                xaxis: { type: 'numeric', labels: { formatter: v => v ? v.toFixed(2)+'s' : '' } },
+                markers: { size: 6, hover: { size: 10 } },
+                tooltip: { custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+                    const p = Sync.frontierPoints[dataPointIndex];
+                    return '<div class="custom-tooltip"><b>' + p.short + '</b><br/>' + p.x.toFixed(3) + 's / ' + p.y.toFixed(1) + 'MB</div>';
+                }}
+            }).render();
 
-            const envs = [{ id: 'ubuntu-latest', label: 'Linux', color: '#fbc929', dash: 0 }, { id: 'windows-latest', label: 'Windows', color: '#3b82f6', dash: 5 }, { id: 'Pyodide', label: 'WASM', color: '#10b981', dash: 2 }];
-            let brushChart;
-
-            const updateTrendCharts = (scenario) => {
-                const benchName = `JSON Serialization Lodum ${scenario}`;
-                const series = [];
-                envs.forEach(env => {
-                    const data = sortedCommits.map(c => {
-                        const x = history.indexOf(c.sha);
-                        const y = getVal(env.id, benchName, c.sha);
-                        return x !== -1 ? [x, y] : null;
-                    }).filter(p => p !== null);
-                    series.push({ name: `Lodum (${env.label})`, data: data, color: env.color, dashArray: env.dash });
-                });
-
+            let mainChart;
+            const updateTrend = (scenario) => {
+                const series = ['ubuntu-latest', 'windows-latest', 'Pyodide'].map(pid => ({
+                    name: pid.includes('ubuntu')?'Linux':(pid.includes('win')?'Windows':'WASM'),
+                    color: pid.includes('ubuntu')?'#fbc929':(pid.includes('win')?'#3b82f6':'#10b981'),
+                    data: Sync.history.map((sha, idx) => {
+                        const y = Sync.getVal(sha, pid, 'JSON Serialization Lodum ' + scenario);
+                        return { x: idx, y: y, sha: sha };
+                    })
+                }));
                 if (mainChart) mainChart.destroy();
-                if (brushChart) brushChart.destroy();
-
-                const mainOptions = {
+                mainChart = new ApexCharts(document.querySelector("#main-chart"), {
                     series: series,
-                    chart: { 
-                        id: 'main-trend', height: 350, type: 'line', toolbar: { show: false }, animations: { enabled: false },
+                    chart: { id: 'trend', type: 'line', height: 300, toolbar: { show: false }, animations: { enabled: false },
                         events: {
-                            dataPointMouseEnter: (event, chartContext, config) => {
-                                const sha = history[config.dataPointIndex];
-                                updateHeatmap(sha);
-                                const fPoint = frontierData.find(p => p.sha === sha);
-                                if (fPoint && frontierChart) frontierChart.addPointAnnotation({
-                                    x: fPoint.x, y: fPoint.y, marker: { size: 10, fillColor: '#ef4444', strokeWidth: 0 },
-                                    label: { style: { color: '#fff', background: '#ef4444' }, text: 'Linked' }
-                                });
+                            dataPointMouseEnter: (e, ctx, cfg) => {
+                                const pt = cfg.w.config.series[cfg.seriesIndex].data[cfg.dataPointIndex];
+                                if (pt) Sync.update(pt.sha, 'trend');
                             },
-                            dataPointMouseLeave: () => { 
-                                if (frontierChart) frontierChart.clearAnnotations(); 
-                                updateHeatmap(selectedSha);
-                            },
-                            dataPointSelection: (event, chartContext, config) => {
-                                selectedSha = history[config.dataPointIndex];
-                                updateHeatmap(selectedSha);
+                            dataPointMouseLeave: () => Sync.clear(),
+                            click: (e, ctx, config) => {
+                                const x = config.w.globals.lastIndices.x[0];
+                                if (x !== undefined) { const sha = Sync.history[Math.round(x)]; if (sha) { Sync.sha = sha; Sync.update(sha, 'click'); } }
                             }
                         }
                     },
-                    stroke: { width: 3, curve: 'straight', dashArray: series.map(s => s.dashArray), connectNulls: true },
-                    markers: { size: 4 }, annotations: { xaxis: releaseAnnotations },
-                    xaxis: { 
-                        type: 'numeric', min: 0, max: history.length - 1, tickAmount: 10,
-                        labels: { show: true, rotate: -45, maxHeight: 60, formatter: (val) => {
-                            const idx = Math.round(val);
-                            return (idx >= 0 && idx < history.length) ? (tagMap[history[idx]] || history[idx].substring(0, 7)) : "";
-                        }}
-                    },
-                    yaxis: { title: { text: 'Execution Time (us) →', style: { color: '#9ca3af', fontSize: '10px' } } },
-                    tooltip: { 
-                        shared: true, 
-                        custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                            const sha = history[dataPointIndex];
-                            const c = commitMap.get(sha);
-                            const tag = tagMap[sha] ? `<span class="tag-badge" style="background:#fbc929; color:#fff;">${tagMap[sha]}</span> ` : '';
-                            let content = `<div class="custom-tooltip"><span class="tooltip-sha">${sha.substring(0,7)}</span><div class="tooltip-msg">${tag}${c ? c.msg : ""}</div><div class="tooltip-meta">`;
-                            series.forEach((s, i) => { if (s[dataPointIndex] !== null) content += `<span style="color:${w.config.series[i].color}">●</span> ${w.config.series[i].name}: <b>${s[dataPointIndex].toFixed(2)}µs</b><br/>`; });
-                            return content + `</div></div>`;
-                        }
-                    },
-                    grid: { borderColor: '#f3f4f6' }
-                };
-                mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
+                    xaxis: { type: 'numeric', min: 0, max: Sync.history.length - 1, labels: { formatter: v => Sync.history[Math.round(v)]?.substring(0,7) || '' } },
+                    markers: { size: 5, hover: { size: 10 } },
+                    tooltip: { shared: true, custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+                        const sha = Sync.history[dataPointIndex];
+                        if (!sha) return '';
+                        const c = Sync.commitMap.get(sha);
+                        if (!c) return '';
+                        let html = '<div class="custom-tooltip"><b>' + c.short + '</b><br/>' + (c.msg || "").substring(0,100) + '<hr/>';
+                        w.config.series.forEach((s, i) => {
+                            const p = s.data.find(x => x.x === dataPointIndex);
+                            if (p && p.y != null) html += '<div><span style="color:' + s.color + '">●</span> ' + s.name + ': <b>' + p.y.toFixed(2) + 'µs</b></div>';
+                        });
+                        return html + '</div>';
+                    }}
+                });
                 mainChart.render();
-
-                const brushOptions = {
-                    series: series,
-                    chart: { id: 'brush-trend', height: 100, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, history.length - 10), max: history.length - 1 } } },
-                    stroke: { connectNulls: true }, colors: series.map(s => s.color),
-                    xaxis: { type: 'numeric', min: 0, max: history.length - 1, labels: { show: false } },
-                    yaxis: { labels: { show: false } }, fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } }
-                };
-                brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
-                brushChart.render();
             };
+            updateTrend('simple');
+            document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
 
-            updateTrendCharts('simple');
-            document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
+            // Binary Formats
+            const headSha = Sync.history[Sync.history.length-1];
+            if (headSha) {
+                const formats = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
+                new ApexCharts(document.querySelector("#format-chart"), {
+                    series: [{ data: formats.map(f => Sync.getVal(headSha, 'ubuntu-latest', f.p) || 0) }],
+                    chart: { type: 'bar', height: 180, toolbar: { show: false } },
+                    plotOptions: { bar: { horizontal: true, distributed: true } },
+                    colors: ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'],
+                    xaxis: { categories: formats.map(f => f.n) }, legend: { show: false }
+                }).render();
+            }
 
-            const getKPI = (id, text) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = text;
-            };
-
-            const lodumVal = getLatestVal('ubuntu-latest', 'JSON Serialization Lodum simple');
-            const mmVal = getLatestVal('ubuntu-latest', 'Serialization Marshmallow simple');
-            if (lodumVal && mmVal) getKPI('kpi-speedup', (mmVal / lodumVal).toFixed(1) + 'x');
-            const stdMem = getLatestVal('ubuntu-latest', 'Standard (loads) Memory');
-            const streamMem = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Memory');
-            if (stdMem && streamMem) getKPI('kpi-memory', ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%');
-            const streamTime = getLatestVal('ubuntu-latest', 'Streaming (load_stream) Time');
-            if (streamTime) getKPI('kpi-throughput', (45 / streamTime).toFixed(1) + ' MB/s');
-            const wasmVal = getLatestVal('Pyodide', 'JSON Serialization Lodum simple');
-            if (lodumVal && wasmVal) getKPI('kpi-wasm', ((lodumVal / wasmVal) * 100).toFixed(0) + '%');
+            Sync.update(Sync.sha, 'init');
+            if (window.BENCHMARK_DATA.lastUpdate) document.getElementById('last-updated').textContent = 'Sync: ' + new Date(window.BENCHMARK_DATA.lastUpdate).toLocaleString();
         });
     </script>
 </body>
