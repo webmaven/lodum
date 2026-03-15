@@ -333,7 +333,7 @@
 
             Sync.update(Sync.selectedSha, 'init');
             if (window.BENCHMARK_DATA.lastUpdate) document.getElementById('last-updated').textContent = 'Sync: ' + new Date(window.BENCHMARK_DATA.lastUpdate).toLocaleString();
-            UI.status('Ready');
+            Debug.log('UI', 'Dashboard Ready');
         });
     </script>
 </body>
