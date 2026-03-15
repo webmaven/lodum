@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: 1.2.1 - Final Restoration - Cache Buster: 1772312000 -->
+    <!-- Version: 1.2.1 - Hardened Sync - Cache Buster: 1772312000 -->
     <title>Lodum Performance Dashboard</title>
     <script>
         // AGGRESSIVE SHIM: Force non-passive listeners globally
@@ -12,7 +12,8 @@
             EventTarget.prototype.addEventListener = function(type, listener, options) {
                 if (['touchstart', 'touchmove', 'wheel', 'mousewheel'].includes(type)) {
                     if (typeof options === 'object') options.passive = false;
-                    else options = { passive: false, capture: !!options };
+                    else if (typeof options === 'boolean') options = { capture: options, passive: false };
+                    else options = { passive: false };
                 }
                 return original.call(this, type, listener, options);
             };
@@ -24,6 +25,7 @@
             --lodum-yellow: #fbc929;
             --lodum-yellow-dark: #d9a300;
             --text-main: #1f2937;
+            --text-muted: #6b7280;
             --bg-main: #ffffff;
             --bg-muted: #f9fafb;
             --border-color: #e5e7eb;
@@ -46,7 +48,7 @@
         .cell-warn { background: #fffbeb; color: #92400e; }
         .apexcharts-tooltip, .custom-tooltip { pointer-events: none !important; user-select: none !important; }
         .custom-tooltip { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-width: 300px; }
-        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; z-index: 9999; border-radius: 4px; border: 1px solid #0a0; }
+        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; z-index: 9999; border-radius: 4px; border: 1px solid #0a0; font-family: monospace; }
         .chart-container { touch-action: none !important; }
     </style>
 </head>
@@ -126,14 +128,13 @@
                     const idx = Sync.history.indexOf(sha);
                     if (idx === -1) return null;
                     if (label === 'v0.3.0') Sync.baselineSha = sha;
-                    return { x: idx, borderColor: '#fbc929', strokeDashArray: 0, label: { text: label, style: { color: '#fff', background: '#fbc929' } } };
+                    return { x: idx, borderColor: '#fbc929', strokeDashArray: 0, label: { text: label, position: 'top', style: { color: '#fff', background: '#fbc929' } } };
                 }).filter(a => a !== null);
                 
                 if (!Sync.baselineSha) Sync.baselineSha = Sync.history[0];
                 Sync.selectedSha = Sync.history[Sync.history.length - 1];
                 
                 Debug.log('DATA', `Mapped ${Sync.commitMap.size} commits with actual data.`);
-                Debug.log('DATA', `Baseline SHA: ${Sync.baselineSha.substring(0,7)}`);
             },
             
             getVal: (sha, pid, bench) => {
@@ -147,11 +148,10 @@
             update: (sha, source) => {
                 if (!sha) return;
                 Sync.hoverSha = sha;
-                document.getElementById('status-bar').innerText = `Event [${source}]: ${sha.substring(0,7)}`;
+                document.getElementById('status-bar').innerText = `[${source.toUpperCase()}] ${sha.substring(0,7)}`;
                 
-                // Annotate other charts
                 try {
-                    // Trend Chart Highlighting
+                    // Update Trend Annotations
                     const hIdx = Sync.history.indexOf(sha);
                     if (source !== 'trend' && hIdx !== -1) {
                         ApexCharts.exec('trend', 'removeAnnotation', 'sync-link');
@@ -161,7 +161,7 @@
                         });
                     }
                     
-                    // Frontier Chart Highlighting
+                    // Update Frontier Annotations
                     const fp = Sync.frontierPoints.find(p => p.sha === sha);
                     if (source !== 'frontier' && fp) {
                         ApexCharts.exec('frontier', 'removeAnnotation', 'sync-link');
@@ -169,7 +169,7 @@
                             id: 'sync-link', x: fp.x, y: fp.y, marker: { size: 10, fillColor: '#ef4444', strokeWidth: 0 } 
                         });
                     }
-                } catch (e) { Debug.error('Annotation update failed', e); }
+                } catch (e) { Debug.error('Sync failed', e); }
                 
                 Sync.updateHeatmap(sha);
             },
@@ -214,7 +214,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             Sync.init();
             
-            // Build Frontier Data
             Sync.frontierPoints = Sync.history.map(sha => {
                 const t = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
                 const m = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Memory') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Memory');
@@ -222,7 +221,6 @@
                 return (t && m && c) ? { x: t, y: m, sha: sha, short: c.short } : null;
             }).filter(p => p !== null);
 
-            // Frontier Chart
             new ApexCharts(document.querySelector("#frontier-chart"), {
                 series: [{ name: 'Evolution', data: Sync.frontierPoints.map(p => ({ x: p.x, y: p.y, sha: p.sha })) }],
                 chart: { id: 'frontier', type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
@@ -262,14 +260,20 @@
                     series: series,
                     chart: { id: 'trend', type: 'line', height: 280, toolbar: { show: false }, animations: { enabled: false },
                         events: {
-                            dataPointMouseEnter: (e, ctx, cfg) => {
-                                const pt = cfg.w.config.series[cfg.seriesIndex].data[cfg.dataPointIndex];
-                                if (pt) Sync.update(pt.sha, 'trend');
+                            mouseMove: (e, ctx, config) => {
+                                const x = config.w.globals.lastIndices.x[0];
+                                if (x !== undefined && x !== null) {
+                                    const sha = Sync.history[Math.round(x)];
+                                    if (sha) Sync.update(sha, 'trend');
+                                }
                             },
                             dataPointMouseLeave: () => Sync.clear(),
                             click: (e, ctx, config) => {
-                                const x = ctx.w.globals.lastIndices.x[0];
-                                if (x !== undefined) { const sha = Sync.history[Math.round(x)]; if (sha) { Sync.selectedSha = sha; Sync.update(sha, 'select'); } }
+                                const x = config.w.globals.lastIndices.x[0];
+                                if (x !== undefined && x !== null) {
+                                    const sha = Sync.history[Math.round(x)];
+                                    if (sha) { Sync.selectedSha = sha; Sync.update(sha, 'click'); }
+                                }
                             }
                         }
                     },
@@ -297,34 +301,42 @@
                     xaxis: { type: 'numeric', labels: { show: false } }, yaxis: { labels: { show: false } }
                 });
                 brushChart.render();
+                
+                // Re-apply selection highlight on new chart
+                if (Sync.selectedSha) {
+                    const idx = Sync.history.indexOf(Sync.selectedSha);
+                    if (idx !== -1) {
+                        ApexCharts.exec('trend', 'addXaxisAnnotation', { 
+                            id: 'selection', x: idx, borderColor: '#ef4444', 
+                            label: { text: 'Selected', position: 'bottom', style: { color: '#fff', background: '#ef4444' } } 
+                        });
+                    }
+                }
             };
 
-            // Update Metrics (KPIs)
+            // Metrics calculation
             try {
                 const latestSha = Sync.history[Sync.history.length - 1];
                 const lodumSimple = Sync.getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Lodum simple');
                 const marshmallowSimple = Sync.getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Marshmallow simple');
                 if (lodumSimple && marshmallowSimple) document.getElementById('kpi-speedup').innerText = (marshmallowSimple / lodumSimple).toFixed(1) + 'x';
-                
                 const stdMem = Sync.getVal(latestSha, 'ubuntu-latest', 'Standard (loads) Memory');
                 const strmMem = Sync.getVal(latestSha, 'ubuntu-latest', 'Streaming (load_stream) Memory');
                 if (stdMem && strmMem) document.getElementById('kpi-memory').innerText = ((1 - (strmMem / stdMem)) * 100).toFixed(1) + '%';
-                
                 const wasmVal = Sync.getVal(latestSha, 'Pyodide', 'JSON Serialization Lodum simple');
                 if (lodumSimple && wasmVal) document.getElementById('kpi-wasm').innerText = ((lodumSimple / wasmVal) * 100).toFixed(0) + '%';
-                
                 const strmTime = Sync.getVal(latestSha, 'ubuntu-latest', 'Streaming (load_stream) Time');
                 if (strmTime) document.getElementById('kpi-throughput').innerText = (45 / strmTime).toFixed(1) + ' MB/s';
-            } catch (e) { Debug.error('KPI calculation failed', e); }
+            } catch (e) { Debug.error('KPIs failed', e); }
 
             updateTrend('simple');
             document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
 
-            // Binary Formats
-            const latestSha = Sync.history[Sync.history.length - 1];
+            // Binary Formats (HEAD)
+            const headSha = Sync.history[Sync.history.length-1];
             const formats = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
             new ApexCharts(document.querySelector("#format-chart"), {
-                series: [{ data: formats.map(f => Sync.getVal(latestSha, 'ubuntu-latest', f.p) || 0) }],
+                series: [{ data: formats.map(f => Sync.getVal(headSha, 'ubuntu-latest', f.p) || 0) }],
                 chart: { type: 'bar', height: 180, toolbar: { show: false } },
                 plotOptions: { bar: { horizontal: true, distributed: true } },
                 colors: ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'],
@@ -333,7 +345,7 @@
 
             Sync.update(Sync.selectedSha, 'init');
             if (window.BENCHMARK_DATA.lastUpdate) document.getElementById('last-updated').textContent = 'Sync: ' + new Date(window.BENCHMARK_DATA.lastUpdate).toLocaleString();
-            Debug.log('UI', 'Dashboard Ready');
+            document.getElementById('status-bar').innerText = 'Ready';
         });
     </script>
 </body>
