@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: 1.2.1 - Hardened Sync - Cache Buster: 1772312000 -->
+    <!-- Version: 1.2.2 - Deep Interaction Fix - Cache Buster: 1772313000 -->
     <title>Lodum Performance Dashboard</title>
     <script>
-        // AGGRESSIVE SHIM: Force non-passive listeners globally
         (function() {
             const original = EventTarget.prototype.addEventListener;
             EventTarget.prototype.addEventListener = function(type, listener, options) {
                 if (['touchstart', 'touchmove', 'wheel', 'mousewheel'].includes(type)) {
                     if (typeof options === 'object') options.passive = false;
-                    else if (typeof options === 'boolean') options = { capture: options, passive: false };
-                    else options = { passive: false };
+                    else options = { passive: false, capture: !!options };
                 }
                 return original.call(this, type, listener, options);
             };
@@ -25,7 +23,6 @@
             --lodum-yellow: #fbc929;
             --lodum-yellow-dark: #d9a300;
             --text-main: #1f2937;
-            --text-muted: #6b7280;
             --bg-main: #ffffff;
             --bg-muted: #f9fafb;
             --border-color: #e5e7eb;
@@ -53,7 +50,7 @@
     </style>
 </head>
 <body>
-    <div id="status-bar">Dashboard Initializing...</div>
+    <div id="status-bar">Initializing...</div>
     <div class="container">
         <header>
             <h1>Lodum Performance Index</h1>
@@ -106,13 +103,9 @@
             releaseAnnotations: [],
             
             init: () => {
-                Debug.log('DATA', 'Initializing dataset...');
                 const data = window.BENCHMARK_DATA;
-                if (!data) { Debug.error('BENCHMARK_DATA not found'); return; }
-                
+                if (!data) return;
                 Sync.history = data.history || [];
-                Debug.log('DATA', `Milestones in history: ${Sync.history.length}`);
-                
                 Object.entries(data.entries).forEach(([suite, points]) => {
                     points.forEach(p => {
                         const id = p.commit.id;
@@ -128,13 +121,12 @@
                     const idx = Sync.history.indexOf(sha);
                     if (idx === -1) return null;
                     if (label === 'v0.3.0') Sync.baselineSha = sha;
-                    return { x: idx, borderColor: '#fbc929', strokeDashArray: 0, label: { text: label, position: 'top', style: { color: '#fff', background: '#fbc929' } } };
+                    return { x: idx, borderColor: '#fbc929', strokeDashArray: 0, label: { text: label, style: { color: '#fff', background: '#fbc929' } } };
                 }).filter(a => a !== null);
                 
-                if (!Sync.baselineSha) Sync.baselineSha = Sync.history[0];
+                Sync.baselineSha = Sync.baselineSha || Sync.history[0];
                 Sync.selectedSha = Sync.history[Sync.history.length - 1];
-                
-                Debug.log('DATA', `Mapped ${Sync.commitMap.size} commits with actual data.`);
+                Debug.log('DATA', `Initialized with ${Sync.history.length} points and ${Sync.releaseAnnotations.length} tags.`);
             },
             
             getVal: (sha, pid, bench) => {
@@ -146,12 +138,11 @@
             },
             
             update: (sha, source) => {
-                if (!sha) return;
+                if (!sha || sha === Sync.hoverSha) return;
                 Sync.hoverSha = sha;
                 document.getElementById('status-bar').innerText = `[${source.toUpperCase()}] ${sha.substring(0,7)}`;
                 
                 try {
-                    // Update Trend Annotations
                     const hIdx = Sync.history.indexOf(sha);
                     if (source !== 'trend' && hIdx !== -1) {
                         ApexCharts.exec('trend', 'removeAnnotation', 'sync-link');
@@ -160,8 +151,6 @@
                             label: { text: 'Linked', style: { color: '#fff', background: '#ef4444' } } 
                         });
                     }
-                    
-                    // Update Frontier Annotations
                     const fp = Sync.frontierPoints.find(p => p.sha === sha);
                     if (source !== 'frontier' && fp) {
                         ApexCharts.exec('frontier', 'removeAnnotation', 'sync-link');
@@ -169,8 +158,7 @@
                             id: 'sync-link', x: fp.x, y: fp.y, marker: { size: 10, fillColor: '#ef4444', strokeWidth: 0 } 
                         });
                     }
-                } catch (e) { Debug.error('Sync failed', e); }
-                
+                } catch (e) { }
                 Sync.updateHeatmap(sha);
             },
             
@@ -187,27 +175,26 @@
                 const c = Sync.commitMap.get(sha);
                 if (!c) return;
                 const grid = document.getElementById('regression-heatmap');
-                if (!grid) return;
-                
-                grid.innerHTML = '';
-                document.getElementById('hover-details').innerHTML = `<b>${c.short}</b>: ${c.msg}`;
-                
-                const platforms = {'ubuntu-latest':'Linux', 'windows-latest':'Windows', 'Pyodide':'WASM'};
-                ['simple', 'complex', 'nested'].forEach(s => {
-                    Object.entries(platforms).forEach(([pid, label]) => {
-                        const cur = Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`);
-                        const base = Sync.getVal(Sync.baselineSha, pid, `JSON Serialization Lodum ${s}`);
-                        let delta = 0, cls = 'cell-neutral';
-                        if (cur && base) {
-                            delta = ((cur / base) - 1) * 100;
-                            cls = delta < -5 ? 'cell-good' : (delta > 15 ? 'cell-bad' : (delta > 5 ? 'cell-warn' : 'cell-neutral'));
-                        }
-                        const cell = document.createElement('div');
-                        cell.className = `heatmap-cell ${cls}`;
-                        cell.innerHTML = `<span class="cell-label">${label} / ${s}</span><span class="cell-value">${cur ? (delta>0?'+':'') + delta.toFixed(0) + '%' : 'N/A'}</span>`;
-                        grid.appendChild(cell);
+                if (grid) {
+                    grid.innerHTML = '';
+                    document.getElementById('hover-details').innerHTML = `<b>${c.short}</b>: ${c.msg}`;
+                    const platforms = {'ubuntu-latest':'Linux', 'windows-latest':'Windows', 'Pyodide':'WASM'};
+                    ['simple', 'complex', 'nested'].forEach(s => {
+                        Object.entries(platforms).forEach(([pid, label]) => {
+                            const cur = Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`);
+                            const base = Sync.getVal(Sync.baselineSha, pid, `JSON Serialization Lodum ${s}`);
+                            let delta = 0, cls = 'cell-neutral';
+                            if (cur && base) {
+                                delta = ((cur / base) - 1) * 100;
+                                cls = delta < -5 ? 'cell-good' : (delta > 15 ? 'cell-bad' : (delta > 5 ? 'cell-warn' : 'cell-neutral'));
+                            }
+                            const cell = document.createElement('div');
+                            cell.className = `heatmap-cell ${cls}`;
+                            cell.innerHTML = `<span class="cell-label">${label} / ${s}</span><span class="cell-value">${cur ? (delta>0?'+':'') + delta.toFixed(0) + '%' : 'N/A'}</span>`;
+                            grid.appendChild(cell);
+                        });
                     });
-                });
+                }
             }
         };
 
@@ -232,7 +219,7 @@
                         dataPointMouseLeave: () => Sync.clear(),
                         click: (e, ctx, cfg) => {
                             const pt = cfg.w.config.series[0].data[cfg.dataPointIndex];
-                            if (pt) { Sync.selectedSha = pt.sha; Sync.update(pt.sha, 'select'); }
+                            if (pt) { Sync.selectedSha = pt.sha; Sync.update(pt.sha, 'click'); }
                         }
                     }
                 },
@@ -246,10 +233,9 @@
 
             let mainChart, brushChart;
             const updateTrend = (scenario) => {
-                Debug.log('UI', `Switching scenario: ${scenario}`);
                 const series = ['ubuntu-latest', 'windows-latest', 'Pyodide'].map(pid => ({
-                    name: pid.includes('ubuntu') ? 'Linux' : (pid.includes('win') ? 'Windows' : 'WASM'),
-                    color: pid.includes('ubuntu') ? '#fbc929' : (pid.includes('win') ? '#3b82f6' : '#10b981'),
+                    name: pid.includes('ubuntu')?'Linux':(pid.includes('win')?'Windows':'WASM'),
+                    color: pid.includes('ubuntu')?'#fbc929':(pid.includes('win')?'#3b82f6':'#10b981'),
                     data: Sync.history.map((sha, idx) => ({ x: idx, y: Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`), sha: sha }))
                 }));
 
@@ -261,16 +247,16 @@
                     chart: { id: 'trend', type: 'line', height: 280, toolbar: { show: false }, animations: { enabled: false },
                         events: {
                             mouseMove: (e, ctx, config) => {
-                                const x = config.w.globals.lastIndices.x[0];
-                                if (x !== undefined && x !== null) {
+                                const x = config?.w?.globals?.lastIndices?.x?.[0];
+                                if (x != null) {
                                     const sha = Sync.history[Math.round(x)];
                                     if (sha) Sync.update(sha, 'trend');
                                 }
                             },
                             dataPointMouseLeave: () => Sync.clear(),
                             click: (e, ctx, config) => {
-                                const x = config.w.globals.lastIndices.x[0];
-                                if (x !== undefined && x !== null) {
+                                const x = config?.w?.globals?.lastIndices?.x?.[0];
+                                if (x != null) {
                                     const sha = Sync.history[Math.round(x)];
                                     if (sha) { Sync.selectedSha = sha; Sync.update(sha, 'click'); }
                                 }
@@ -301,20 +287,9 @@
                     xaxis: { type: 'numeric', labels: { show: false } }, yaxis: { labels: { show: false } }
                 });
                 brushChart.render();
-                
-                // Re-apply selection highlight on new chart
-                if (Sync.selectedSha) {
-                    const idx = Sync.history.indexOf(Sync.selectedSha);
-                    if (idx !== -1) {
-                        ApexCharts.exec('trend', 'addXaxisAnnotation', { 
-                            id: 'selection', x: idx, borderColor: '#ef4444', 
-                            label: { text: 'Selected', position: 'bottom', style: { color: '#fff', background: '#ef4444' } } 
-                        });
-                    }
-                }
             };
 
-            // Metrics calculation
+            // Metrics
             try {
                 const latestSha = Sync.history[Sync.history.length - 1];
                 const lodumSimple = Sync.getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Lodum simple');
@@ -332,7 +307,6 @@
             updateTrend('simple');
             document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
 
-            // Binary Formats (HEAD)
             const headSha = Sync.history[Sync.history.length-1];
             const formats = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
             new ApexCharts(document.querySelector("#format-chart"), {
