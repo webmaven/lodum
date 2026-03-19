@@ -160,15 +160,47 @@
                 // Highlight on Trend
                 const idx = Sync.history.indexOf(sha);
                 if (source !== 'trend' && idx !== -1) {
-                    Sync.charts.trend.dispatchAction({ type: 'showTip', dataIndex: idx });
+                    Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
                 }
                 
                 // Highlight on Frontier
                 if (source !== 'frontier') {
                     const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
                     if (fIdx !== -1) {
-                        Sync.charts.frontier.dispatchAction({ type: 'showTip', dataIndex: fIdx });
+                        Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
                     }
+                }
+
+                // Persistent Selection Marker
+                if (source === 'click' || source === 'init') {
+                    Sync.updateSelectionMarkers(sha);
+                }
+            },
+            updateSelectionMarkers: (sha) => {
+                const idx = Sync.history.indexOf(sha);
+                const fPt = Sync.frontierData.find(d => d && d[3] === sha);
+                
+                if (idx !== -1) {
+                    Sync.charts.trend.setOption({
+                        series: Sync.charts.trend.getOption().series.map((s, i) => ({
+                            markPoint: i === 0 ? {
+                                symbol: 'pin', symbolSize: 30,
+                                data: [{ coord: [idx, Sync.getVal(sha, 'ubuntu-latest', 'JSON Serialization Lodum simple') || 0] }],
+                                itemStyle: { color: '#ef4444' }
+                            } : undefined
+                        }))
+                    });
+                }
+                if (fPt) {
+                    Sync.charts.frontier.setOption({
+                        series: [{
+                            markPoint: {
+                                symbol: 'pin', symbolSize: 30,
+                                data: [{ coord: [fPt[0], fPt[1]] }],
+                                itemStyle: { color: '#ef4444' }
+                            }
+                        }]
+                    });
                 }
             },
             updateFormats: (sha) => {
@@ -215,7 +247,7 @@
                     tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                     legend: { bottom: 0 },
                     grid: { top: 20, left: 40, right: 20, bottom: 80 },
-                    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)) },
+                    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
                         getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
@@ -263,6 +295,16 @@
                 }
             });
 
+            // ZR-level clicks for reliable area-based selection
+            trend.getZr().on('click', (params) => {
+                const pointInPixel = [params.offsetX, params.offsetY];
+                if (trend.containPixel('grid', pointInPixel)) {
+                    const idx = trend.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0];
+                    const sha = Sync.history[idx];
+                    if (sha) { Sync.selectedSha = sha; Sync.refresh(sha, 'click'); }
+                }
+            });
+
             frontier.on('updateAxisPointer', (event) => {
                 // Frontier is value axis, event structure is different
                 if (event.dataIndex !== undefined) {
@@ -275,16 +317,20 @@
                 if (params.data && params.data[3]) Sync.refresh(params.data[3], 'frontier');
             });
 
-            trend.on('click', (params) => {
-                const sha = Sync.history[params.dataIndex];
-                if (sha) { Sync.selectedSha = sha; Sync.refresh(sha, 'click'); }
-            });
-
-            frontier.on('click', (params) => {
-                if (params.data && params.data[3]) {
-                    const sha = params.data[3];
-                    Sync.selectedSha = sha;
-                    Sync.refresh(sha, 'click');
+            frontier.getZr().on('click', (params) => {
+                const pointInPixel = [params.offsetX, params.offsetY];
+                if (frontier.containPixel('grid', pointInPixel)) {
+                    const data = frontier.convertFromPixel({ seriesIndex: 0 }, pointInPixel);
+                    // Find closest point in frontierData
+                    let closest = null, minDist = Infinity;
+                    Sync.frontierData.forEach(d => {
+                        const dist = Math.pow(d[0] - data[0], 2) + Math.pow(d[1] - data[1], 2);
+                        if (dist < minDist) { minDist = dist; closest = d; }
+                    });
+                    if (closest) { 
+                        Sync.selectedSha = closest[3]; 
+                        Sync.refresh(closest[3], 'click'); 
+                    }
                 }
             });
 
