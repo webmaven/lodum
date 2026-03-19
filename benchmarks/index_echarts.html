@@ -173,39 +173,44 @@
             refresh: (sha, source) => {
                 if (Sync.isRefreshing) return;
                 Sync.isRefreshing = true;
-                
-                UI.status(`[${source.toUpperCase()}] ${sha.substring(0,7)}`);
-                UI.updateKPIs(sha);
-                UI.updateHeatmap(sha);
-                Sync.updateFormats(sha);
-                
-                const idx = Sync.history.indexOf(sha);
-                const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
+                try {
+                    UI.status(`[${source.toUpperCase()}] ${sha.substring(0,7)}`);
+                    UI.updateKPIs(sha);
+                    UI.updateHeatmap(sha);
+                    Sync.updateFormats(sha);
+                    
+                    const idx = Sync.history.indexOf(sha);
+                    const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
 
-                // Highlight on Trend
-                if (idx !== -1 && source !== 'trend') {
-                    Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
-                    Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
-                }
-                
-                // Highlight on Frontier
-                if (fIdx !== -1 && source !== 'frontier') {
-                    Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
-                    Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
-                }
+                    // Highlight on Trend
+                    if (idx !== -1 && source !== 'trend') {
+                        Sync.charts.trend.dispatchAction({ type: 'downplay', seriesIndex: [0, 1, 2] });
+                        Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
+                        Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
+                    }
+                    
+                    // Highlight on Frontier
+                    if (fIdx !== -1 && source !== 'frontier') {
+                        Sync.charts.frontier.dispatchAction({ type: 'downplay', seriesIndex: 0 });
+                        Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
+                        Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
+                    }
 
-                // Persistent Selection Marker
-                if (source === 'click' || source === 'init') {
-                    Sync.updateSelectionMarkers(sha);
+                    // Persistent Selection Marker
+                    if (source === 'click' || source === 'init') {
+                        Sync.updateSelectionMarkers(sha);
+                    }
+                } finally {
+                    Sync.isRefreshing = false;
                 }
-                Sync.isRefreshing = false;
             },
             updateSelectionMarkers: (sha) => {
                 const idx = Sync.history.indexOf(sha);
                 const fPt = Sync.frontierData.find(d => d && d[3] === sha);
+                const scenario = document.getElementById('scenario-selector').value;
                 
                 if (idx !== -1) {
-                    const yVal = Sync.getVal(sha, 'ubuntu-latest', 'JSON Serialization Lodum simple') || 0;
+                    const yVal = Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`) || 0;
                     Sync.charts.trend.setOption({
                         series: Sync.charts.trend.getOption().series.map((s, i) => ({
                             markLine: i === 0 ? {
@@ -307,7 +312,10 @@
             frontier.setOption({
                 tooltip: { 
                     trigger: 'item',
-                    formatter: (p) => `<b>${p.data[2]}</b><br/>Time: ${p.data[0].toFixed(3)}s<br/>Mem: ${p.data[1].toFixed(1)}MB` 
+                    formatter: (p) => {
+                        if (!p.data || !Array.isArray(p.data)) return '';
+                        return `<b>${p.data[2]}</b><br/>Time: ${p.data[0].toFixed(3)}s<br/>Mem: ${p.data[1].toFixed(1)}MB`;
+                    }
                 },
                 xAxis: { type: 'value', name: 'Time (s)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
                 yAxis: { type: 'value', name: 'RAM (MB)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
@@ -380,6 +388,21 @@
             updateTrend('simple');
             Sync.refresh(latestSha, 'init');
             document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
+
+            // Handle mouse leave globally to clear cross-chart highlights
+            window.addEventListener('mousemove', (e) => {
+                const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
+                const frontierRect = document.getElementById('frontier-chart').getBoundingClientRect();
+                const isOverTrend = (e.clientX >= trendRect.left && e.clientX <= trendRect.right && e.clientY >= trendRect.top && e.clientY <= trendRect.bottom);
+                const isOverFrontier = (e.clientX >= frontierRect.left && e.clientX <= frontierRect.right && e.clientY >= frontierRect.top && e.clientY <= frontierRect.bottom);
+                
+                if (!isOverTrend && !isOverFrontier && !Sync.isRefreshing) {
+                    Sync.charts.trend.dispatchAction({ type: 'downplay' });
+                    Sync.charts.frontier.dispatchAction({ type: 'downplay' });
+                    Sync.charts.trend.dispatchAction({ type: 'hideTip' });
+                    Sync.charts.frontier.dispatchAction({ type: 'hideTip' });
+                }
+            });
         });
     </script>
 </body>
