@@ -67,6 +67,24 @@
                 </div>
             </div>
         </div>
+
+        <div class="card" style="background: var(--bg-muted); border-left: 4px solid #cbd5e1;">
+            <b style="font-size: 0.8rem; text-transform: uppercase; color: #64748b;">Glossary & Methodology</b>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 15px; font-size: 0.8rem; line-height: 1.5;">
+                <div>
+                    <b>Latency (us/op)</b>: Time taken for one serialization operation. 
+                    <i>Benchmark</i>: Simple (flat dict), Complex (mixed), Nested (deep).
+                </div>
+                <div>
+                    <b>Evolution Path</b>: A Pareto-style frontier mapping Time (Speed) against RAM (Efficiency). 
+                    The path traces the architectural maturity of the project.
+                </div>
+                <div>
+                    <b>Throughput (MB/s)</b>: Theoretical maximum data rate during O(1) streaming operations, 
+                    derived from a 45MB benchmark payload.
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="./data_v123.js"></script>
@@ -183,10 +201,15 @@
                 if (idx !== -1) {
                     Sync.charts.trend.setOption({
                         series: Sync.charts.trend.getOption().series.map((s, i) => ({
+                            markLine: i === 0 ? {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [{ xAxis: idx }]
+                            } : undefined,
                             markPoint: i === 0 ? {
-                                symbol: 'pin', symbolSize: 30,
+                                symbol: 'circle', symbolSize: 10,
                                 data: [{ coord: [idx, Sync.getVal(sha, 'ubuntu-latest', 'JSON Serialization Lodum simple') || 0] }],
-                                itemStyle: { color: '#ef4444' }
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
                             } : undefined
                         }))
                     });
@@ -194,10 +217,15 @@
                 if (fPt) {
                     Sync.charts.frontier.setOption({
                         series: [{
+                            markLine: {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [{ xAxis: fPt[0] }, { yAxis: fPt[1] }]
+                            },
                             markPoint: {
-                                symbol: 'pin', symbolSize: 30,
+                                symbol: 'circle', symbolSize: 12,
                                 data: [{ coord: [fPt[0], fPt[1]] }],
-                                itemStyle: { color: '#ef4444' }
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
                             }
                         }]
                     });
@@ -207,17 +235,18 @@
                 const c = Sync.commitMap.get(sha);
                 if (!c) return;
                 const platforms = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
-                const vals = platforms.map(f => {
+                const colors = ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'];
+                const vals = platforms.map((f, i) => {
                     const suiteKey = Object.keys(c.data).find(k => k.includes('ubuntu-latest'));
-                    if (!suiteKey) return 0;
+                    if (!suiteKey) return { value: 0, itemStyle: { color: colors[i] } };
                     const b = c.data[suiteKey].benches.find(x => x.name.includes(f.p));
-                    return b ? b.value : 0;
+                    return { value: b ? b.value : 0, itemStyle: { color: colors[i] } };
                 });
                 Sync.charts.formats.setOption({
                     xAxis: { type: 'value', show: false },
                     yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
                     grid: { top: 10, bottom: 10, left: 60, right: 40 },
-                    series: [{ type: 'bar', data: vals, color: '#fbc929', label: { show: true, position: 'right', formatter: '{c}us' } }]
+                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c}us' } }]
                 });
             }
         };
@@ -269,13 +298,20 @@
             }).filter(p => p !== null);
 
             frontier.setOption({
-                tooltip: { formatter: (p) => `<b>${p.data[2]}</b><br/>Time: ${p.data[0].toFixed(3)}s<br/>Mem: ${p.data[1].toFixed(1)}MB` },
-                xAxis: { type: 'value', name: 'Time (s)', splitLine: { show: false } },
-                yAxis: { type: 'value', name: 'RAM (MB)', splitLine: { show: false } },
+                tooltip: { 
+                    trigger: 'item',
+                    formatter: (p) => `<b>${p.data[2]}</b><br/>Time: ${p.data[0].toFixed(3)}s<br/>Mem: ${p.data[1].toFixed(1)}MB` 
+                },
+                xAxis: { type: 'value', name: 'Time (s)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
+                yAxis: { type: 'value', name: 'RAM (MB)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
                 series: [{ 
-                    type: 'line', data: Sync.frontierData, symbolSize: 10,
-                    itemStyle: { color: '#cbd5e1' },
-                    emphasis: { itemStyle: { color: '#ef4444', scale: 2 } }
+                    type: 'line', data: Sync.frontierData, symbolSize: 8, smooth: true,
+                    lineStyle: { width: 2, color: '#e2e8f0' },
+                    itemStyle: { color: '#94a3b8' },
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
                 }]
             });
 
