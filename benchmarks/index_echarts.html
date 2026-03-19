@@ -143,6 +143,7 @@
             charts: {},
             selectedSha: null,
             baselineSha: null,
+            isRefreshing: false,
             init: () => {
                 const data = window.BENCHMARK_DATA;
                 Sync.history = data.history || [];
@@ -170,6 +171,9 @@
                 return b ? b.value : null;
             },
             refresh: (sha, source) => {
+                if (Sync.isRefreshing) return;
+                Sync.isRefreshing = true;
+                
                 UI.status(`[${source.toUpperCase()}] ${sha.substring(0,7)}`);
                 UI.updateKPIs(sha);
                 UI.updateHeatmap(sha);
@@ -179,13 +183,13 @@
                 const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
 
                 // Highlight on Trend
-                if (idx !== -1) {
+                if (idx !== -1 && source !== 'trend') {
                     Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
                     Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
                 }
                 
                 // Highlight on Frontier
-                if (fIdx !== -1) {
+                if (fIdx !== -1 && source !== 'frontier') {
                     Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
                     Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
                 }
@@ -194,6 +198,7 @@
                 if (source === 'click' || source === 'init') {
                     Sync.updateSelectionMarkers(sha);
                 }
+                Sync.isRefreshing = false;
             },
             updateSelectionMarkers: (sha) => {
                 const idx = Sync.history.indexOf(sha);
@@ -269,7 +274,7 @@
                 }).filter(m => m !== null);
 
                 const getPlatformSeries = (pid, name, color) => ({
-                    name, type: 'line', smooth: true, showSymbol: false, color,
+                    name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                     data: Sync.history.map(sha => Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
                     markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined
                 });
