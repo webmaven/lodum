@@ -175,18 +175,19 @@
                 UI.updateHeatmap(sha);
                 Sync.updateFormats(sha);
                 
-                // Highlight on Trend
                 const idx = Sync.history.indexOf(sha);
-                if (source !== 'trend' && idx !== -1) {
+                const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
+
+                // Highlight on Trend
+                if (idx !== -1) {
                     Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
+                    Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
                 }
                 
                 // Highlight on Frontier
-                if (source !== 'frontier') {
-                    const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
-                    if (fIdx !== -1) {
-                        Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
-                    }
+                if (fIdx !== -1) {
+                    Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
+                    Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
                 }
 
                 // Persistent Selection Marker
@@ -199,16 +200,17 @@
                 const fPt = Sync.frontierData.find(d => d && d[3] === sha);
                 
                 if (idx !== -1) {
+                    const yVal = Sync.getVal(sha, 'ubuntu-latest', 'JSON Serialization Lodum simple') || 0;
                     Sync.charts.trend.setOption({
                         series: Sync.charts.trend.getOption().series.map((s, i) => ({
                             markLine: i === 0 ? {
                                 symbol: ['none', 'none'], label: { show: false },
                                 lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
-                                data: [{ xAxis: idx }]
+                                data: [{ xAxis: idx }, { yAxis: yVal }]
                             } : undefined,
                             markPoint: i === 0 ? {
                                 symbol: 'circle', symbolSize: 10,
-                                data: [{ coord: [idx, Sync.getVal(sha, 'ubuntu-latest', 'JSON Serialization Lodum simple') || 0] }],
+                                data: [{ coord: [idx, yVal] }],
                                 itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
                             } : undefined
                         }))
@@ -263,7 +265,7 @@
             const updateTrend = (scenario) => {
                 const markLines = Object.entries(Sync.tags).map(([sha, label]) => {
                     const idx = Sync.history.indexOf(sha);
-                    return idx !== -1 ? { xAxis: idx, label: { formatter: label, position: 'end' }, lineStyle: { color: '#fbc929', type: 'dashed' } } : null;
+                    return idx !== -1 ? { xAxis: idx, label: { formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed' } } : null;
                 }).filter(m => m !== null);
 
                 const getPlatformSeries = (pid, name, color) => ({
@@ -275,7 +277,7 @@
                 trend.setOption({
                     tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                     legend: { bottom: 0 },
-                    grid: { top: 20, left: 40, right: 20, bottom: 80 },
+                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
                     xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
