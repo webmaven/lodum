@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lodum Dashboard (uPlot Prototype)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+    <style>
+        :root { --lodum-yellow: #fbc929; --bg-muted: #f9fafb; --border: #e5e7eb; }
+        body { font-family: Inter, system-ui, sans-serif; margin: 0; padding: 20px; color: #1f2937; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { border-bottom: 2px solid var(--lodum-yellow); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: var(--bg-muted); border-left: 4px solid var(--lodum-yellow); padding: 15px; border-radius: 0 8px 8px 0; }
+        .kpi-value { font-size: 1.5rem; font-weight: 800; }
+        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 600; }
+        .grid-main { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; }
+        .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .chart-wrap { width: 100%; overflow: hidden; }
+        .uplot { margin: 0 auto; }
+        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; font-family: monospace; border-radius: 4px; z-index: 100; }
+        .u-tooltip { position: absolute; background: #fff; border: 1px solid #ccc; padding: 10px; pointer-events: none; z-index: 1000; display: none; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="status-bar">uPlot Mode Initializing...</div>
+    <div id="tooltip" class="u-tooltip"></div>
+    <div class="container">
+        <header>
+            <h1>Lodum Index (uPlot)</h1>
+            <div id="last-updated" style="font-size: 0.7rem; color: #666;"></div>
+        </header>
+
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Speedup vs MM</div><div class="kpi-value" id="kpi-speedup">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Mem. Reduction</div><div class="kpi-value" id="kpi-memory">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">WASM Efficiency</div><div class="kpi-value" id="kpi-wasm">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Throughput</div><div class="kpi-value" id="kpi-throughput">--</div></div>
+        </div>
+
+        <div class="grid-main">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <b style="font-size: 0.9rem;">Serialization Latency (JSON)</b>
+                    <select id="scenario-selector"><option value="simple">Simple</option><option value="complex">Complex</option><option value="nested">Nested</option></select>
+                </div>
+                <div id="trend-chart" class="chart-wrap"></div>
+            </div>
+            <div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Evolution Path (Synced)</b>
+                    <div id="frontier-chart" class="chart-wrap" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./data_v123.js"></script>
+    <script>
+        const Sync = {
+            history: [],
+            commitMap: new Map(),
+            tags: {},
+            syncBus: uPlot.sync("dash"),
+            init: () => {
+                const data = window.BENCHMARK_DATA;
+                Sync.history = data.history || [];
+                Sync.tags = data.tags || {};
+                Object.entries(data.entries).forEach(([suite, points]) => {
+                    points.forEach(p => {
+                        const id = p.commit.id;
+                        if (!id || !Sync.history.includes(id)) return;
+                        if (!Sync.commitMap.has(id)) Sync.commitMap.set(id, { id, short: id.substring(0,7), msg: p.commit.message, data: {} });
+                        Sync.commitMap.get(id).data[suite] = p;
+                    });
+                });
+            }
+        };
+
+        const getVal = (sha, pid, bench) => {
+            const c = Sync.commitMap.get(sha); if (!c) return null;
+            const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
+            if (!suiteKey) return null;
+            const b = c.data[suiteKey].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
+            return b ? b.value : null;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Sync.init();
+            const latestSha = Sync.history[Sync.history.length - 1];
+
+            // 1. Trend Chart Data Mapping
+            const buildTrendData = (scenario) => {
+                const x = Sync.history.map((_, i) => i);
+                const linux = Sync.history.map(sha => getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`));
+                const win = Sync.history.map(sha => getVal(sha, 'windows-latest', `JSON Serialization Lodum ${scenario}`));
+                const wasm = Sync.history.map(sha => getVal(sha, 'Pyodide', `JSON Serialization Lodum ${scenario}`));
+                return [x, linux, win, wasm];
+            };
+
+            const trendOpts = {
+                width: 700, height: 350,
+                cursor: { sync: { key: Sync.syncBus.key } },
+                scales: { x: { time: false } },
+                series: [
+                    {},
+                    { label: "Linux", stroke: "#fbc929", width: 2 },
+                    { label: "Windows", stroke: "#3b82f6", width: 2 },
+                    { label: "WASM", stroke: "#10b981", width: 2 }
+                ],
+                axes: [
+                    { values: (u, vals) => vals.map(v => Sync.history[v]?.substring(0,7) || "") },
+                    { label: "us/op" }
+                ]
+            };
+
+            let trend = new uPlot(trendOpts, buildTrendData('simple'), document.getElementById('trend-chart'));
+
+            // 2. Frontier Chart (X=Time, Y=Memory)
+            // Note: uPlot requires X to be monotonic. For scatter/frontier we map history index to X and use tooltips.
+            const frontierDataPoints = Sync.history.map(sha => {
+                const t = getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
+                const m = getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Memory') || getVal(sha, 'ubuntu-latest', 'Standard (loads) Memory');
+                return { t, m, sha };
+            }).filter(p => p.t && p.m);
+
+            const frontierData = [
+                Sync.history.map((_, i) => i),
+                Sync.history.map(sha => {
+                    const p = frontierDataPoints.find(dp => dp.sha === sha);
+                    return p ? p.t : null;
+                }),
+                Sync.history.map(sha => {
+                    const p = frontierDataPoints.find(dp => dp.sha === sha);
+                    return p ? p.m : null;
+                })
+            ];
+
+            const frontierOpts = {
+                width: 400, height: 300,
+                cursor: { sync: { key: Sync.syncBus.key } },
+                scales: { x: { time: false } },
+                series: [
+                    {},
+                    { label: "Time (s)", stroke: "#ef4444", width: 0, points: { show: true, size: 8 } },
+                    { label: "RAM (MB)", stroke: "#3b82f6", width: 0, points: { show: true, size: 8 }, scale: "mem" }
+                ],
+                axes: [
+                    { show: false },
+                    { label: "Time (s)" },
+                    { label: "RAM (MB)", side: 1, scale: "mem", grid: { show: false } }
+                ]
+            };
+
+            let frontier = new uPlot(frontierOpts, frontierData, document.getElementById('frontier-chart'));
+
+            // KPI calculation
+            const lodum = getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Lodum simple');
+            const mm = getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Marshmallow simple');
+            if (lodum && mm) document.getElementById('kpi-speedup').innerText = (mm / lodum).toFixed(1) + 'x';
+            
+            document.getElementById('status-bar').innerText = 'uPlot Prototype Ready';
+            document.getElementById('scenario-selector').onchange = (e) => {
+                trend.setData(buildTrendData(e.target.value));
+            };
+        });
+    </script>
+</body>
+</html>
