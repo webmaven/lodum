@@ -184,14 +184,14 @@
 
                     // Highlight on Trend
                     if (idx !== -1 && source !== 'trend') {
-                        Sync.charts.trend.dispatchAction({ type: 'downplay', seriesIndex: [0, 1, 2] });
+                        Sync.charts.trend.dispatchAction({ type: 'downplay' });
                         Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
                         Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
                     }
                     
                     // Highlight on Frontier
                     if (fIdx !== -1 && source !== 'frontier') {
-                        Sync.charts.frontier.dispatchAction({ type: 'downplay', seriesIndex: 0 });
+                        Sync.charts.frontier.dispatchAction({ type: 'downplay' });
                         Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
                         Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
                     }
@@ -281,7 +281,11 @@
                 const getPlatformSeries = (pid, name, color) => ({
                     name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                     data: Sync.history.map(sha => Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
-                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined
+                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
                 });
 
                 trend.setOption({
