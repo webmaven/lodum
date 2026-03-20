@@ -448,14 +448,6 @@ def get_commit_info(target_sha=None):
 def run_all():
     is_json = "--json" in sys.argv
     use_baselines = "--use-baselines" in sys.argv
-    
-    only_filter = None
-    scenario_filter = None
-    for arg in sys.argv:
-        if arg.startswith("--only="):
-            only_filter = arg.split("=")[1].strip("\"'")
-        if arg.startswith("--scenario="):
-            scenario_filter = arg.split("=")[1].strip("\"'")
 
     target_sha = None
     for arg in sys.argv:
@@ -471,23 +463,8 @@ def run_all():
         if use_baselines:
             print("Note: Using stored competitor baselines for comparison.\n")
 
-    def run_filtered_group(name, benchmarks, results):
-        if only_filter and only_filter not in name:
-            return
-        
-        filtered_benchmarks = {}
-        for lib, scenarios in benchmarks.items():
-            if scenario_filter:
-                if scenario_filter in scenarios:
-                    filtered_benchmarks[lib] = {scenario_filter: scenarios[scenario_filter]}
-            else:
-                filtered_benchmarks[lib] = scenarios
-        
-        if filtered_benchmarks:
-            run_group(name, filtered_benchmarks, results)
-
     # JSON Serialization
-    run_filtered_group(
+    run_group(
         "JSON Serialization",
         {
             "Lodum": {
@@ -510,7 +487,7 @@ def run_all():
     )
 
     # JSON Deserialization
-    run_filtered_group(
+    run_group(
         "JSON Deserialization",
         {
             "Lodum": {
@@ -534,7 +511,7 @@ def run_all():
 
     # MsgPack
     if msgpack and lodum_msgpack:
-        run_filtered_group(
+        run_group(
             "MsgPack Serialization",
             {
                 "Lodum": {
@@ -550,7 +527,7 @@ def run_all():
             },
             all_results,
         )
-        run_filtered_group(
+        run_group(
             "MsgPack Deserialization",
             {
                 "Lodum": {
@@ -571,7 +548,7 @@ def run_all():
 
     # CBOR
     if cbor2 and lodum_cbor:
-        run_filtered_group(
+        run_group(
             "CBOR Serialization",
             {
                 "Lodum": {
@@ -587,7 +564,7 @@ def run_all():
             },
             all_results,
         )
-        run_filtered_group(
+        run_group(
             "CBOR Deserialization",
             {
                 "Lodum": {
@@ -606,7 +583,7 @@ def run_all():
 
     # YAML
     if ruamel.yaml and lodum_yaml:
-        run_filtered_group(
+        run_group(
             "YAML Serialization",
             {
                 "Lodum": {
@@ -617,7 +594,7 @@ def run_all():
             },
             all_results,
         )
-        run_filtered_group(
+        run_group(
             "YAML Deserialization",
             {
                 "Lodum": {
@@ -631,7 +608,7 @@ def run_all():
 
     # TOML
     if tomli_w and lodum_toml:
-        run_filtered_group(
+        run_group(
             "TOML Serialization",
             {
                 "Lodum": {
@@ -642,7 +619,7 @@ def run_all():
             },
             all_results,
         )
-        run_filtered_group(
+        run_group(
             "TOML Deserialization",
             {
                 "Lodum": {
@@ -656,7 +633,7 @@ def run_all():
 
     # Pickle
     if lodum_pickle:
-        run_filtered_group(
+        run_group(
             "Pickle Serialization",
             {
                 "Lodum (Safe)": {
@@ -667,7 +644,7 @@ def run_all():
             },
             all_results,
         )
-        run_filtered_group(
+        run_group(
             "Pickle Deserialization",
             {
                 "Lodum (Safe)": {
