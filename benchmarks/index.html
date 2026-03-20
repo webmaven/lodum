@@ -3,39 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: 1.2.3 - Deep Interaction Fix - Cache Buster: 1772314000 -->
-    <title>Lodum Performance Dashboard</title>
-    <script>
-        (function() {
-            const original = EventTarget.prototype.addEventListener;
-            EventTarget.prototype.addEventListener = function(type, listener, options) {
-                if (['touchstart', 'touchmove', 'wheel', 'mousewheel'].includes(type)) {
-                    if (typeof options === 'object') options.passive = false;
-                    else options = { passive: false, capture: !!options };
-                }
-                return original.call(this, type, listener, options);
-            };
-        })();
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+    <title>Lodum Dashboard (ECharts Prototype)</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
-        :root {
-            --lodum-yellow: #fbc929;
-            --lodum-yellow-dark: #d9a300;
-            --text-main: #1f2937;
-            --bg-main: #ffffff;
-            --bg-muted: #f9fafb;
-            --border-color: #e5e7eb;
-        }
-        body { font-family: Inter, sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.4; }
+        :root { --lodum-yellow: #fbc929; --bg-muted: #f9fafb; --border: #e5e7eb; }
+        body { font-family: Inter, system-ui, sans-serif; margin: 0; padding: 20px; color: #1f2937; }
         .container { max-width: 1200px; margin: 0 auto; }
-        header { border-bottom: 2px solid var(--lodum-yellow); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .card { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        header { border-bottom: 2px solid var(--lodum-yellow); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: var(--bg-muted); border-left: 4px solid var(--lodum-yellow); padding: 15px; border-radius: 0 8px 8px 0; }
         .kpi-value { font-size: 1.5rem; font-weight: 800; }
-        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 600; }
         .grid-main { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; }
+        .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .chart-container { height: 350px; width: 100%; touch-action: none; }
+        #frontier-chart { height: 280px; }
         .heatmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .heatmap-cell { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; font-size: 0.8rem; }
         .cell-label { display: block; font-size: 0.6rem; color: #666; margin-bottom: 2px; }
@@ -43,19 +25,17 @@
         .cell-good { background: #ecfdf5; color: #065f46; }
         .cell-bad { background: #fef2f2; color: #991b1b; }
         .cell-warn { background: #fffbeb; color: #92400e; }
-        .apexcharts-tooltip, .custom-tooltip { pointer-events: none !important; user-select: none !important; }
-        .custom-tooltip { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-width: 300px; }
-        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; z-index: 9999; border-radius: 4px; border: 1px solid #0a0; font-family: monospace; }
-        .chart-container { touch-action: none !important; }
+        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; font-family: monospace; border-radius: 4px; z-index: 100; }
     </style>
 </head>
 <body>
-    <div id="status-bar">Initializing...</div>
+    <div id="status-bar">ECharts Mode Initializing...</div>
     <div class="container">
         <header>
-            <h1>Lodum Performance Index</h1>
-            <div style="text-align: right;"><span id="last-updated" style="font-size: 0.7rem; color: #666;"></span></div>
+            <h1>Lodum Index (ECharts)</h1>
+            <div id="last-updated" style="font-size: 0.7rem; color: #666;"></div>
         </header>
+
         <div class="kpi-grid">
             <div class="kpi-card"><div class="kpi-label">Speedup vs MM</div><div class="kpi-value" id="kpi-speedup">--</div></div>
             <div class="kpi-card"><div class="kpi-label">Mem. Reduction</div><div class="kpi-value" id="kpi-memory">--</div></div>
@@ -66,111 +46,69 @@
         <div class="grid-main">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <b>Serialization Latency (JSON)</b>
+                    <b style="font-size: 0.9rem;">Serialization Latency (JSON)</b>
                     <select id="scenario-selector"><option value="simple">Simple</option><option value="complex">Complex</option><option value="nested">Nested</option></select>
                 </div>
-                <div id="main-chart" class="chart-container"></div>
-                <div id="brush-chart" class="chart-container"></div>
+                <div id="trend-chart" class="chart-container"></div>
             </div>
             <div>
-                <div class="card"><b>Evolution Path</b><div id="frontier-chart" class="chart-container"></div></div>
-                <div class="card"><b>Regression vs v0.3.0</b><div class="heatmap-grid" id="regression-heatmap"></div><div id="hover-details" style="font-size: 0.75rem; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 10px;">Hover a point to explore.</div></div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Evolution Path (Synced)</b>
+                    <div id="frontier-chart" class="chart-container"></div>
+                </div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Regression vs v0.3.0</b>
+                    <div class="heatmap-grid" id="regression-heatmap"></div>
+                    <div id="hover-details" style="font-size: 0.75rem; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 10px;">Hover a point to explore.</div>
+                </div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Binary Formats (Latest)</b>
+                    <div id="format-chart" style="height: 180px;"></div>
+                </div>
             </div>
         </div>
-        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div class="card"><b>Binary Formats (Latest)</b><div id="format-chart" class="chart-container"></div></div>
-            <div class="card" style="background: var(--bg-muted);"><b>Glossary</b><div style="font-size: 0.8rem; margin-top: 10px;"><b>Latency</b>: us/op. <b>RAM</b>: Peak MB. <b>Streaming</b>: O(1) mode.</div></div>
+
+        <div class="card" style="background: var(--bg-muted); border-left: 4px solid #cbd5e1;">
+            <b style="font-size: 0.8rem; text-transform: uppercase; color: #64748b;">Glossary & Methodology</b>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 15px; font-size: 0.8rem; line-height: 1.5;">
+                <div>
+                    <b>Latency (us/op)</b>: Time taken for one serialization operation. 
+                    <i>Benchmark</i>: Simple (flat dict), Complex (mixed), Nested (deep).
+                </div>
+                <div>
+                    <b>Evolution Path</b>: A Pareto-style frontier mapping Time (Speed) against RAM (Efficiency). 
+                    The path traces the architectural maturity of the project.
+                </div>
+                <div>
+                    <b>Throughput (MB/s)</b>: Theoretical maximum data rate during O(1) streaming operations, 
+                    derived from a 45MB benchmark payload.
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="./data_v123.js"></script>
     <script>
-        const Debug = {
-            log: (cat, msg, data) => {
-                const ts = new Date().toISOString().split('T')[1].substring(0,8);
-                console.log(`[%c${cat}%c][${ts}] ${msg}`, 'color: #fbc929; font-weight: bold', '', data || '');
-            },
-            error: (msg, err) => console.error(`[ERROR] ${msg}`, err)
-        };
-
-        const Sync = {
-            selectedSha: null,
-            hoverSha: null,
-            history: [],
-            commitMap: new Map(),
-            frontierPoints: [],
-            baselineSha: null,
-            releaseAnnotations: [],
-            
-            init: () => {
-                const data = window.BENCHMARK_DATA;
-                if (!data) return;
-                Sync.history = data.history || [];
-                Object.entries(data.entries).forEach(([suite, points]) => {
-                    points.forEach(p => {
-                        const id = p.commit.id;
-                        if (!id || !Sync.history.includes(id)) return;
-                        if (!Sync.commitMap.has(id)) Sync.commitMap.set(id, { id, short: id.substring(0,7), msg: p.commit.message, data: {} });
-                        const c = Sync.commitMap.get(id);
-                        if (!c.data[suite] || (p.benches && p.benches.length > (c.data[suite].benches || []).length)) c.data[suite] = p;
-                    });
-                });
-                
-                const tags = data.tags || {};
-                Sync.releaseAnnotations = Object.entries(tags).map(([sha, label]) => {
-                    const idx = Sync.history.indexOf(sha);
-                    if (idx === -1) return null;
-                    if (label === 'v0.3.0') Sync.baselineSha = sha;
-                    return { x: idx, borderColor: '#fbc929', strokeDashArray: 0, label: { text: label, style: { color: '#fff', background: '#fbc929' } } };
-                }).filter(a => a !== null);
-                
-                Sync.baselineSha = Sync.baselineSha || Sync.history[0];
-                Sync.selectedSha = Sync.history[Sync.history.length - 1];
-                Debug.log('DATA', `Initialized with ${Sync.history.length} points and ${Sync.releaseAnnotations.length} tags.`);
-            },
-            
-            getVal: (sha, pid, bench) => {
-                const c = Sync.commitMap.get(sha); if (!c) return null;
-                const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
-                if (!suiteKey) return null;
-                const benchObj = c.data[suiteKey].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
-                return benchObj ? benchObj.value : null;
-            },
-            
-            update: (sha, source) => {
-                if (!sha || sha === Sync.hoverSha) return;
-                Sync.hoverSha = sha;
-                document.getElementById('status-bar').innerText = `[${source.toUpperCase()}] ${sha.substring(0,7)}`;
-                
+        const UI = {
+            status: (msg) => document.getElementById('status-bar').innerText = msg,
+            updateKPIs: (sha) => {
+                const getVal = (pid, bench) => Sync.getVal(sha, pid, bench);
                 try {
-                    const hIdx = Sync.history.indexOf(sha);
-                    if (source !== 'trend' && hIdx !== -1) {
-                        ApexCharts.exec('trend', 'removeAnnotation', 'sync-link');
-                        ApexCharts.exec('trend', 'addXaxisAnnotation', { 
-                            id: 'sync-link', x: hIdx, borderColor: '#ef4444', 
-                            label: { text: 'Linked', style: { color: '#fff', background: '#ef4444' } } 
-                        });
-                    }
-                    const fp = Sync.frontierPoints.find(p => p.sha === sha);
-                    if (source !== 'frontier' && fp) {
-                        ApexCharts.exec('frontier', 'removeAnnotation', 'sync-link');
-                        ApexCharts.exec('frontier', 'addPointAnnotation', { 
-                            id: 'sync-link', x: fp.x, y: fp.y, marker: { size: 10, fillColor: '#ef4444', strokeWidth: 0 } 
-                        });
-                    }
-                } catch (e) { }
-                Sync.updateHeatmap(sha);
+                    const lodum = getVal('ubuntu-latest', 'JSON Serialization Lodum simple');
+                    const mm = getVal('ubuntu-latest', 'JSON Serialization Marshmallow simple');
+                    if (lodum && mm) document.getElementById('kpi-speedup').innerText = (mm / lodum).toFixed(1) + 'x';
+                    
+                    const stdMem = getVal('ubuntu-latest', 'Standard (loads) Memory');
+                    const strmMem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory');
+                    if (stdMem && strmMem) document.getElementById('kpi-memory').innerText = ((1 - (strmMem / stdMem)) * 100).toFixed(1) + '%';
+                    
+                    const wasm = getVal('Pyodide', 'JSON Serialization Lodum simple');
+                    if (lodum && wasm) document.getElementById('kpi-wasm').innerText = ((lodum / wasm) * 100).toFixed(0) + '%';
+                    
+                    const strmTime = getVal('ubuntu-latest', 'Streaming (load_stream) Time');
+                    if (strmTime) document.getElementById('kpi-throughput').innerText = (45 / strmTime).toFixed(1) + ' MB/s';
+                } catch(e) { console.error('KPI error', e); }
             },
-            
-            clear: () => {
-                Sync.hoverSha = null;
-                try {
-                    ApexCharts.exec('trend', 'removeAnnotation', 'sync-link');
-                    ApexCharts.exec('frontier', 'removeAnnotation', 'sync-link');
-                } catch (e) {}
-                Sync.updateHeatmap(Sync.selectedSha);
-            },
-            
             updateHeatmap: (sha) => {
                 const c = Sync.commitMap.get(sha);
                 if (!c) return;
@@ -198,128 +136,277 @@
             }
         };
 
+        const Sync = {
+            history: [],
+            commitMap: new Map(),
+            tags: {},
+            charts: {},
+            selectedSha: null,
+            baselineSha: null,
+            isRefreshing: false,
+            init: () => {
+                const data = window.BENCHMARK_DATA;
+                Sync.history = data.history || [];
+                Sync.tags = data.tags || {};
+                Object.entries(data.entries).forEach(([suite, points]) => {
+                    points.forEach(p => {
+                        const id = p.commit.id;
+                        if (!id || !Sync.history.includes(id)) return;
+                        if (!Sync.commitMap.has(id)) Sync.commitMap.set(id, { id, short: id.substring(0,7), msg: p.commit.message, data: {} });
+                        const c = Sync.commitMap.get(id);
+                        c.data[suite] = p;
+                    });
+                });
+                Object.entries(Sync.tags).forEach(([sha, label]) => {
+                    if (label === 'v0.3.0') Sync.baselineSha = sha;
+                });
+                if (!Sync.baselineSha) Sync.baselineSha = Sync.history[0];
+                if (data.lastUpdate) document.getElementById('last-updated').innerText = 'Sync: ' + new Date(data.lastUpdate).toLocaleString();
+            },
+            getVal: (sha, pid, bench) => {
+                const c = Sync.commitMap.get(sha); if (!c) return null;
+                const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
+                if (!suiteKey) return null;
+                const b = c.data[suiteKey].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
+                return b ? b.value : null;
+            },
+            refresh: (sha, source) => {
+                if (Sync.isRefreshing) return;
+                Sync.isRefreshing = true;
+                try {
+                    UI.status(`[${source.toUpperCase()}] ${sha.substring(0,7)}`);
+                    UI.updateKPIs(sha);
+                    UI.updateHeatmap(sha);
+                    Sync.updateFormats(sha);
+                    
+                    const idx = Sync.history.indexOf(sha);
+                    const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
+
+                    // Highlight on Trend
+                    if (idx !== -1 && source !== 'trend') {
+                        Sync.charts.trend.dispatchAction({ type: 'downplay' });
+                        Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
+                        Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
+                    }
+                    
+                    // Highlight on Frontier
+                    if (fIdx !== -1 && source !== 'frontier') {
+                        Sync.charts.frontier.dispatchAction({ type: 'downplay' });
+                        Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
+                        Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
+                    }
+
+                    // Persistent Selection Marker
+                    if (source === 'click' || source === 'init') {
+                        Sync.updateSelectionMarkers(sha);
+                    }
+                } finally {
+                    Sync.isRefreshing = false;
+                }
+            },
+            updateSelectionMarkers: (sha) => {
+                const idx = Sync.history.indexOf(sha);
+                const fPt = Sync.frontierData.find(d => d && d[3] === sha);
+                const scenario = document.getElementById('scenario-selector').value;
+                
+                if (idx !== -1) {
+                    const yVal = Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`) || 0;
+                    Sync.charts.trend.setOption({
+                        series: Sync.charts.trend.getOption().series.map((s, i) => ({
+                            markLine: i === 0 ? {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [{ xAxis: idx }, { yAxis: yVal }]
+                            } : undefined,
+                            markPoint: i === 0 ? {
+                                symbol: 'circle', symbolSize: 10,
+                                data: [{ coord: [idx, yVal] }],
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
+                            } : undefined
+                        }))
+                    });
+                }
+                if (fPt) {
+                    Sync.charts.frontier.setOption({
+                        series: [{
+                            markLine: {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [{ xAxis: fPt[0] }, { yAxis: fPt[1] }]
+                            },
+                            markPoint: {
+                                symbol: 'circle', symbolSize: 12,
+                                data: [{ coord: [fPt[0], fPt[1]] }],
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
+                            }
+                        }]
+                    });
+                }
+            },
+            updateFormats: (sha) => {
+                const c = Sync.commitMap.get(sha);
+                if (!c) return;
+                const platforms = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
+                const colors = ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'];
+                const vals = platforms.map((f, i) => {
+                    const suiteKey = Object.keys(c.data).find(k => k.includes('ubuntu-latest'));
+                    if (!suiteKey) return { value: 0, itemStyle: { color: colors[i] } };
+                    const b = c.data[suiteKey].benches.find(x => x.name.includes(f.p));
+                    return { value: b ? b.value : 0, itemStyle: { color: colors[i] } };
+                });
+                Sync.charts.formats.setOption({
+                    xAxis: { type: 'value', show: false },
+                    yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
+                    grid: { top: 10, bottom: 10, left: 60, right: 40 },
+                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c}us' } }]
+                });
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             Sync.init();
-            
-            Sync.frontierPoints = Sync.history.map(sha => {
-                const t = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
-                const m = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Memory') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Memory');
-                const c = Sync.commitMap.get(sha);
-                return (t && m && c) ? { x: t, y: m, sha: sha, short: c.short } : null;
-            }).filter(p => p !== null);
+            const latestSha = Sync.history[Sync.history.length - 1];
+            Sync.selectedSha = latestSha;
 
-            new ApexCharts(document.querySelector("#frontier-chart"), {
-                series: [{ name: 'Evolution', data: Sync.frontierPoints.map(p => ({ x: p.x, y: p.y, sha: p.sha })) }],
-                chart: { id: 'frontier', type: 'line', height: 250, toolbar: { show: false }, zoom: { enabled: false },
-                    events: {
-                        dataPointMouseEnter: (e, ctx, cfg) => {
-                            const pt = cfg.w.config.series[0].data[cfg.dataPointIndex];
-                            if (pt) Sync.update(pt.sha, 'frontier');
-                        },
-                        dataPointMouseLeave: () => Sync.clear(),
-                        click: (e, ctx, cfg) => {
-                            const pt = cfg.w.config.series[0].data[cfg.dataPointIndex];
-                            if (pt) { Sync.selectedSha = pt.sha; Sync.update(pt.sha, 'click'); }
-                        }
-                    }
-                },
-                xaxis: { type: 'numeric', labels: { formatter: v => v ? v.toFixed(2)+'s' : '' } },
-                markers: { size: 6, hover: { size: 10 }, colors: Sync.frontierPoints.map((p, i) => i === Sync.frontierPoints.length - 1 ? '#ef4444' : '#cbd5e1') },
-                tooltip: { custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-                    const p = Sync.frontierPoints[dataPointIndex];
-                    return `<div class="custom-tooltip"><b>${p.short}</b><br/>${p.x.toFixed(3)}s / ${p.y.toFixed(1)}MB</div>`;
-                }}
-            }).render();
+            // 1. Trend Chart
+            const trend = echarts.init(document.getElementById('trend-chart'));
+            Sync.charts.trend = trend;
 
-            let mainChart, brushChart;
             const updateTrend = (scenario) => {
-                const series = ['ubuntu-latest', 'windows-latest', 'Pyodide'].map(pid => ({
-                    name: pid.includes('ubuntu')?'Linux':(pid.includes('win')?'Windows':'WASM'),
-                    color: pid.includes('ubuntu')?'#fbc929':(pid.includes('win')?'#3b82f6':'#10b981'),
-                    data: Sync.history.map((sha, idx) => ({ x: idx, y: Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`), sha: sha }))
-                }));
+                const markLines = Object.entries(Sync.tags).map(([sha, label]) => {
+                    const idx = Sync.history.indexOf(sha);
+                    return idx !== -1 ? { xAxis: idx, label: { formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed' } } : null;
+                }).filter(m => m !== null);
 
-                if (mainChart) mainChart.destroy();
-                if (brushChart) brushChart.destroy();
-
-                mainChart = new ApexCharts(document.querySelector("#main-chart"), {
-                    series: series,
-                    chart: { id: 'trend', type: 'line', height: 280, toolbar: { show: false }, animations: { enabled: false },
-                        events: {
-                            mouseMove: (e, ctx, config) => {
-                                const x = config?.w?.globals?.lastIndices?.x?.[0];
-                                if (x != null) {
-                                    const sha = Sync.history[Math.round(x)];
-                                    if (sha) Sync.update(sha, 'trend');
-                                }
-                            },
-                            dataPointMouseLeave: () => Sync.clear(),
-                            click: (e, ctx, config) => {
-                                const x = config?.w?.globals?.lastIndices?.x?.[0];
-                                if (x != null) {
-                                    const sha = Sync.history[Math.round(x)];
-                                    if (sha) { Sync.selectedSha = sha; Sync.update(sha, 'click'); }
-                                }
-                            }
-                        }
-                    },
-                    annotations: { xaxis: Sync.releaseAnnotations },
-                    xaxis: { type: 'numeric', min: 0, max: Sync.history.length - 1, labels: { formatter: v => Sync.history[Math.round(v)]?.substring(0,7) || '' } },
-                    markers: { size: 5, hover: { size: 10 }, strokeWidth: 0 },
-                    tooltip: { shared: true, custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-                        const sha = Sync.history[dataPointIndex];
-                        const c = Sync.commitMap.get(sha);
-                        if (!c) return '';
-                        let html = `<div class="custom-tooltip"><b>${c.short}</b><br/>${(c.msg || "").substring(0,100)}<hr/>`;
-                        w.config.series.forEach((s, i) => {
-                            const p = s.data[dataPointIndex];
-                            if (p && p.y != null) html += `<div><span style="color:${s.color}">●</span> ${s.name}: <b>${p.y.toFixed(2)}µs</b></div>`;
-                        });
-                        return html + '</div>';
-                    }}
+                const getPlatformSeries = (pid, name, color) => ({
+                    name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
+                    data: Sync.history.map(sha => Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
+                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
                 });
-                mainChart.render();
 
-                brushChart = new ApexCharts(document.querySelector("#brush-chart"), {
-                    series: series,
-                    chart: { id: 'brush', height: 80, type: 'area', brush: { target: 'trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, Sync.history.length - 8), max: Sync.history.length - 1 } } },
-                    colors: series.map(s => s.color), fill: { opacity: 0.2 },
-                    xaxis: { type: 'numeric', labels: { show: false } }, yaxis: { labels: { show: false } }
+                trend.setOption({
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                    legend: { bottom: 0 },
+                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
+                    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
+                    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
+                    series: [
+                        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
+                        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
+                        getPlatformSeries('Pyodide', 'WASM', '#10b981')
+                    ],
+                    dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
                 });
-                brushChart.render();
             };
 
-            // Metrics
-            try {
-                const latestSha = Sync.history[Sync.history.length - 1];
-                const lodumSimple = Sync.getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Lodum simple');
-                const marshmallowSimple = Sync.getVal(latestSha, 'ubuntu-latest', 'JSON Serialization Marshmallow simple');
-                if (lodumSimple && marshmallowSimple) document.getElementById('kpi-speedup').innerText = (marshmallowSimple / lodumSimple).toFixed(1) + 'x';
-                const stdMem = Sync.getVal(latestSha, 'ubuntu-latest', 'Standard (loads) Memory');
-                const strmMem = Sync.getVal(latestSha, 'ubuntu-latest', 'Streaming (load_stream) Memory');
-                if (stdMem && strmMem) document.getElementById('kpi-memory').innerText = ((1 - (strmMem / stdMem)) * 100).toFixed(1) + '%';
-                const wasmVal = Sync.getVal(latestSha, 'Pyodide', 'JSON Serialization Lodum simple');
-                if (lodumSimple && wasmVal) document.getElementById('kpi-wasm').innerText = ((lodumSimple / wasmVal) * 100).toFixed(0) + '%';
-                const strmTime = Sync.getVal(latestSha, 'ubuntu-latest', 'Streaming (load_stream) Time');
-                if (strmTime) document.getElementById('kpi-throughput').innerText = (45 / strmTime).toFixed(1) + ' MB/s';
-            } catch (e) { Debug.error('KPIs failed', e); }
+            // 2. Frontier Chart
+            const frontier = echarts.init(document.getElementById('frontier-chart'));
+            Sync.charts.frontier = frontier;
+            
+            Sync.frontierData = Sync.history.map(sha => {
+                const t = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
+                const m = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Memory') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Memory');
+                return (t && m) ? [t, m, sha.substring(0,7), sha] : null;
+            }).filter(p => p !== null);
+
+            frontier.setOption({
+                tooltip: { 
+                    trigger: 'item',
+                    formatter: (p) => {
+                        if (!p.data || !Array.isArray(p.data)) return '';
+                        return `<b>${p.data[2]}</b><br/>Time: ${p.data[0].toFixed(3)}s<br/>Mem: ${p.data[1].toFixed(1)}MB`;
+                    }
+                },
+                xAxis: { type: 'value', name: 'Time (s)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
+                yAxis: { type: 'value', name: 'RAM (MB)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
+                series: [{ 
+                    type: 'line', data: Sync.frontierData, symbolSize: 8, smooth: true,
+                    lineStyle: { width: 2, color: '#e2e8f0' },
+                    itemStyle: { color: '#94a3b8' },
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
+                }]
+            });
+
+            // 3. Format Chart
+            const formatC = echarts.init(document.getElementById('format-chart'));
+            Sync.charts.formats = formatC;
+
+            // NATIVE CONNECT (Partial for same-axis types)
+            // echarts.connect([trend, frontier]); // Disabled in favor of manual bridge
+
+            // INTERACTION BRIDGE
+            trend.on('updateAxisPointer', (event) => {
+                const idx = event.axesInfo[0]?.value;
+                if (idx !== undefined) {
+                    const sha = Sync.history[idx];
+                    Sync.refresh(sha, 'trend');
+                }
+            });
+
+            // ZR-level clicks for reliable area-based selection
+            trend.getZr().on('click', (params) => {
+                const pointInPixel = [params.offsetX, params.offsetY];
+                if (trend.containPixel('grid', pointInPixel)) {
+                    const idx = trend.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0];
+                    const sha = Sync.history[idx];
+                    if (sha) { Sync.selectedSha = sha; Sync.refresh(sha, 'click'); }
+                }
+            });
+
+            frontier.on('updateAxisPointer', (event) => {
+                // Frontier is value axis, event structure is different
+                if (event.dataIndex !== undefined) {
+                    const sha = Sync.frontierData[event.dataIndex][3];
+                    Sync.refresh(sha, 'frontier');
+                }
+            });
+            
+            frontier.on('mouseover', (params) => {
+                if (params.data && params.data[3]) Sync.refresh(params.data[3], 'frontier');
+            });
+
+            frontier.getZr().on('click', (params) => {
+                const pointInPixel = [params.offsetX, params.offsetY];
+                if (frontier.containPixel('grid', pointInPixel)) {
+                    const data = frontier.convertFromPixel({ seriesIndex: 0 }, pointInPixel);
+                    // Find closest point in frontierData
+                    let closest = null, minDist = Infinity;
+                    Sync.frontierData.forEach(d => {
+                        const dist = Math.pow(d[0] - data[0], 2) + Math.pow(d[1] - data[1], 2);
+                        if (dist < minDist) { minDist = dist; closest = d; }
+                    });
+                    if (closest) { 
+                        Sync.selectedSha = closest[3]; 
+                        Sync.refresh(closest[3], 'click'); 
+                    }
+                }
+            });
 
             updateTrend('simple');
+            Sync.refresh(latestSha, 'init');
             document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
 
-            const headSha = Sync.history[Sync.history.length-1];
-            const formats = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
-            new ApexCharts(document.querySelector("#format-chart"), {
-                series: [{ data: formats.map(f => Sync.getVal(headSha, 'ubuntu-latest', f.p) || 0) }],
-                chart: { type: 'bar', height: 180, toolbar: { show: false } },
-                plotOptions: { bar: { horizontal: true, distributed: true } },
-                colors: ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'],
-                xaxis: { categories: formats.map(f => f.n) }, legend: { show: false }
-            }).render();
-
-            Sync.update(Sync.selectedSha, 'init');
-            if (window.BENCHMARK_DATA.lastUpdate) document.getElementById('last-updated').textContent = 'Sync: ' + new Date(window.BENCHMARK_DATA.lastUpdate).toLocaleString();
-            document.getElementById('status-bar').innerText = 'Ready';
+            // Handle mouse leave globally to clear cross-chart highlights
+            window.addEventListener('mousemove', (e) => {
+                const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
+                const frontierRect = document.getElementById('frontier-chart').getBoundingClientRect();
+                const isOverTrend = (e.clientX >= trendRect.left && e.clientX <= trendRect.right && e.clientY >= trendRect.top && e.clientY <= trendRect.bottom);
+                const isOverFrontier = (e.clientX >= frontierRect.left && e.clientX <= frontierRect.right && e.clientY >= frontierRect.top && e.clientY <= frontierRect.bottom);
+                
+                if (!isOverTrend && !isOverFrontier && !Sync.isRefreshing) {
+                    Sync.charts.trend.dispatchAction({ type: 'downplay' });
+                    Sync.charts.frontier.dispatchAction({ type: 'downplay' });
+                    Sync.charts.trend.dispatchAction({ type: 'hideTip' });
+                    Sync.charts.frontier.dispatchAction({ type: 'hideTip' });
+                }
+            });
         });
     </script>
 </body>
