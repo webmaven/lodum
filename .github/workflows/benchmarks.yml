@@ -180,8 +180,21 @@ jobs:
     - name: Update Template and Push
       run: |
         cd gh-pages-repo
+        
+        # Ensure benchmarks directory exists
+        mkdir -p benchmarks
+        
+        # Initialize data.js if missing
+        if [ ! -f benchmarks/data.js ]; then
+          echo "window.BENCHMARK_DATA = { \"entries\": {}, \"history\": [], \"tags\": {} };" > benchmarks/data.js
+        fi
+        
         cp ../benchmarks/index.html benchmarks/index.html
-        git add benchmarks/index.html benchmarks/data.js
+        
+        # Add files only if they exist
+        [ -f benchmarks/index.html ] && git add benchmarks/index.html
+        [ -f benchmarks/data.js ] && git add benchmarks/data.js
+        
         git commit -m "docs: sync dashboard template and data" || echo "No changes"
         
         # Retry loop for push to handle concurrent updates
