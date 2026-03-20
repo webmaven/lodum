@@ -158,6 +158,9 @@ jobs:
     needs: [benchmark, benchmark-pyodide, historical]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      deployments: write
     steps:
     - uses: actions/checkout@v4
       with:
