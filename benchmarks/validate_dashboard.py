@@ -54,7 +54,14 @@ def validate_dashboard():
                     print(f"ERROR: data.js history is missing {len(missing_in_history)} entries found in data")
                     success = False
                 
-                print(f"OK: data.js validated ({history_len} history points, {len(entry_ids)} unique entries)")
+                # STRICT CHECK: Check that EVERY SHA in history has corresponding data (prevents bloat)
+                extra_in_history = [sha for sha in data["history"] if sha not in entry_ids]
+                if extra_in_history:
+                    print(f"ERROR: data.js history contains {len(extra_in_history)} bloated entries with no data")
+                    success = False
+                
+                if success:
+                    print(f"OK: data.js validated ({history_len} history points, {len(entry_ids)} unique entries)")
                 
         except Exception as e:
             print(f"ERROR: Failed to parse data.js: {e}")
