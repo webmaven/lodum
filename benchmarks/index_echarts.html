@@ -273,9 +273,20 @@
             Sync.charts.trend = trend;
 
             const updateTrend = (scenario) => {
+                const data = window.BENCHMARK_DATA;
                 const markLines = Object.entries(Sync.tags).map(([sha, label]) => {
-                    const idx = Sync.history.indexOf(sha);
-                    return idx !== -1 ? { xAxis: idx, label: { formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed' } } : null;
+                    let idx = Sync.history.indexOf(sha);
+                    // If exact SHA not in history, find the next closest one
+                    if (idx === -1) {
+                        const commitIdx = data.history.indexOf(sha);
+                        if (commitIdx !== -1) {
+                            // Find first SHA in Sync.history that appears AFTER this tag in full history
+                            const laterShas = data.history.slice(commitIdx);
+                            const nextSha = laterShas.find(s => Sync.history.includes(s));
+                            if (nextSha) idx = Sync.history.indexOf(nextSha);
+                        }
+                    }
+                    return idx !== -1 ? { xAxis: idx, label: { show: true, formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed', width: 2 } } : null;
                 }).filter(m => m !== null);
 
                 const getPlatformSeries = (pid, name, color) => ({
