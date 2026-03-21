@@ -49,7 +49,7 @@ def validate_dashboard():
                     success = False
                 
                 # Check that history includes the data we have
-                missing_in_history = [eid for entry_id in entry_ids if entry_id not in data["history"]]
+                missing_in_history = [entry_id for entry_id in entry_ids if entry_id not in data["history"]]
                 if missing_in_history:
                     print(f"ERROR: data.js history is missing {len(missing_in_history)} entries found in data")
                     success = False
