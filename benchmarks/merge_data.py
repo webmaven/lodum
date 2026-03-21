@@ -21,11 +21,24 @@ def merge_results(gh_pages_dir, artifacts_dir):
 
     # Add history and tags from git
     try:
-        # Get full topological history
-        history = subprocess.check_output(
+        # Get existing history
+        existing_history = data.get("history", [])
+        
+        # Get full topological history from current HEAD
+        git_history = subprocess.check_output(
             ["git", "rev-list", "--topo-order", "--reverse", "HEAD"], text=True
         ).splitlines()
-        data["history"] = history
+        
+        # Merge histories: start with existing, append new ones from git
+        # This preserves historical SHAs that might have been rebased out or are from deleted branches.
+        history_set = set(existing_history)
+        merged_history = list(existing_history)
+        for sha in git_history:
+            if sha not in history_set:
+                merged_history.append(sha)
+                history_set.add(sha)
+        
+        data["history"] = merged_history
 
         # Get all tags and resolve them to the closest commit on main
         tags_raw = subprocess.check_output(
@@ -38,12 +51,15 @@ def merge_results(gh_pages_dir, artifacts_dir):
             text=True,
         ).splitlines()
 
-        resolved_tags = {}
+        # Preserve existing tags
+        resolved_tags = data.get("tags", {})
         for line in tags_raw:
             parts = line.split()
             if len(parts) != 2:
                 continue
             tag_name, tag_sha = parts
+            if tag_sha in resolved_tags:
+                continue
             try:
                 # Find the first commit on main that contains this tag's changes
                 # or is the tag itself.
@@ -55,7 +71,7 @@ def merge_results(gh_pages_dir, artifacts_dir):
                 resolved_tags[tag_sha] = tag_name
 
         data["tags"] = resolved_tags
-        print(f"Captured {len(history)} commits and {len(data['tags'])} resolved tags.")
+        print(f"Captured {len(data['history'])} total history points and {len(data['tags'])} tags.")
     except Exception as e:
         print(f"Warning: Could not retrieve history or tags: {e}")
 
@@ -142,6 +158,19 @@ def merge_results(gh_pages_dir, artifacts_dir):
         else:
             print(f"  Adding new entry for {sha[:7]} to {suite_name}")
             data["entries"][suite_name].append(entry)
+
+    # Ensure all SHAs with data are in history
+    all_data_shas = set()
+    for suite in data["entries"].values():
+        for p in suite:
+            all_data_shas.add(p["commit"]["id"])
+    
+    current_history_set = set(data["history"])
+    for sha in all_data_shas:
+        if sha not in current_history_set:
+            print(f"  Adding missing entry SHA to history: {sha[:7]}")
+            data["history"].append(sha)
+            current_history_set.add(sha)
 
     # Save updated data.js
     data["lastUpdate"] = int(datetime.now().timestamp() * 1000)
