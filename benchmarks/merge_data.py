@@ -116,6 +116,10 @@ def merge_results(gh_pages_dir, artifacts_dir):
         for p in suite:
             all_data_shas.add(p["commit"]["id"])
     
+    # Also include tagged commits in history, even if benchmarking failed
+    tag_shas = set(data.get("tags", {}).keys())
+    required_shas = all_data_shas | tag_shas
+    
     try:
         full_git_history = subprocess.check_output(
             ["git", "rev-list", "--topo-order", "--reverse", "HEAD"], text=True
@@ -123,11 +127,11 @@ def merge_results(gh_pages_dir, artifacts_dir):
     except:
         full_git_history = data.get("history", [])
 
-    # The dashboard history MUST be the intersection of the project history and SHAs-with-data
-    filtered_history = [sha for sha in full_git_history if sha in all_data_shas]
+    # The dashboard history MUST be the intersection of the project history and required SHAs
+    filtered_history = [sha for sha in full_git_history if sha in required_shas]
     
-    # Handle SHAs that have data but are no longer in the git history
-    remaining_shas = all_data_shas - set(filtered_history)
+    # Handle required SHAs that are no longer in the git history
+    remaining_shas = required_shas - set(filtered_history)
     if remaining_shas:
         old_history = data.get("history", [])
         for sha in old_history:
