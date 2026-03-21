@@ -177,6 +177,11 @@ jobs:
     - name: Merge all results into data.js
       run: |
         python benchmarks/merge_data.py gh-pages-repo all-results
+    - name: Validate Dashboard and Data
+      run: |
+        # Run validation on the merged result
+        cp gh-pages-repo/benchmarks/data.js benchmarks/data.js
+        python benchmarks/validate_dashboard.py
     - name: Update Template and Push
       run: |
         cd gh-pages-repo
