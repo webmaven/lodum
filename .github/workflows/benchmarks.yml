@@ -211,20 +211,25 @@ jobs:
 
   parse_refs:
     name: Parse Historical Refs
-    if: github.event.inputs.run_historical != ''
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - id: set-matrix
         run: |
-          REFS=$(echo "${{ github.event.inputs.run_historical }}" | tr ' ' '\n' | jq -R . | jq -s -c .)
+          if [ "${{ github.event_name }}" == "push" ]; then
+            # Concurrent Baseline: Always re-run v0.3.0 on push to normalize environment noise
+            REFS='["v0.3.0"]'
+          else
+            REFS=$(echo "${{ github.event.inputs.run_historical }}" | tr ' ' '\n' | jq -R . | jq -s -c .)
+          fi
           echo "matrix=$REFS" >> $GITHUB_OUTPUT
 
   historical:
     name: Historical Baseline (${{ matrix.version }} on ${{ matrix.platform }})
     needs: parse_refs
-    runs-on: ubuntu-latest
+    if: needs.parse_refs.outputs.matrix != '[""]'
+    runs-on: ${{ matrix.platform == 'Pyodide' && 'ubuntu-latest' || matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
@@ -264,7 +269,7 @@ jobs:
           npm install pyodide
         else
           pip install -e ".[all]"
-          pip install pydantic ijson marshmallow orjson
+          pip install pydantic ijson marshmallow orjson ruamel.yaml tomli-w cbor2
         fi
     - name: Build Wheel (Pyodide)
       if: matrix.platform == 'Pyodide'
