@@ -297,18 +297,28 @@
                         itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
                     }
                 });
+trend.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    legend: { bottom: 0 },
+    grid: { top: 40, left: 40, right: 20, bottom: 80 },
+    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
+    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
+    series: [
+        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
+        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
+        getPlatformSeries('Pyodide', 'WASM', '#10b981')
+    ]
+});
 
-                trend.setOption({
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
-                    legend: { bottom: 0 },
-                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
-                    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
-                    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
-                    series: [
-                        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
-                        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
-                        getPlatformSeries('Pyodide', 'WASM', '#10b981')
-                    ],
+// Explicitly add release markers as a separate series if markLine fails
+trend.setOption({
+    series: trend.getOption().series.map((s, i) => {
+        if (i === 0) { // Only add to the first (Linux) series
+            return { ...s, markLine: { symbol: 'none', data: markLines } };
+        }
+        return s;
+    })
+});
                     dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
                 });
             };
