@@ -320,7 +320,7 @@
                 const t = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
                 const m = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Memory') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Memory');
                 return (t && m) ? [t, m, sha.substring(0,7), sha] : null;
-            }
+            }).filter(p => p !== null);
 
             frontier.setOption({
                 tooltip: { 
