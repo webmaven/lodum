@@ -294,7 +294,16 @@
                 });
 
                 trend.setOption({
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                    tooltip: { 
+                        trigger: 'axis', 
+                        axisPointer: { type: 'cross' },
+                        formatter: (params) => {
+                            let sha = Sync.history[params[0].dataIndex];
+                            let c = Sync.commitMap.get(sha);
+                            let dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest'].commit.timestamp).toLocaleDateString() : 'Unknown';
+                            return `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>` + params.map(p => `${p.seriesName}: ${p.value}us`).join('<br/>');
+                        }
+                    },
                     legend: { bottom: 0 },
                     grid: { top: 40, left: 40, right: 20, bottom: 80 },
                     xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
