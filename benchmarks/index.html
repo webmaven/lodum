@@ -10,10 +10,10 @@
         body { font-family: Inter, system-ui, sans-serif; margin: 0; padding: 20px; color: #1f2937; }
         .container { max-width: 1200px; margin: 0 auto; }
         header { border-bottom: 2px solid var(--lodum-yellow); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .kpi-card { background: var(--bg-muted); border-left: 4px solid var(--lodum-yellow); padding: 15px; border-radius: 0 8px 8px 0; }
-        .kpi-value { font-size: 1.5rem; font-weight: 800; }
-        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 600; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+        .kpi-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .kpi-value { font-size: 1.2rem; font-weight: 700; color: #000; }
         .grid-main { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; }
         .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
         .chart-container { height: 350px; width: 100%; touch-action: none; }
@@ -182,21 +182,17 @@
                     const idx = Sync.history.indexOf(sha);
                     const fIdx = Sync.frontierData.findIndex(d => d && d[3] === sha);
 
-                    // Highlight on Trend
                     if (idx !== -1 && source !== 'trend') {
                         Sync.charts.trend.dispatchAction({ type: 'downplay' });
                         Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
                         Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
                     }
-                    
-                    // Highlight on Frontier
                     if (fIdx !== -1 && source !== 'frontier') {
                         Sync.charts.frontier.dispatchAction({ type: 'downplay' });
                         Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
                         Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
                     }
 
-                    // Persistent Selection Marker
                     if (source === 'click' || source === 'init') {
                         Sync.updateSelectionMarkers(sha);
                     }
@@ -255,20 +251,30 @@
                     return { value: b ? b.value : 0, itemStyle: { color: colors[i] } };
                 });
                 Sync.charts.formats.setOption({
-            // 1. Trend Chart
+                    xAxis: { type: 'value', show: false },
+                    yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
+                    grid: { top: 10, bottom: 10, left: 60, right: 40 },
+                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c}us' } }]
+                });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Sync.init();
+            const latestSha = Sync.history[Sync.history.length - 1];
+            Sync.selectedSha = latestSha;
+
             const trend = echarts.init(document.getElementById('trend-chart'));
             Sync.charts.trend = trend;
             trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
 
             const updateTrend = (scenario) => {
+                const data = window.BENCHMARK_DATA;
                 const markLines = Object.entries(Sync.tags).map(([sha, label]) => {
                     let idx = Sync.history.indexOf(sha);
-                    // If exact SHA not in history, find the next closest one
                     if (idx === -1) {
-                        console.log(`Release tag ${label} (sha: ${sha.substring(0,7)}) not in current history. Finding nearest index...`);
                         const commitIdx = data.history.indexOf(sha);
                         if (commitIdx !== -1) {
-                            // Find first SHA in Sync.history that appears AFTER this tag in full history
                             const laterShas = data.history.slice(commitIdx);
                             const nextSha = laterShas.find(s => Sync.history.includes(s));
                             if (nextSha) idx = Sync.history.indexOf(nextSha);
@@ -280,11 +286,7 @@
                 const getPlatformSeries = (pid, name, color) => ({
                     name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                     data: Sync.history.map(sha => Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
-                    // Merge selection markers and release markers safely
-                    markLine: name === 'Linux' ? { 
-                        symbol: 'none', 
-                        data: [...markLines]
-                    } : undefined,
+                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
                     emphasis: { 
                         scale: 2,
                         itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
@@ -306,31 +308,6 @@
                 });
             };
 
-            updateTrend('simple');
-            setTimeout(() => Sync.refresh(latestSha, 'init'), 100);
-                        data: [...markLines]
-                    } : undefined,
-                    emphasis: { 
-                        scale: 2,
-                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
-                    }
-                });
-                trend.setOption({
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
-                    legend: { bottom: 0 },
-                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
-                    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
-                    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
-                    series: [
-                        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
-                        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
-                        getPlatformSeries('Pyodide', 'WASM', '#10b981')
-                    ],
-                    dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
-                });
-            };
-
-            // 2. Frontier Chart
             const frontier = echarts.init(document.getElementById('frontier-chart'));
             Sync.charts.frontier = frontier;
             
@@ -361,14 +338,9 @@
                 }]
             });
 
-            // 3. Format Chart
             const formatC = echarts.init(document.getElementById('format-chart'));
             Sync.charts.formats = formatC;
 
-            // NATIVE CONNECT (Partial for same-axis types)
-            // echarts.connect([trend, frontier]); // Disabled in favor of manual bridge
-
-            // INTERACTION BRIDGE
             trend.on('updateAxisPointer', (event) => {
                 const idx = event.axesInfo[0]?.value;
                 if (idx !== undefined) {
@@ -377,18 +349,17 @@
                 }
             });
 
-            // ZR-level clicks for reliable area-based selection
             trend.getZr().on('click', (params) => {
                 const pointInPixel = [params.offsetX, params.offsetY];
                 if (trend.containPixel('grid', pointInPixel)) {
-                    const idx = trend.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0];
+                    const data = trend.convertFromPixel({ seriesIndex: 0 }, pointInPixel);
+                    const idx = Math.round(data[0]);
                     const sha = Sync.history[idx];
                     if (sha) { Sync.selectedSha = sha; Sync.refresh(sha, 'click'); }
                 }
             });
 
             frontier.on('updateAxisPointer', (event) => {
-                // Frontier is value axis, event structure is different
                 if (event.dataIndex !== undefined) {
                     const sha = Sync.frontierData[event.dataIndex][3];
                     Sync.refresh(sha, 'frontier');
@@ -403,7 +374,6 @@
                 const pointInPixel = [params.offsetX, params.offsetY];
                 if (frontier.containPixel('grid', pointInPixel)) {
                     const data = frontier.convertFromPixel({ seriesIndex: 0 }, pointInPixel);
-                    // Find closest point in frontierData
                     let closest = null, minDist = Infinity;
                     Sync.frontierData.forEach(d => {
                         const dist = Math.pow(d[0] - data[0], 2) + Math.pow(d[1] - data[1], 2);
@@ -417,10 +387,9 @@
             });
 
             updateTrend('simple');
-            Sync.refresh(latestSha, 'init');
+            setTimeout(() => Sync.refresh(latestSha, 'init'), 100);
             document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
 
-            // Handle mouse leave globally to clear cross-chart highlights
             window.addEventListener('mousemove', (e) => {
                 const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
                 const frontierRect = document.getElementById('frontier-chart').getBoundingClientRect();
