@@ -255,22 +255,10 @@
                     return { value: b ? b.value : 0, itemStyle: { color: colors[i] } };
                 });
                 Sync.charts.formats.setOption({
-                    xAxis: { type: 'value', show: false },
-                    yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
-                    grid: { top: 10, bottom: 10, left: 60, right: 40 },
-                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c}us' } }]
-                });
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            Sync.init();
-            const latestSha = Sync.history[Sync.history.length - 1];
-            Sync.selectedSha = latestSha;
-
             // 1. Trend Chart
             const trend = echarts.init(document.getElementById('trend-chart'));
             Sync.charts.trend = trend;
+            trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
 
             const updateTrend = (scenario) => {
                 const markLines = Object.entries(Sync.tags).map(([sha, label]) => {
@@ -295,6 +283,31 @@
                     // Merge selection markers and release markers safely
                     markLine: name === 'Linux' ? { 
                         symbol: 'none', 
+                        data: [...markLines]
+                    } : undefined,
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
+                });
+
+                trend.setOption({
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                    legend: { bottom: 0 },
+                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
+                    xAxis: { type: 'category', data: Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
+                    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
+                    series: [
+                        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
+                        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
+                        getPlatformSeries('Pyodide', 'WASM', '#10b981')
+                    ],
+                    dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
+                });
+            };
+
+            updateTrend('simple');
+            setTimeout(() => Sync.refresh(latestSha, 'init'), 100);
                         data: [...markLines]
                     } : undefined,
                     emphasis: { 
