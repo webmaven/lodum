@@ -292,10 +292,10 @@
                 const getPlatformSeries = (pid, name, color) => ({
                     name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                     data: Sync.history.map(sha => Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
-                    // Merge selection markers and release markers correctly
+                    // Merge selection markers and release markers safely
                     markLine: name === 'Linux' ? { 
                         symbol: 'none', 
-                        data: [...markLines, ...((Sync.charts.trend.getOption().series && Sync.charts.trend.getOption().series[0].markLine && Sync.charts.trend.getOption().series[0].markLine.data) || [])]
+                        data: [...markLines]
                     } : undefined,
                     emphasis: { 
                         scale: 2,
