@@ -319,15 +319,7 @@
 
             frontier.setOption({
                 tooltip: { 
-                    trigger: 'item',
-                    formatter: (p) => {
-                        if (!p.data || !Array.isArray(p.data)) return '';
-                        return `<b>${p.data[2]}</b><br/>Time: ${p.data[0].toFixed(3)}s<br/>Mem: ${p.data[1].toFixed(1)}MB`;
-                    }
-                },
-                xAxis: { type: 'value', name: 'Time (s)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
-                yAxis: { type: 'value', name: 'RAM (MB)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
-                series: [{ 
+                tooltip: { trigger: "item", formatter: function(p) { if (!p.data || !Array.isArray(p.data)) return ""; return "<b>" + p.data[2] + "</b><br/>Time: " + p.data[0].toFixed(3) + "s<br/>Mem: " + p.data[1].toFixed(1) + "MB"; } },
                     type: 'line', data: Sync.frontierData, symbolSize: 8, smooth: true,
                     lineStyle: { width: 2, color: '#e2e8f0' },
                     itemStyle: { color: '#94a3b8' },
