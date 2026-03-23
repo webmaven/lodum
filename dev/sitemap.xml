@@ -2,122 +2,122 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://webmaven.github.io/lodum/dev/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/ARCHITECTURE/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/BENCHMARK_HISTORY/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/BENCHMARK_METHODOLOGY/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/BENCHMARK_RESULTS/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/CONTRIBUTING/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/FIELD_CUSTOMIZATION/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/GETTING_STARTED/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/IMPLEMENTING_FORMATS/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/MIGRATION/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/NEWS/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE_ANALYSIS/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE_EVOLUTION/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE_LOG/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/ROADMAP/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/TECHNICAL_DEBT/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/VALIDATION/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/api_reference/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/demo/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/compiler_enhancements_cython_mypyc/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/fastapi_integration/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/ide_plugin/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/memory_aware_serialization/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/openapi_support/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/partial_serialization/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/protocol_buffers_support/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/schema_to_code_cli_tool/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/streaming_dump/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/streaming_support/</loc>
-         <lastmod>2026-03-21</lastmod>
+         <lastmod>2026-03-23</lastmod>
     </url>
 </urlset>
