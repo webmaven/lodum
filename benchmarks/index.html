@@ -277,6 +277,7 @@
                     let idx = Sync.history.indexOf(sha);
                     // If exact SHA not in history, find the next closest one
                     if (idx === -1) {
+                        console.log(`Release tag ${label} (sha: ${sha.substring(0,7)}) not in current history. Finding nearest index...`);
                         const commitIdx = data.history.indexOf(sha);
                         if (commitIdx !== -1) {
                             // Find first SHA in Sync.history that appears AFTER this tag in full history
@@ -291,7 +292,11 @@
                 const getPlatformSeries = (pid, name, color) => ({
                     name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                     data: Sync.history.map(sha => Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
-                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
+                    // Merge selection markers and release markers correctly
+                    markLine: name === 'Linux' ? { 
+                        symbol: 'none', 
+                        data: [...markLines, ...((Sync.charts.trend.getOption().series && Sync.charts.trend.getOption().series[0].markLine && Sync.charts.trend.getOption().series[0].markLine.data) || [])]
+                    } : undefined,
                     emphasis: { 
                         scale: 2,
                         itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
