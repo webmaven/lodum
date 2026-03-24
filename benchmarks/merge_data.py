@@ -12,12 +12,19 @@ def merge_results(gh_pages_dir, artifacts_dir):
         return
 
     # Load existing data.js
-    with open(data_js_path, "r") as f:
-        content = f.read()
-
-    json_start = content.find("{")
-    json_end = content.rfind("}") + 1
-    data = json.loads(content[json_start:json_end])
+    data = {"entries": {}, "history": [], "tags": {}}
+    if data_js_path.exists():
+        try:
+            with open(data_js_path, "r") as f:
+                content = f.read()
+            json_start = content.find("{")
+            json_end = content.rfind("}") + 1
+            data = json.loads(content[json_start:json_end])
+        except Exception as e:
+            print(f"Warning: Could not load existing data.js, starting fresh: {e}")
+            data = {"entries": {}, "history": [], "tags": {}}
+    else:
+        print(f"Info: {data_js_path} not found, initializing empty structure.")
 
     # Add history and tags from git (initial load)
     try:
