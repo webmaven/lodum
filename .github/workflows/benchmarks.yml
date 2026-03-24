@@ -26,6 +26,7 @@ jobs:
   benchmark:
     name: Performance Tracking (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -94,6 +95,7 @@ jobs:
   benchmark-pyodide:
     name: Performance Tracking (Pyodide/WASM)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
@@ -158,6 +160,7 @@ jobs:
     needs: [benchmark, benchmark-pyodide, historical]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       deployments: write
@@ -212,6 +215,7 @@ jobs:
   parse_refs:
     name: Parse Historical Refs
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -230,6 +234,7 @@ jobs:
     needs: parse_refs
     if: needs.parse_refs.outputs.matrix != '[""]'
     runs-on: ${{ matrix.platform == 'Pyodide' && 'ubuntu-latest' || matrix.platform }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
