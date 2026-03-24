@@ -318,13 +318,10 @@
             };
 
             const frontier = echarts.init(document.getElementById('frontier-chart'));
-            Sync.charts.frontier = frontier;
-            
-            Sync.frontierData = Sync.history.map(sha => {
-                const t = Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
-            frontier.setOption({
-                tooltip: { 
-                    trigger: 'item',
+                const t = Sync.getVal(sha, "ubuntu-latest", "Streaming (load_stream) Time") || Sync.getVal(sha, "ubuntu-latest", "Standard (loads) Time");
+                const m = Sync.getVal(sha, "ubuntu-latest", "Streaming (load_stream) Memory") || Sync.getVal(sha, "ubuntu-latest", "Standard (loads) Memory");
+                return (t && m) ? [t, m, sha.substring(0,7), sha] : null;
+            }).filter(p => p !== null);
                     formatter: function(p) {
                         if (!p.data || !Array.isArray(p.data)) return ""; 
                         return "<b>" + p.data[2] + "</b><br/>Time: " + p.data[0].toFixed(3) + "s<br/>Mem: " + p.data[1].toFixed(1) + "MB";
