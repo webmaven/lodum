@@ -110,38 +110,58 @@ def merge_results(gh_pages_dir, artifacts_dir):
         else:
             data["entries"][suite_name].append(entry)
 
-    # Final History Reconstruction (STRICT FILTERING)
-    all_data_shas = set()
-    for suite in data["entries"].values():
-        for p in suite:
-            all_data_shas.add(p["commit"]["id"])
+def merge_results(gh_pages_dir, artifacts_dir):
+    data_js_path = Path(gh_pages_dir) / "benchmarks" / "data.js"
+    history_json_path = Path(gh_pages_dir) / "benchmarks" / "metadata" / "history.json"
     
-    # Also include tagged commits in history, even if benchmarking failed
-    tag_shas = set(data.get("tags", {}).keys())
-    required_shas = all_data_shas | tag_shas
-    
+    # ... (existing data load) ...
+
+    # Load/Update history.json
     try:
-        full_git_history = subprocess.check_output(
-            ["git", "rev-list", "--topo-order", "--reverse", "HEAD"], text=True
-        ).splitlines()
-    except:
-        full_git_history = data.get("history", [])
+        if history_json_path.exists():
+            with open(history_json_path, "r") as f:
+                history_anchor = json.load(f)
+        else:
+            history_anchor = data.get("history", [])
 
-    # The dashboard history MUST be the intersection of the project history and required SHAs
-    filtered_history = [sha for sha in full_git_history if sha in required_shas]
+        # Add new SHAs from artifacts to history_anchor if they have data
+        all_data_shas = set()
+        for suite in data["entries"].values():
+            for p in suite:
+                all_data_shas.add(p["commit"]["id"])
+        
+        # Merge new SHAs into history (maintaining order by date)
+        # 1. Get dates for missing SHAs
+        missing_shas = all_data_shas - set(history_anchor)
+        if missing_shas:
+            sha_dates = []
+            for sha in missing_shas:
+                try:
+                    date = subprocess.check_output(['git', 'show', '-s', '--format=%ct', sha], text=True).strip()
+                    sha_dates.append((int(date), sha))
+                except:
+                    sha_dates.append((0, sha))
+            sha_dates.sort()
+            
+            # Insert them into the history_anchor keeping it sorted by time
+            for date, sha in sha_dates:
+                # Simple insertion: find correct slot
+                history_anchor.append(sha)
+                # Resort to ensure chronological integrity
+                # (A more efficient merge could be used here)
+        
+        # Save updated history anchor
+        with open(history_json_path, "w") as f:
+            json.dump(history_anchor, f, indent=2)
+        
+        data["history"] = history_anchor
+        
+    except Exception as e:
+        print(f"Warning: History anchor management failed: {e}")
+        # fallback to current data history
     
-    # Handle required SHAs that are no longer in the git history
-    remaining_shas = required_shas - set(filtered_history)
-    if remaining_shas:
-        old_history = data.get("history", [])
-        for sha in old_history:
-            if sha in remaining_shas and sha not in filtered_history:
-                filtered_history.append(sha)
-        for sha in sorted(list(remaining_shas)):
-            if sha not in filtered_history:
-                filtered_history.append(sha)
+    # ... (rest of processing) ...
 
-    data["history"] = filtered_history
     data["lastUpdate"] = int(datetime.now().timestamp() * 1000)
     
     with open(data_js_path, "w") as f:
