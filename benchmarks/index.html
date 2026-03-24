@@ -89,7 +89,7 @@
 
     <script src="./data.js"></script>
     <script>
-        const UI = {
+        window.UI = {
             status: (msg) => document.getElementById('status-bar').innerText = msg,
             updateKPIs: (sha) => {
                 const getVal = (pid, bench) => Sync.getVal(sha, pid, bench);
@@ -136,7 +136,7 @@
             }
         };
 
-        const Sync = {
+        window.Sync = {
             history: [],
             commitMap: new Map(),
             tags: {},
