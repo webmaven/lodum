@@ -275,18 +275,8 @@
             trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
 
             const updateTrend = (scenario) => {
-                const data = window.BENCHMARK_DATA;
                 const markLines = Object.entries(window.Sync.tags).map(([sha, label]) => {
-                    let idx = window.Sync.history.indexOf(sha);
-                    if (idx === -1) {
-                        console.log(`Release tag ${label} not in current history. Finding closest index...`);
-                        const commitIdx = data.history.indexOf(sha);
-                        if (commitIdx !== -1) {
-                            const laterShas = data.history.slice(commitIdx);
-                            const nextSha = laterShas.find(s => window.Sync.history.includes(s));
-                            if (nextSha) idx = window.Sync.history.indexOf(nextSha);
-                        }
-                    }
+                    const idx = window.Sync.history.indexOf(sha);
                     return idx !== -1 ? { xAxis: idx, label: { show: true, formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed', width: 2 } } : null;
                 }).filter(m => m !== null);
 
