@@ -275,7 +275,7 @@
             trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
 
             const updateTrend = (scenario) => {
-                const markLines = Object.entries(window.Sync.tags).map(([sha, label]) => {
+                window.markLines = Object.entries(window.Sync.tags).map(([sha, label]) => {
                     const idx = window.Sync.history.indexOf(sha);
                     console.log("Adding markLine for", label, "at", idx); return idx !== -1 ? { xAxis: idx, label: { show: true, formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed', width: 2 } } : null;
                 }).filter(m => m !== null);
