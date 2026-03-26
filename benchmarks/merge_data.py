@@ -109,8 +109,8 @@ def merge_results(gh_pages_dir, artifacts_dir):
             if not found:
                 sha_dates.append((0, sha))
 
-    # Sort strictly by timestamp
-    sha_dates.sort()
+    # Sort strictly by timestamp (date/time) and then by SHA
+    sha_dates.sort(key=lambda x: (x[0], x[1]))
     data["history"] = [s for _, s in sha_dates]
     
     print(f"Final history length: {len(data['history'])} points (Chronologically sorted).")
