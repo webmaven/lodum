@@ -213,12 +213,14 @@
                 
                 if (idx !== -1) {
                     const yVal = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`) || 0;
+                    const markLines = window.updateTrendMarkers();
+                    
                     window.Sync.charts.trend.setOption({
                         series: window.Sync.charts.trend.getOption().series.map((s, i) => ({
                             markLine: i === 0 ? {
                                 symbol: ['none', 'none'], label: { show: false },
                                 lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
-                                data: [{ xAxis: idx }, { yAxis: yVal }]
+                                data: [...markLines, { xAxis: idx }, { yAxis: yVal }]
                             } : undefined,
                             markPoint: i === 0 ? {
                                 symbol: 'circle', symbolSize: 10,
@@ -265,6 +267,18 @@
             }
         };
 
+        // Authoritative source for release markers
+        window.updateTrendMarkers = () => {
+            return Object.entries(window.Sync.tags).map(([sha, label]) => {
+                const idx = window.Sync.history.indexOf(sha);
+                return idx !== -1 ? { 
+                    xAxis: idx, 
+                    label: { show: true, formatter: label, position: 'end', distance: [0, 10] }, 
+                    lineStyle: { color: '#fbc929', type: 'dashed', width: 2 } 
+                } : null;
+            }).filter(m => m !== null);
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             window.Sync.init();
             const latestSha = window.Sync.history[window.Sync.history.length - 1];
@@ -275,11 +289,7 @@
             trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
 
             window.updateTrend = (scenario) => {
-                window.markLines = Object.entries(window.Sync.tags).map(([sha, label]) => {
-                    const idx = window.Sync.history.indexOf(sha);
-                    console.log("Adding markLine for", label, "at", idx); return idx !== -1 ? { xAxis: idx, label: { show: true, formatter: label, position: 'end', distance: [0, 10] }, lineStyle: { color: '#fbc929', type: 'dashed', width: 2 } } : null;
-                }).filter(m => m !== null);
-
+                const markLines = window.updateTrendMarkers();
                 const getPlatformSeries = (pid, name, color) => ({
                     name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                     data: window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
@@ -392,9 +402,9 @@
                 }
             });
 
-            window.updateTrend('simple');
+            updateTrend('simple');
             setTimeout(() => window.Sync.refresh(latestSha, 'init'), 100);
-            document.getElementById('scenario-selector').onchange = (e) => window.updateTrend(e.target.value);
+            document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
 
             window.addEventListener('mousemove', (e) => {
                 const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
