@@ -90,24 +90,25 @@ def merge_results(gh_pages_dir, artifacts_dir):
     sha_dates = []
     for sha in all_shas:
         try:
-            # Use %ct (committer date, UNIX timestamp) for objective sorting
-            ts = subprocess.check_output(["git", "show", "-s", "--format=%ct", sha], text=True).strip()
-            sha_dates.append((int(ts), sha))
+            # Use %ci (ISO 8601) for precise timestamp sorting
+            iso_date = subprocess.check_output(["git", "show", "-s", "--format=%ci", sha], text=True).strip()
+            # Parse ISO date (e.g., 2026-03-20 14:41:20 +0200)
+            dt = datetime.strptime(iso_date, "%Y-%m-%d %H:%M:%S %z")
+            sha_dates.append((dt, sha))
         except:
-            # Fallback if commit is missing from local history (e.g. from a rebase)
+            # Fallback if commit is missing from local history
             # Try to find it in entries
             found = False
             for suite in data["entries"].values():
                 entry = next((e for e in suite if e["commit"]["id"] == sha), None)
                 if entry and "timestamp" in entry["commit"]:
-                    # Convert ISO format to timestamp if possible
                     try:
                         dt = datetime.fromisoformat(entry["commit"]["timestamp"].replace('Z', '+00:00'))
-                        sha_dates.append((int(dt.timestamp()), sha))
+                        sha_dates.append((dt, sha))
                         found = True; break
                     except: pass
             if not found:
-                sha_dates.append((0, sha))
+                sha_dates.append((datetime.min.replace(tzinfo=None), sha))
 
     # Sort strictly by timestamp (date/time) and then by SHA
     sha_dates.sort(key=lambda x: (x[0], x[1]))
