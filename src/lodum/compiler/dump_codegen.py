@@ -7,154 +7,12 @@ from typing import (
     Dict,
     Type,
     Tuple,
-    get_origin,
-    get_args,
 )
 
 from ..field import Field
 from ..exception import DeserializationError, SerializationError
 from .analyzer import _sanitize_name
 from .dsl import b
-
-
-def _build_dump_expr(
-    ftype: Type[Any],
-    val_node: ast.expr,
-    context: Dict[str, Any],
-    cls: Type[Any],
-    i: int,
-    get_dump_handler_fn: Any,
-) -> ast.expr:
-    """
-    Builds an optimized AST expression to dump a value of type 'ftype'.
-    Inlines primitive calls and comprehensions for common containers.
-    """
-    PRIMITIVE_TYPES = {
-        int: "dump_int",
-        str: "dump_str",
-        float: "dump_float",
-        bool: "dump_bool",
-        bytes: "dump_bytes",
-    }
-
-    if ftype in PRIMITIVE_TYPES:
-        dump_meth = PRIMITIVE_TYPES[ftype]
-        type_test: ast.expr
-        if ftype is float:
-            type_test = ast.Tuple(
-                elts=[b.load("float"), b.load("int")],
-                ctx=ast.Load(),
-            )
-        else:
-            type_test = b.load(ftype.__name__)
-
-        return b.if_exp(
-            test=b.isinstance(val_node, type_test),
-            body=b.call(b.attr("dumper", dump_meth), [val_node]),
-            orelse=b.call(
-                "dump_fn",
-                [
-                    val_node,
-                    b.load("dumper"),
-                    b.add(b.load("depth"), b.const(1)),
-                    b.load("seen"),
-                ],
-            ),
-        )
-
-    origin = get_origin(ftype) or ftype
-    if origin in (list, set, tuple):
-        args = get_args(ftype)
-        item_type = args[0] if args else Any
-        # Inline comprehension if item_type is primitive
-        if item_type in PRIMITIVE_TYPES:
-            item_dump_meth = PRIMITIVE_TYPES[item_type]
-            item_type_test: ast.expr
-            if item_type is float:
-                item_type_test = ast.Tuple(
-                    elts=[b.load("float"), b.load("int")],
-                    ctx=ast.Load(),
-                )
-            else:
-                item_type_test = b.load(item_type.__name__)
-
-            elt_dump_expr = b.if_exp(
-                test=b.isinstance("item", item_type_test),
-                body=b.call(b.attr("dumper", item_dump_meth), [b.load("item")]),
-                orelse=b.call(
-                    "dump_fn",
-                    [
-                        b.load("item"),
-                        b.load("dumper"),
-                        b.add(b.load("depth"), b.const(1)),
-                        b.load("seen"),
-                    ],
-                ),
-            )
-
-            return b.list_comp(elt_dump_expr, "item", val_node)
-
-    if origin is dict:
-        args = get_args(ftype)
-        if len(args) == 2:
-            k_type, v_type = args
-            if k_type is str and v_type in PRIMITIVE_TYPES:
-                v_dump_meth = PRIMITIVE_TYPES[v_type]
-                v_type_test: ast.expr
-                if v_type is float:
-                    v_type_test = ast.Tuple(
-                        elts=[b.load("float"), b.load("int")],
-                        ctx=ast.Load(),
-                    )
-                else:
-                    v_type_test = b.load(v_type.__name__)
-
-                val_dump_expr = b.if_exp(
-                    test=b.isinstance("v", v_type_test),
-                    body=b.call(b.attr("dumper", v_dump_meth), [b.load("v")]),
-                    orelse=b.call(
-                        "dump_fn",
-                        [
-                            b.load("v"),
-                            b.load("dumper"),
-                            b.add(b.load("depth"), b.const(1)),
-                            b.load("seen"),
-                        ],
-                    ),
-                )
-
-                return b.dict_comp(
-                    key=b.call("str", [b.load("k")]),
-                    value=val_dump_expr,
-                    targets=["k", "v"],
-                    iter_node=b.call(b.attr(val_node, "items")),
-                )
-
-    # Pre-resolve handler
-    try:
-        handler = get_dump_handler_fn(ftype, excluding=cls)
-        handler_name = f"h_{i}"
-        context[handler_name] = handler
-        return b.call(
-            handler_name,
-            [
-                val_node,
-                b.load("dumper"),
-                b.add(b.load("depth"), b.const(1)),
-                b.load("seen"),
-            ],
-        )
-    except ValueError:
-        # Recursive reference, fall back to global dump_fn
-        return b.call(
-            "dump_fn",
-            [
-                val_node,
-                b.load("dumper"),
-                b.add(b.load("depth"), b.const(1)),
-                b.load("seen"),
-            ],
-        )
 
 
 def _build_dump_function_ast(
@@ -171,6 +29,7 @@ def _build_dump_function_ast(
     context: Dict[str, Any] = {
         "cls": cls,
         "_cls": cls,
+        "Field": Field,
         "DeserializationError": DeserializationError,
         "SerializationError": SerializationError,
         "dump_fn_orig": dump_orig,
@@ -181,24 +40,78 @@ def _build_dump_function_ast(
 
     body: list[ast.stmt] = []
 
-    # _cls = cls
-    body.append(b.assign("_cls", b.load("cls")))
+    # Depth check
+    from ..core import DEFAULT_MAX_DEPTH
 
-    # data = dumper.begin_struct(_cls)
+    context["DEFAULT_MAX_DEPTH"] = DEFAULT_MAX_DEPTH
     body.append(
-        b.assign("data", b.call(b.attr("dumper", "begin_struct"), [b.load("_cls")]))
+        ast.If(
+            test=b.gt(b.load("depth"), b.load("DEFAULT_MAX_DEPTH")),
+            body=[
+                ast.Raise(
+                    exc=b.call(
+                        "SerializationError",
+                        [
+                            b.const(
+                                f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded"
+                            )
+                        ],
+                    )
+                )
+            ],
+            orelse=[],
+        )
+    )
+
+    # Cycle detection
+    body.append(b.assign("obj_id", b.call("id", [b.load("obj")])))
+    body.append(
+        ast.If(
+            test=ast.Compare(
+                left=b.load("obj_id"),
+                ops=[ast.In()],
+                comparators=[b.load("seen")],
+            ),
+            body=[
+                ast.Raise(
+                    exc=b.call(
+                        "SerializationError", [b.const("Circular reference detected")]
+                    )
+                )
+            ],
+            orelse=[],
+        )
+    )
+    body.append(ast.Expr(value=b.call(b.attr("seen", "add"), [b.load("obj_id")])))
+
+    main_body: list[ast.stmt] = []
+
+    # dumper.begin_struct(_cls)
+    main_body.append(
+        ast.Expr(value=b.call(b.attr("dumper", "begin_struct"), [b.load("_cls")]))
     )
 
     tag = getattr(cls, "_lodum_tag", None)
     tag_value = getattr(cls, "_lodum_tag_value", None)
 
     if tag:
+        from ..handlers.base import _dump_str
+
         context["tag_value"] = tag_value
-        # data[tag_name] = dumper.dump_str(tag_value)
-        body.append(
-            b.assign(
-                b.subscript("data", b.const(tag), load=False),
-                b.call(b.attr("dumper", "dump_str"), [b.load("tag_value")]),
+        context["_dump_str"] = _dump_str
+        # dumper.field(tag, tag_value, _dump_str, depth + 1, seen)
+        main_body.append(
+            ast.Expr(
+                value=b.call(
+                    b.attr("dumper", "field"),
+                    [
+                        b.const(tag),
+                        b.load("tag_value"),
+                        b.load("_dump_str"),
+                        b.add(b.load("depth"), b.const(1)),
+                        b.load("seen"),
+                    ],
+                )
             )
         )
 
@@ -211,33 +124,134 @@ def _build_dump_function_ast(
         context[safe_key] = key
 
         # val = obj.field_name
-        body.append(b.assign("val", b.attr("obj", field_name)))
+        main_body.append(b.assign("val", b.attr("obj", field_name)))
 
-        target_subscript = b.subscript("data", b.const(key), load=False)
+        # Handle Field objects used as defaults in __init__
+        main_body.append(
+            ast.If(
+                test=b.isinstance("val", b.load("Field")),
+                body=[b.assign("val", b.call(b.attr("val", "get_default")))],
+                orelse=[],
+            )
+        )
 
-        dump_expr: ast.expr
         if field_info.serializer:
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer
-            # data[key] = ser_n(val)
-            dump_expr = b.call(ser_name, [b.load("val")])
-        else:
-            dump_expr = _build_dump_expr(
-                field_info.type,
-                b.load("val"),
-                context,
-                cls,
-                i,
-                get_dump_handler_fn,
+            # Custom serializers currently return IR, so we use dump_fn_orig to dump that IR.
+            # We wrap it in a small handler for dumper.field
+            wrapper_name = f"wrap_ser_{i}"
+
+            def make_wrapper(ser):
+                return lambda v, d, de, s: context["dump_fn_orig"](ser(v), d, de, s)
+
+            context[wrapper_name] = make_wrapper(field_info.serializer)
+            main_body.append(
+                ast.Expr(
+                    value=b.call(
+                        b.attr("dumper", "field"),
+                        [
+                            b.const(key),
+                            b.load("val"),
+                            b.load(wrapper_name),
+                            b.add(b.load("depth"), b.const(1)),
+                            b.load("seen"),
+                        ],
+                    )
+                )
             )
+        else:
+            ftype = field_info.type
+            PRIMITIVE_TYPES = {
+                int: "_dump_int",
+                str: "_dump_str",
+                float: "_dump_float",
+                bool: "_dump_bool",
+                bytes: "_dump_bytes",
+            }
 
-        body.append(b.assign(target_subscript, dump_expr))
+            # Resolve handler at compile time
+            try:
+                handler = get_dump_handler_fn(ftype, excluding=cls)
+                h_name = f"h_{i}"
+                context[h_name] = handler
+            except ValueError:
+                # Recursive reference
+                h_name = "dump_fn"
 
-    # dumper.end_struct()
-    body.append(ast.Expr(value=b.call(b.attr("dumper", "end_struct"))))
+            if ftype in PRIMITIVE_TYPES:
+                # Inlined type check for speed for primitives
+                type_test: ast.expr
+                if ftype is float:
+                    type_test = ast.Tuple(
+                        elts=[b.load("float"), b.load("int")], ctx=ast.Load()
+                    )
+                else:
+                    type_test = b.load(ftype.__name__)
 
-    # return data
-    body.append(b.return_stmt(b.load("data")))
+                main_body.append(
+                    ast.If(
+                        test=b.isinstance("val", type_test),
+                        body=[
+                            ast.Expr(
+                                value=b.call(
+                                    b.attr("dumper", "field"),
+                                    [
+                                        b.const(key),
+                                        b.load("val"),
+                                        b.load(h_name),
+                                        b.add(b.load("depth"), b.const(1)),
+                                        b.load("seen"),
+                                    ],
+                                )
+                            )
+                        ],
+                        orelse=[
+                            ast.Expr(
+                                value=b.call(
+                                    b.attr("dumper", "field"),
+                                    [
+                                        b.const(key),
+                                        b.load("val"),
+                                        b.load("dump_fn"),
+                                        b.add(b.load("depth"), b.const(1)),
+                                        b.load("seen"),
+                                    ],
+                                )
+                            )
+                        ],
+                    )
+                )
+            else:
+                main_body.append(
+                    ast.Expr(
+                        value=b.call(
+                            b.attr("dumper", "field"),
+                            [
+                                b.const(key),
+                                b.load("val"),
+                                b.load(h_name),
+                                b.add(b.load("depth"), b.const(1)),
+                                b.load("seen"),
+                            ],
+                        )
+                    )
+                )
+
+    # return dumper.end_struct()
+    main_body.append(b.return_stmt(b.call(b.attr("dumper", "end_struct"))))
+
+    # Wrap in try-finally
+    body.append(
+        ast.Try(
+            body=main_body,
+            handlers=[],
+            orelse=[],
+            finalbody=[
+                ast.Expr(value=b.call(b.attr("seen", "remove"), [b.load("obj_id")]))
+            ],
+        )
+    )
 
     func_def = b.function_def(func_name, args, body)
     return func_def, context

@@ -4,12 +4,15 @@
 import pickle
 import builtins
 import io
-from typing import Any, Type, TypeVar
+from typing import Any, Optional, Type, TypeVar, Union, IO
+from pathlib import Path
 
 from .core import Dumper
 from .internal import (
     dump as validate_lodum_structure,
     DEFAULT_MAX_SIZE,
+    _resolve_source,
+    _resolve_target,
 )
 from .exception import DeserializationError
 
@@ -21,41 +24,97 @@ T = TypeVar("T")
 class ValidationDumper(Dumper):
     """A no-op dumper used only for validation."""
 
-    def dump_int(self, value: int) -> None:
+    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
         pass
 
-    def dump_str(self, value: str) -> None:
+    def dump_str(self, value: str, depth: int = 0, seen: Optional[set] = None) -> Any:
         pass
 
-    def dump_float(self, value: float) -> None:
+    def dump_float(
+        self, value: float, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         pass
 
-    def dump_bool(self, value: bool) -> None:
+    def dump_bool(self, value: bool, depth: int = 0, seen: Optional[set] = None) -> Any:
         pass
 
-    def dump_bytes(self, value: bytes) -> None:
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         pass
 
-    def dump_list(self, value: list[Any]) -> None:
+    def dump_list(
+        self, value: list[Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         pass
 
-    def dump_dict(self, value: dict[str, Any]) -> None:
+    def dump_dict(
+        self, value: dict[str, Any], depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         pass
 
-    def begin_struct(self, cls: Type[Any]) -> dict[str, Any]:
+    def begin_struct(self, cls: Type[Any]) -> Any:
         return {}  # Return a dummy dict
 
-    def end_struct(self) -> None:
+    def end_struct(self) -> Any:
+        pass
+
+    def field(
+        self,
+        name: str,
+        value: Any,
+        handler: Any,
+        depth: int = 0,
+        seen: Optional[set] = None,
+    ) -> None:
+        handler(value, self, depth, seen)
+
+    def begin_list(self) -> None:
+        pass
+
+    def end_list(self) -> Any:
+        pass
+
+    def list_item(
+        self,
+        value: Any,
+        handler: Any,
+        depth: int = 0,
+        seen: Optional[set] = None,
+    ) -> None:
+        handler(value, self, depth, seen)
+
+    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:
         pass
 
 
-def dumps(obj: Any) -> bytes:
+def dump(
+    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs
+) -> Optional[bytes]:
     """
     Encodes a Python object to a pickle byte string, ensuring it is safe.
+
+    Args:
+        obj: The object to encode.
+        target: Optional file-like object or Path to write to.
+        **kwargs: Additional arguments for pickle.dump(s).
+
+    Returns:
+        The pickle bytes if target is None, otherwise None.
     """
     validator = ValidationDumper()
     validate_lodum_structure(obj, validator)
-    return pickle.dumps(obj)
+
+    with _resolve_target(target, "wb") as out:
+        if out is None:
+            return pickle.dumps(obj, **kwargs)
+        pickle.dump(obj, out, **kwargs)
+        return None
+
+
+def dumps(obj: Any, **kwargs) -> bytes:
+    """Legacy alias for dump(obj)."""
+    return dump(obj, **kwargs)  # type: ignore
 
 
 # --- Safe Decoding ---
@@ -116,27 +175,47 @@ class SafeUnpickler(pickle.Unpickler):
         )
 
 
-def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
+def load(
+    cls: Type[T],
+    source: Union[bytes, IO[bytes], Path],
+    max_size: int = DEFAULT_MAX_SIZE,
+) -> T:
     """
-    Decodes a pickle byte string to a Python object, ensuring it is safe.
-    """
-    if len(data) > max_size:
-        raise DeserializationError(
-            f"Input size ({len(data)}) exceeds maximum allowed ({max_size})"
-        )
+    Decodes a pickle from bytes, stream, or file into a Python object.
 
-    with io.BytesIO(data) as f:
-        unpickler = SafeUnpickler(f)
-        try:
+    Args:
+        cls: The class to instantiate.
+        source: pickle bytes, file-like object, or Path.
+        max_size: Maximum allowed size for bytes input.
+
+    Returns:
+        An instance of cls.
+    """
+    try:
+        with _resolve_source(source, "rb") as src:
+            f: IO[bytes]
+            if isinstance(src, (bytes, bytearray)):
+                if len(src) > max_size:
+                    raise DeserializationError(
+                        f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
+                    )
+                # Unpickler doesn't take bytes directly
+                f = io.BytesIO(src)
+            elif hasattr(src, "read"):
+                f = src  # type: ignore[assignment]
+            else:
+                raise DeserializationError(f"Unsupported source type: {type(src)}")
+
+            unpickler = SafeUnpickler(f)
             obj = unpickler.load()
-        except (
-            pickle.UnpicklingError,
-            AttributeError,
-            ImportError,
-            IndexError,
-            TypeError,
-        ) as e:
-            raise DeserializationError(f"Failed to unpickle data: {e}")
+    except (
+        pickle.UnpicklingError,
+        AttributeError,
+        ImportError,
+        IndexError,
+        TypeError,
+    ) as e:
+        raise DeserializationError(f"Failed to unpickle data: {e}")
 
     if not isinstance(obj, cls):
         raise DeserializationError(
@@ -144,3 +223,8 @@ def loads(cls: Type[T], data: bytes, max_size: int = DEFAULT_MAX_SIZE) -> T:
         )
 
     return obj
+
+
+def loads(cls: Type[T], data: bytes, **kwargs) -> T:
+    """Legacy alias for load(cls, source)."""
+    return load(cls, data, **kwargs)

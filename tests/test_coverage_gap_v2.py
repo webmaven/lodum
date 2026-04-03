@@ -207,7 +207,21 @@ def test_msgpack_loads_error_wrap():
 
 
 def test_format_loads_max_size():
+    from lodum import bson, cbor, msgpack, toml, yaml
+
     for mod in [bson, cbor, msgpack, toml, yaml]:
+        # Skip if the module's underlying library is not available
+        if mod == bson and bson.bson is None:
+            continue
+        if mod == cbor and cbor.cbor2 is None:
+            continue
+        if mod == msgpack and msgpack.msgpack is None:
+            continue
+        if mod == toml and toml.tomllib is None:
+            continue
+        if mod == yaml and yaml.yaml_available is False:
+            continue
+
         data = b"x" * 100 if mod != toml and mod != yaml else "a=1" * 50
         with pytest.raises(DeserializationError, match="exceeds maximum"):
             mod.loads(Dict, data, max_size=10)
@@ -621,7 +635,7 @@ def test_base_dumper_extra_methods():
     assert d.dump_list([1]) == [1]
     assert d.dump_dict({"a": 1}) == {"a": 1}
     assert d.begin_struct(int) == {}
-    assert d.end_struct() is None
+    assert d.end_struct() == {}
 
 
 def test_base_loader_successful_ops():

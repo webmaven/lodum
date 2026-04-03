@@ -88,6 +88,18 @@ print(data)  # {"id": 1, "username": "alice", "active": True}
 new_user = lodum.fromdict(User, data)
 ```
 
+## Streaming Serialization
+
+For extremely large datasets that don't fit in memory, use `dump_stream`:
+
+```python
+import sys
+from lodum import json
+
+# Serialize directly to a file or stdout
+json.dump_stream(user, sys.stdout)
+```
+
 ## Next Steps
 
 - Check out the [API Reference](api_reference.md) for full details on all functions.

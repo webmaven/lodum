@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lodum"
-version = "0.3.0"
+version = "0.4.0.dev0"
 description = "A Python serialization/deserialization library (AKA LOad/DUMp) inspired by Rust's serde."
 readme = "README.md"
 license = "Apache-2.0"
@@ -62,5 +62,8 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest"
+lint = "ruff check src tests benchmarks"
+format = "ruff format src tests benchmarks"
+typecheck = "mypy src tests"
 docs-build = "mkdocs build"
 docs-serve = "mkdocs serve"

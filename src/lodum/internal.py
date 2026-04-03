@@ -1,28 +1,30 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import collections
 import inspect
+import array
+import ast
 import datetime
 import enum
 import uuid
-import collections
-import array
-import ast
 from decimal import Decimal
 from pathlib import Path
 from typing import (
     Any,
     Dict,
-    List,
+    Iterator,
     Optional,
     Type,
     TypeVar,
     Union,
+    IO,
+    cast,
     get_origin,
     get_args,
-    cast,
     ForwardRef,
 )
+from contextlib import contextmanager
 
 from .core import (
     Loader,
@@ -34,7 +36,7 @@ from .core import (
 )
 from .exception import DeserializationError, SerializationError
 from .registry import DumpHandler, LoadHandler, TypeHandler
-from .compiler.analyzer import _resolve_forward_ref
+from .compiler.analyzer import _resolve_forward_ref, _analyze_class
 from .compiler.dump_codegen import _build_dump_function_ast
 from .compiler.load_codegen import _build_load_function_ast
 from .handlers.base import (
@@ -77,11 +79,59 @@ from .handlers.stdlib import (
     _load_bytes,
     _load_bytearray,
 )
+from .schema import (
+    _schema_int,
+    _schema_str,
+    _schema_float,
+    _schema_bool,
+    _schema_none,
+    _schema_any,
+    _schema_list,
+    _schema_dict,
+    _schema_union,
+    _schema_datetime,
+    _schema_enum,
+    _schema_uuid,
+    _schema_decimal,
+    _schema_path,
+    _schema_bytes,
+    _schema_set,
+    _schema_tuple,
+)
 
 # Re-export schema generation
-from .schema import generate_schema as generate_schema
 
 T = TypeVar("T")
+
+
+@contextmanager
+def _resolve_source(
+    source: Union[str, bytes, IO[Any], Path], mode: str = "r"
+) -> Iterator[Union[str, bytes, IO[Any]]]:
+    """
+    Context manager that resolves a source (Path, IO, or raw data) into a
+    usable format for loaders.
+    """
+    if isinstance(source, Path):
+        with source.open(mode) as f:
+            yield f
+    else:
+        yield source
+
+
+@contextmanager
+def _resolve_target(
+    target: Optional[Union[IO[Any], Path]], mode: str = "w"
+) -> Iterator[Optional[IO[Any]]]:
+    """
+    Context manager that resolves a target (Path, IO, or None) into a
+    usable format for dumpers.
+    """
+    if isinstance(target, Path):
+        with target.open(mode) as f:
+            yield f
+    else:
+        yield target
 
 
 def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -> Any:
@@ -96,10 +146,11 @@ def dump(obj: Any, dumper: Dumper, depth: int = 0, seen: Optional[set] = None) -
     if obj_id in seen:
         raise SerializationError("Circular reference detected")
 
-    # Only track containers and lodum objects to detect cycles
+    # Only track containers to detect cycles.
+    # Lodum-enabled objects are tracked in their compiled handlers.
     is_container = isinstance(
         obj, (list, dict, set, tuple, collections.deque, array.array)
-    ) or getattr(obj, "_lodum_enabled", False)
+    )
 
     if is_container:
         seen.add(obj_id)
@@ -118,6 +169,7 @@ def load(cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 
         raise DeserializationError(
             f"Max recursion depth ({DEFAULT_MAX_DEPTH}) exceeded", path
         )
+
     handler = _get_load_handler(cls)
     return cast(T, handler(cls, loader, path, depth))
 
@@ -126,6 +178,7 @@ def _compile_dump_handler(cls: Type[Any]) -> DumpHandler:
     """
     Compiles an optimized dump handler for a lodum-enabled class using AST.
     """
+    _analyze_class(cls)
     func_def, context = _build_dump_function_ast(cls, _get_dump_handler, dump)
     module = ast.Module(body=[func_def], type_ignores=[])
     ast.fix_missing_locations(module)
@@ -190,10 +243,11 @@ def _get_dump_handler(
         item_type = args[0] if args else Any
         item_handler = _get_dump_handler(item_type, excluding=excluding)
 
-        def dump_seq(
-            obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
-        ) -> List[Any]:
-            return [item_handler(item, dumper, depth + 1, seen) for item in obj]
+        def dump_seq(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
+            dumper.begin_list()
+            for item in obj:
+                dumper.list_item(item, item_handler, depth + 1, seen)
+            return dumper.end_list()
 
         with ctx.cache_lock:
             ctx.dump_cache[t] = dump_seq
@@ -215,10 +269,12 @@ def _get_dump_handler(
 
         def dump_mapping(
             obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
-        ) -> Dict[str, Any]:
-            return {
-                str(k): v_handler(v, dumper, depth + 1, seen) for k, v in obj.items()
-            }
+        ) -> Any:
+            # We treat generic dicts as anonymous structs
+            dumper.begin_struct(dict)
+            for k, v in obj.items():
+                dumper.field(str(k), v, v_handler, depth + 1, seen)
+            return dumper.end_struct()
 
         with ctx.cache_lock:
             ctx.dump_cache[t] = dump_mapping
@@ -248,6 +304,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
     """
     Compiles an optimized load handler for a lodum-enabled class using AST.
     """
+    _analyze_class(cls)
     func_def, context = _build_load_function_ast(cls, _get_load_handler)
     module = ast.Module(body=[func_def], type_ignores=[])
     ast.fix_missing_locations(module)
@@ -255,6 +312,7 @@ def _compile_load_handler(cls: Type[Any]) -> LoadHandler:
 
     local_vars: Dict[str, Any] = {}
     exec(code, context, local_vars)
+
     compiled_fn = local_vars[func_def.name]
     return lambda cls_ignore, loader, path, depth: compiled_fn(
         loader, load, path, depth
@@ -437,26 +495,11 @@ def _get_load_handler(
     raise DeserializationError(f"Cannot deserialize to type {t}")
 
 
-# --- Import Schema and register late to avoid circular issues ---
-from .schema import (  # noqa: E402
-    _schema_int,
-    _schema_str,
-    _schema_float,
-    _schema_bool,
-    _schema_none,
-    _schema_any,
-    _schema_uuid,
-    _schema_decimal,
-    _schema_path,
-    _schema_bytes,
-    _schema_list,
-    _schema_dict,
-    _schema_union,
-    _schema_tuple,
-    _schema_set,
-    _schema_datetime,
-    _schema_enum,
-)
+def generate_schema(t: Type[Any]) -> Dict[str, Any]:
+    """Generates a JSON Schema for a given type."""
+    from .schema import generate_schema as _gen
+
+    return _gen(t)
 
 
 def _register_builtin_handlers(ctx: Context) -> None:
@@ -469,10 +512,7 @@ def _register_builtin_handlers(ctx: Context) -> None:
     ctx.registry.register(
         type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
     )
-    ctx.registry.register(
-        Any,
-        TypeHandler(dump, _load_any, _schema_any),  # Use global dump for Any
-    )
+    ctx.registry.register(Any, TypeHandler(dump, _load_any, _schema_any))  # type: ignore[arg-type]
 
     # Containers
     ctx.registry.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
@@ -481,14 +521,11 @@ def _register_builtin_handlers(ctx: Context) -> None:
         tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple)
     )
     ctx.registry.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
-    ctx.registry.register(
-        cast(Type[Any], Union), TypeHandler(dump, _load_union, _schema_union)
-    )  # Use global dump for Union
+    ctx.registry.register(Union, TypeHandler(dump, _load_union, _schema_union))  # type: ignore[arg-type]
 
     # Library types
     ctx.registry.register(
-        datetime.datetime,
-        TypeHandler(_dump_datetime, _load_datetime, _schema_datetime),
+        datetime.datetime, TypeHandler(_dump_datetime, _load_datetime, _schema_datetime)
     )
     ctx.registry.register(enum.Enum, TypeHandler(_dump_enum, _load_enum, _schema_enum))
     ctx.registry.register(uuid.UUID, TypeHandler(_dump_uuid, _load_uuid, _schema_uuid))

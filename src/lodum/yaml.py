@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import io
-from typing import Any, Dict, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Optional, Type, TypeVar, Union, IO
+from pathlib import Path
 
 try:
     from ruamel.yaml import YAML
@@ -13,30 +14,44 @@ except ImportError:
     yaml_available = False
 
 from .core import Loader, BaseDumper, BaseLoader
-from .internal import dump, load, DEFAULT_MAX_SIZE, generate_schema
+from .internal import (
+    dump as dump_internal,
+    load as load_internal,
+    DEFAULT_MAX_SIZE,
+    generate_schema,
+    _resolve_source,
+    _resolve_target,
+)
 from .exception import DeserializationError
 
 T = TypeVar("T")
-yaml: Any = None
-if yaml_available:
-    yaml = YAML(typ="safe")
-    yaml.sort_base_mapping_type_on_output = False
+_yaml_instance: Any = None
+
+
+def _get_yaml():
+    global _yaml_instance
+    if _yaml_instance is None and yaml_available:
+        _yaml_instance = YAML(typ="safe")
+        _yaml_instance.sort_base_mapping_type_on_output = False
+    return _yaml_instance
+
 
 # --- Public API ---
 
 
-def dumps(obj: Any) -> str:
+def dump(
+    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs
+) -> Optional[str]:
     """
-    Encodes a Python object to a YAML string.
+    Encodes a Python object to YAML.
 
     Args:
-        obj: The object to encode. Must be lodum-enabled or a supported type.
+        obj: The object to encode.
+        target: Optional file-like object or Path to write to.
+        **kwargs: Additional arguments for yaml.dump.
 
     Returns:
-        A YAML string representation of the object.
-
-    Raises:
-        ImportError: If ruamel.yaml is not installed.
+        The YAML string if target is None, otherwise None.
     """
     if not yaml_available:
         raise ImportError(
@@ -44,42 +59,85 @@ def dumps(obj: Any) -> str:
         )
 
     dumper = YamlDumper()
-    dumped_data = dump(obj, dumper)
+    dumped_data = dump_internal(obj, dumper)
 
-    with io.StringIO() as string_stream:
-        yaml.dump(dumped_data, string_stream)
-        return string_stream.getvalue()
+    with _resolve_target(target, "w") as out:
+        if out is None:
+            with io.StringIO() as string_stream:
+                _get_yaml().dump(dumped_data, string_stream, **kwargs)
+                return string_stream.getvalue()
+        _get_yaml().dump(dumped_data, out, **kwargs)
+        return None
 
 
-def loads(cls: Type[T], yaml_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T:
+def dumps(obj: Any, **kwargs) -> str:
+    """Legacy alias for dump(obj)."""
+    return dump(obj, **kwargs)  # type: ignore
+
+
+def load(
+    cls: Type[T], source: Union[str, IO[Any], Path], max_size: int = DEFAULT_MAX_SIZE
+) -> T:
     """
-    Decodes a YAML string into a Python object of the specified type.
+    Decodes YAML from a string, stream, or file into a Python object.
 
     Args:
         cls: The class to instantiate.
-        yaml_string: The YAML data to decode.
-        max_size: Maximum allowed size of the input string in bytes.
+        source: YAML string, file-like object, or Path.
+        max_size: Maximum allowed size for string input.
 
     Returns:
-        An instance of cls populated with the decoded data.
-
-    Raises:
-        DeserializationError: If the input is invalid or exceeds max_size.
-        ImportError: If ruamel.yaml is not installed.
+        An instance of cls.
     """
-    if len(yaml_string) > max_size:
-        raise DeserializationError(
-            f"Input size ({len(yaml_string)}) exceeds maximum allowed ({max_size})"
-        )
-
     if not yaml_available:
         raise ImportError(
             "ruamel.yaml is required for YAML deserialization. Install it with 'pip install lodum[yaml]'."
         )
 
-    data = yaml.load(yaml_string)
+    try:
+        with _resolve_source(source, "r") as src:
+            if isinstance(src, str):
+                if len(src) > max_size:
+                    raise DeserializationError(
+                        f"Input size ({len(src)}) exceeds maximum allowed ({max_size})"
+                    )
+                data = _get_yaml().load(src)
+            else:
+                data = _get_yaml().load(src)
+    except Exception as e:
+        if isinstance(e, DeserializationError):
+            raise
+        raise DeserializationError(f"Failed to parse YAML: {e}")
+
     loader = YamlLoader(data)
-    return load(cls, loader)
+    return load_internal(cls, loader)
+
+
+def loads(cls: Type[T], yaml_string: str, **kwargs) -> T:
+    """Legacy alias for load(cls, source)."""
+    return load(cls, yaml_string, **kwargs)
+
+
+def stream(cls: Type[T], source: Union[IO[Any], Path]) -> Iterator[T]:
+    """
+    Lazily decodes a stream of YAML documents.
+
+    Args:
+        cls: The class to instantiate for each item.
+        source: A stream, file-like object, or Path.
+
+    Returns:
+        An iterator yielding instances of `cls`.
+    """
+    if not yaml_available:
+        raise ImportError(
+            "ruamel.yaml is required for YAML deserialization. Install it with 'pip install lodum[yaml]'."
+        )
+
+    with _resolve_source(source, "r") as src:
+        # load_all handles multi-document YAML streams
+        for data in _get_yaml().load_all(src):
+            yield load_internal(cls, YamlLoader(data))
 
 
 def schema(cls: Type[Any]) -> Dict[str, Any]:
@@ -95,7 +153,9 @@ class YamlDumper(BaseDumper):
     Encodes Python objects into a YAML-compatible intermediate representation.
     """
 
-    def dump_bytes(self, value: bytes) -> Any:
+    def dump_bytes(
+        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
         # YAML can handle bytes natively if using certain tags,
         # but for simplicity and cross-format consistency, we'll use base64 like JSON.
         import base64
