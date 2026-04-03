@@ -10,31 +10,27 @@
       
       
       
-        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/PERFORMANCE/">
+        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/plans/streaming_dump/">
       
       
-        <link rel="prev" href="../VALIDATION/">
-      
-      
-        <link rel="next" href="../PERFORMANCE_EVOLUTION/">
       
       
         
       
       
-      <link rel="icon" href="../assets/dumptruck-icon.png">
+      <link rel="icon" href="../../assets/dumptruck-icon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Overview - lodum</title>
+        <title>Detailed Design: Streaming Serialization (Phase 2) - lodum</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,11 +49,11 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#performance-tracking" class="md-skip">
+        <a href="#detailed-design-streaming-serialization-phase-2" class="md-skip">
           Skip to content
         </a>
       
@@ -102,9 +98,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href="../.." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../assets/dumptruck-icon.png" alt="logo">
+  <img src="../../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -121,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Detailed Design: Streaming Serialization (Phase 2)
             
           </span>
         </div>
@@ -239,9 +235,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href="../.." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../assets/dumptruck-icon.png" alt="logo">
+  <img src="../../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     lodum
@@ -268,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -295,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../NEWS/" class="md-nav__link">
+      <a href="../../NEWS/" class="md-nav__link">
         
   
   
@@ -319,8 +315,6 @@
       
   
   
-    
-  
   
   
     
@@ -333,11 +327,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -358,7 +352,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -376,7 +370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GETTING_STARTED/" class="md-nav__link">
+      <a href="../../GETTING_STARTED/" class="md-nav__link">
         
   
   
@@ -404,7 +398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../demo/" class="md-nav__link">
+      <a href="../../demo/" class="md-nav__link">
         
   
   
@@ -432,7 +426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FIELD_CUSTOMIZATION/" class="md-nav__link">
+      <a href="../../FIELD_CUSTOMIZATION/" class="md-nav__link">
         
   
   
@@ -460,7 +454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../VALIDATION/" class="md-nav__link">
+      <a href="../../VALIDATION/" class="md-nav__link">
         
   
   
@@ -485,8 +479,6 @@
                 
   
   
-    
-  
   
   
     
@@ -496,11 +488,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
         
           
           <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
@@ -521,7 +513,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -536,35 +528,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE/" class="md-nav__link">
         
   
   
@@ -580,107 +547,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#performance-tracking" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Tracking
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#benchmark-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Benchmark Results
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Benchmark Results">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#json-serialization-object-json" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        JSON Serialization (Object -&gt; JSON)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#json-deserialization-json-object" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        JSON Deserialization (JSON -&gt; Object)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#binary-formats-lodum-vs-native" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Binary Formats (Lodum vs Native)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#analysis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Analysis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-benchmarks-yourself" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running Benchmarks Yourself
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -693,7 +559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PERFORMANCE_EVOLUTION/" class="md-nav__link">
+      <a href="../../PERFORMANCE_EVOLUTION/" class="md-nav__link">
         
   
   
@@ -721,7 +587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../BENCHMARK_METHODOLOGY/" class="md-nav__link">
+      <a href="../../BENCHMARK_METHODOLOGY/" class="md-nav__link">
         
   
   
@@ -749,7 +615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../BENCHMARK_HISTORY/" class="md-nav__link">
+      <a href="../../BENCHMARK_HISTORY/" class="md-nav__link">
         
   
   
@@ -785,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MIGRATION/" class="md-nav__link">
+      <a href="../../MIGRATION/" class="md-nav__link">
         
   
   
@@ -820,7 +686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api_reference/" class="md-nav__link">
+      <a href="../../api_reference/" class="md-nav__link">
         
   
   
@@ -899,7 +765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ARCHITECTURE/" class="md-nav__link">
+      <a href="../../ARCHITECTURE/" class="md-nav__link">
         
   
   
@@ -927,7 +793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../IMPLEMENTING_FORMATS/" class="md-nav__link">
+      <a href="../../IMPLEMENTING_FORMATS/" class="md-nav__link">
         
   
   
@@ -1014,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ROADMAP/" class="md-nav__link">
+      <a href="../../ROADMAP/" class="md-nav__link">
         
   
   
@@ -1091,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/streaming_support/" class="md-nav__link">
+      <a href="../streaming_support/" class="md-nav__link">
         
   
   
@@ -1119,7 +985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/partial_serialization/" class="md-nav__link">
+      <a href="../partial_serialization/" class="md-nav__link">
         
   
   
@@ -1147,7 +1013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/fastapi_integration/" class="md-nav__link">
+      <a href="../fastapi_integration/" class="md-nav__link">
         
   
   
@@ -1175,7 +1041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/openapi_support/" class="md-nav__link">
+      <a href="../openapi_support/" class="md-nav__link">
         
   
   
@@ -1203,7 +1069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/schema_to_code_cli_tool/" class="md-nav__link">
+      <a href="../schema_to_code_cli_tool/" class="md-nav__link">
         
   
   
@@ -1231,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/compiler_enhancements_cython_mypyc/" class="md-nav__link">
+      <a href="../compiler_enhancements_cython_mypyc/" class="md-nav__link">
         
   
   
@@ -1259,7 +1125,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/protocol_buffers_support/" class="md-nav__link">
+      <a href="../protocol_buffers_support/" class="md-nav__link">
         
   
   
@@ -1287,7 +1153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plans/ide_plugin/" class="md-nav__link">
+      <a href="../ide_plugin/" class="md-nav__link">
         
   
   
@@ -1323,7 +1189,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CONTRIBUTING/" class="md-nav__link">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -1368,6 +1234,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1376,10 +1244,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#performance-tracking" class="md-nav__link">
+  <a href="#status-revised-implementation-strategy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Tracking
+        Status: Revised Implementation Strategy
       
     </span>
   </a>
@@ -1387,22 +1255,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#benchmark-results" class="md-nav__link">
+  <a href="#architecture-the-stateful-dumper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Benchmark Results
+        🏛️ Architecture: The Stateful Dumper
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Benchmark Results">
+    <nav class="md-nav" aria-label="🏛️ Architecture: The Stateful Dumper">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#json-serialization-object-json" class="md-nav__link">
+  <a href="#1-the-lodum-protocol-interface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JSON Serialization (Object -&gt; JSON)
+        1. The "Lodum Protocol" Interface
       
     </span>
   </a>
@@ -1410,21 +1278,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#json-deserialization-json-object" class="md-nav__link">
+  <a href="#2-dual-mode-implementation-strategy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JSON Deserialization (JSON -&gt; Object)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#binary-formats-lodum-vs-native" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Binary Formats (Lodum vs Native)
+        2. Dual-Mode Implementation Strategy
       
     </span>
   </a>
@@ -1437,21 +1294,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#analysis" class="md-nav__link">
+  <a href="#implementation-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Analysis
+        🛠️ Implementation Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Implementation Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-a-protocol-core-hygiene-surgical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A: Protocol &amp; Core Hygiene (Surgical)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#running-benchmarks-yourself" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#phase-b-compiler-refactor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running Benchmarks Yourself
+        Phase B: Compiler Refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-c-the-json-streamer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase C: The JSON Streamer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-regression-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Verification &amp; Regression Testing
       
     </span>
   </a>
@@ -1475,7 +1371,7 @@
 
 
   
-    <a href="https://github.com/webmaven/lodum/edit/master/docs/PERFORMANCE.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/webmaven/lodum/edit/master/docs/plans/streaming_dump.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1484,173 +1380,68 @@
     
       
     
-    <a href="https://github.com/webmaven/lodum/raw/master/docs/PERFORMANCE.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/webmaven/lodum/raw/master/docs/plans/streaming_dump.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Overview</h1>
-
-<h2 id="performance-tracking">Performance Tracking</h2>
-<p>Lodum performance is automatically tracked on every push to the <code>main</code> branch. You can view the historical performance dashboard here:</p>
-<p>👉 <strong><a href="https://webmaven.github.io/lodum/benchmarks/index.html">Lodum Performance Dashboard</a></strong></p>
-<p>We track performance across both <strong>Linux</strong> and <strong>Windows</strong> environments to ensure consistent quality for all users.</p>
-<h2 id="benchmark-results">Benchmark Results</h2>
-<p>The following benchmarks were run on Python 3.13.7 (win32). Results are in microseconds (us) per operation (lower is better).</p>
-<h3 id="json-serialization-object-json">JSON Serialization (Object -&gt; JSON)</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Library</th>
-<th style="text-align: right;">Simple (us)</th>
-<th style="text-align: right;">Complex (us)</th>
-<th style="text-align: right;">Nested (us)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;">Lodum</td>
-<td style="text-align: right;">7.62 ± 1.87</td>
-<td style="text-align: right;">15.45 ± 2.03</td>
-<td style="text-align: right;">36.51 ± 3.67</td>
-</tr>
-<tr>
-<td style="text-align: left;">Pydantic (v2)</td>
-<td style="text-align: right;">3.13 ± 1.63</td>
-<td style="text-align: right;">3.31 ± 0.40</td>
-<td style="text-align: right;">6.76 ± 0.52</td>
-</tr>
-<tr>
-<td style="text-align: left;">Marshmallow</td>
-<td style="text-align: right;">12.73 ± 1.73</td>
-<td style="text-align: right;">30.23 ± 0.97</td>
-<td style="text-align: right;">73.29 ± 4.58</td>
-</tr>
-<tr>
-<td style="text-align: left;">Native json (dict)</td>
-<td style="text-align: right;">4.29 ± 0.41</td>
-<td style="text-align: right;">6.76 ± 0.57</td>
-<td style="text-align: right;">8.78 ± 0.46</td>
-</tr>
-<tr>
-<td style="text-align: left;">orjson (dict)</td>
-<td style="text-align: right;">0.50 ± 0.02</td>
-<td style="text-align: right;">0.73 ± 0.02</td>
-<td style="text-align: right;">0.98 ± 0.01</td>
-</tr>
-</tbody>
-</table>
-<h3 id="json-deserialization-json-object">JSON Deserialization (JSON -&gt; Object)</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Library</th>
-<th style="text-align: right;">Simple (us)</th>
-<th style="text-align: right;">Complex (us)</th>
-<th style="text-align: right;">Nested (us)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;">Lodum</td>
-<td style="text-align: right;">21.75 ± 1.70</td>
-<td style="text-align: right;">42.52 ± 2.13</td>
-<td style="text-align: right;">131.67 ± 6.75</td>
-</tr>
-<tr>
-<td style="text-align: left;">Pydantic (v2)</td>
-<td style="text-align: right;">3.21 ± 0.76</td>
-<td style="text-align: right;">3.94 ± 0.71</td>
-<td style="text-align: right;">16.52 ± 0.95</td>
-</tr>
-<tr>
-<td style="text-align: left;">Marshmallow</td>
-<td style="text-align: right;">31.21 ± 4.01</td>
-<td style="text-align: right;">72.18 ± 4.93</td>
-<td style="text-align: right;">226.99 ± 6.63</td>
-</tr>
-<tr>
-<td style="text-align: left;">Native json (dict)</td>
-<td style="text-align: right;">3.15 ± 0.40</td>
-<td style="text-align: right;">4.52 ± 0.64</td>
-<td style="text-align: right;">7.59 ± 0.57</td>
-</tr>
-<tr>
-<td style="text-align: left;">orjson (dict)</td>
-<td style="text-align: right;">0.77 ± 0.10</td>
-<td style="text-align: right;">1.52 ± 0.06</td>
-<td style="text-align: right;">2.84 ± 0.13</td>
-</tr>
-</tbody>
-</table>
-<h3 id="binary-formats-lodum-vs-native">Binary Formats (Lodum vs Native)</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Format</th>
-<th style="text-align: left;">Operation</th>
-<th style="text-align: left;">Simple (us)</th>
-<th style="text-align: left;">Complex (us)</th>
-<th style="text-align: left;">Nested (us)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>MsgPack</strong></td>
-<td style="text-align: left;">Serialization</td>
-<td style="text-align: left;">4.60 ± 1.37</td>
-<td style="text-align: left;">10.15 ± 0.40</td>
-<td style="text-align: left;">31.31 ± 3.03</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>MsgPack</strong></td>
-<td style="text-align: left;">Deserialization</td>
-<td style="text-align: left;">18.22 ± 2.12</td>
-<td style="text-align: left;">35.90 ± 2.62</td>
-<td style="text-align: left;">119.92 ± 7.01</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>CBOR</strong></td>
-<td style="text-align: left;">Serialization</td>
-<td style="text-align: left;">11.61 ± 0.88</td>
-<td style="text-align: left;">18.84 ± 0.70</td>
-<td style="text-align: left;">43.67 ± 2.76</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>CBOR</strong></td>
-<td style="text-align: left;">Deserialization</td>
-<td style="text-align: left;">21.61 ± 2.00</td>
-<td style="text-align: left;">39.39 ± 3.38</td>
-<td style="text-align: left;">132.37 ± 4.49</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Pickle</strong></td>
-<td style="text-align: left;">Serialization</td>
-<td style="text-align: left;">8.91 ± 0.73</td>
-<td style="text-align: left;">13.26 ± 0.95</td>
-<td style="text-align: left;">39.72 ± 2.00</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Pickle</strong></td>
-<td style="text-align: left;">Deserialization</td>
-<td style="text-align: left;">6.75 ± 0.42</td>
-<td style="text-align: left;">9.87 ± 1.75</td>
-<td style="text-align: left;">16.21 ± 1.22</td>
-</tr>
-</tbody>
-</table>
-<h2 id="analysis">Analysis</h2>
+<h1 id="detailed-design-streaming-serialization-phase-2">Detailed Design: Streaming Serialization (Phase 2)</h1>
+<h2 id="status-revised-implementation-strategy">Status: Revised Implementation Strategy</h2>
+<p>This document specifies the technical architecture for enabling O(1) memory streaming serialization in Lodum via a <strong>Stateful Dumper Protocol</strong>.</p>
+<h2 id="architecture-the-stateful-dumper">🏛️ Architecture: The Stateful Dumper</h2>
+<p>The primary goal is to shift responsibility for "data shaping" from the compiler to the Dumper implementation. The compiler becomes a structural driver that informs the dumper about the object's topology.</p>
+<h3 id="1-the-lodum-protocol-interface">1. The "Lodum Protocol" Interface</h3>
+<p>The <code>Dumper</code> protocol in <code>core.py</code> will be expanded to include structural orchestration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Dumper</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="c1"># Primitives (Standardized Signature)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dump_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dump_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="c1"># ... other primitives ...</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="c1"># Struct Orchestration</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">begin_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">end_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="c1"># Collection Orchestration</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">begin_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">end_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">list_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+<h3 id="2-dual-mode-implementation-strategy">2. Dual-Mode Implementation Strategy</h3>
 <ul>
-<li><strong>Lodum vs Marshmallow</strong>: Lodum consistently outperforms Marshmallow (often 2x faster), particularly in serialization and handling complex structures.</li>
-<li><strong>Lodum vs Pydantic</strong>: Pydantic v2 remains faster due to its Rust-based core. Lodum provides a competitive pure-Python alternative with zero binary dependencies.</li>
-<li><strong>AST Optimization</strong>: The move to AST-based code generation has significantly improved performance compared to string-based <code>exec</code> methods while providing better type safety and more informative error messages.</li>
-<li><strong>Thread Safety</strong>: The modular refactor introduced thread-safe global state management via <code>Context</code> without performance regressions, thanks to a lock-free fast path for handler cache lookups.</li>
+<li><strong>BaseDumper (IR Mode)</strong>: Implements these methods to build and return standard Python dictionaries and lists. This preserves backward compatibility for <code>dump(obj) -&gt; str</code>.</li>
+<li><strong>StreamingDumper (O(1) Mode)</strong>: Implements these methods to write tokens directly to an IO target, managing separators (commas) and depth internally.</li>
 </ul>
-<p>For a detailed analysis of performance improvements over time, see <a href="PERFORMANCE_ANALYSIS.md">PERFORMANCE_ANALYSIS.md</a>.</p>
-<h2 id="running-benchmarks-yourself">Running Benchmarks Yourself</h2>
-<p>See the <a href="https://github.com/webmaven/lodum/tree/main/benchmarks">benchmarks/</a> directory for instructions on how to run these benchmarks on your own machine.</p>
+<hr />
+<h2 id="implementation-steps">🛠️ Implementation Steps</h2>
+<h3 id="phase-a-protocol-core-hygiene-surgical">Phase A: Protocol &amp; Core Hygiene (Surgical)</h3>
+<ol>
+<li>Update <code>Dumper</code> protocol and <code>BaseDumper</code> in <code>core.py</code>. <ul>
+<li><strong>CRITICAL</strong>: Do not remove <code>Context</code>, <code>get_context</code>, or decorator analysis logic.</li>
+</ul>
+</li>
+<li>Update all primitive handlers in <code>handlers/</code> to support the 3-argument <code>(value, depth, seen)</code> signature.</li>
+</ol>
+<h3 id="phase-b-compiler-refactor">Phase B: Compiler Refactor</h3>
+<ol>
+<li>Update <code>dump_codegen.py</code> to use <code>dumper.field()</code> and <code>dumper.list_item()</code>.</li>
+<li>The generated AST should no longer create lists or dicts; it should purely call dumper orchestration methods.</li>
+</ol>
+<h3 id="phase-c-the-json-streamer">Phase C: The JSON Streamer</h3>
+<ol>
+<li>Implement <code>JsonStreamingDumper(StreamingDumper)</code> in <code>json.py</code>.</li>
+<li>Handle recursive state and separators using an internal depth stack.</li>
+</ol>
+<hr />
+<h2 id="verification-regression-testing">🧪 Verification &amp; Regression Testing</h2>
+<ul>
+<li><strong>Signature Parity</strong>: All 315 existing tests must pass with <code>BaseDumper</code>'s new orchestration logic.</li>
+<li><strong>Deep Parity</strong>: <code>test_json_streaming_dumper_deep</code> must confirm that nested structures and character escaping are identical between IR and Stream paths.</li>
+<li><strong>Memory Guard</strong>: Profile a 100k-object dump to ensure peak memory remains constant.</li>
+</ul>
 
 
 
@@ -1738,10 +1529,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.view", "content.action.edit", "content.tooltips", "content.revision.date", "content.revision.history"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.view", "content.action.edit", "content.tooltips", "content.revision.date", "content.revision.history"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
