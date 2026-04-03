@@ -267,7 +267,6 @@
             }
         };
 
-        // Authoritative source for release markers
         window.updateTrendMarkers = () => {
             return Object.entries(window.Sync.tags).map(([sha, label]) => {
                 const idx = window.Sync.history.indexOf(sha);
@@ -286,8 +285,7 @@
 
             const trend = echarts.init(document.getElementById('trend-chart'));
             window.Sync.charts.trend = trend;
-            trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
-
+            
             window.updateTrend = (scenario) => {
                 const markLines = window.updateTrendMarkers();
                 const getPlatformSeries = (pid, name, color) => ({
@@ -300,7 +298,7 @@
                     }
                 });
 
-                window.Sync.charts.trend.setOption({
+                trend.setOption({
                     tooltip: { 
                         trigger: 'axis', 
                         axisPointer: { type: 'cross' },
@@ -402,9 +400,9 @@
                 }
             });
 
-            updateTrend('simple');
+            window.updateTrend('simple');
             setTimeout(() => window.Sync.refresh(latestSha, 'init'), 100);
-            document.getElementById('scenario-selector').onchange = (e) => updateTrend(e.target.value);
+            document.getElementById('scenario-selector').onchange = (e) => window.updateTrend(e.target.value);
 
             window.addEventListener('mousemove', (e) => {
                 const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
