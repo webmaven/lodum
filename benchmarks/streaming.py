@@ -4,6 +4,12 @@ import time
 import tracemalloc
 import sys
 from typing import List, Type, Any
+from lodum import lodum, json as lodum_json
+
+try:
+    from pydantic import TypeAdapter, BaseModel
+except ImportError:
+    TypeAdapter = None
 
 @lodum
 class LargeItem:
@@ -14,32 +20,30 @@ class LargeItem:
         self.active = active
 
 if TypeAdapter:
-
+    class PydanticItem(BaseModel):
+        id: int
+        name: str
+        data: List[int]
+        active: bool
+    
     pydantic_adapter = TypeAdapter(List[PydanticItem])
-
 
 def generate_large_json(count: int) -> bytes:
     items = []
     for i in range(count):
-        items.append(
-            {
-                "id": i,
-                "name": f"Item {i}",
-                "data": list(range(10)),
-                "active": i % 2 == 0,
-            }
-        )
+        items.append({
+            "id": i,
+            "name": f"Item {i}",
+            "data": list(range(10)),
+            "active": i % 2 == 0
+        })
     return json.dumps(items).encode("utf-8")
 
-
 def run_benchmark(count: int):
-    is_json = "--json" in sys.argv
-    if not is_json:
-        print(f"Generating {count} items...")
+    print(f"Generating {count} items...")
     raw_data = generate_large_json(count)
     data_size_mb = len(raw_data) / (1024 * 1024)
-    if not is_json:
-        print(f"Data size: {data_size_mb:.2f} MB\n")
+    print(f"Data size: {data_size_mb:.2f} MB\n")
 
     results = []
 
@@ -63,6 +67,10 @@ def run_benchmark(count: int):
         "memory_mb": peak / (1024 * 1024)
     })
 
+    # --- Streaming load_stream ---
+    tracemalloc.start()
+    start_time = time.perf_counter()
+    
     stream = io.BytesIO(raw_data)
     items_iter = lodum_json.load_stream(LargeItem, stream)
     # Must consume the iterator to measure full time/memory
@@ -80,20 +88,23 @@ def run_benchmark(count: int):
         "memory_mb": peak / (1024 * 1024)
     })
 
+    # --- Pydantic (for comparison) ---
+    if TypeAdapter:
+        tracemalloc.start()
+        start_time = time.perf_counter()
+        
         # Pydantic v2 validate_json is very fast but in-memory
         _ = pydantic_adapter.validate_json(raw_data)
-
+        
         end_time = time.perf_counter()
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
-
-        results.append(
-            {
-                "name": "Pydantic v2 (validate_json)",
-                "time": end_time - start_time,
-                "memory_mb": peak / (1024 * 1024),
-            }
-        )
+        
+        results.append({
+            "name": "Pydantic v2 (validate_json)",
+            "time": end_time - start_time,
+            "memory_mb": peak / (1024 * 1024)
+        })
 
     # Print Results
     if "--json" in sys.argv:
@@ -110,6 +121,12 @@ def run_benchmark(count: int):
                 "unit": "MB",
                 "value": res['memory_mb']
             })
+        print(json.dumps(bench_data))
+    else:
+        print("| Method | Time (s) | Peak Memory (MB) |")
+        print("| :--- | ---: | ---: |")
+        for res in results:
+            print(f"| {res['name']} | {res['time']:.4f} | {res['memory_mb']:.2f} |")
 
 if __name__ == "__main__":
     count = 100000
