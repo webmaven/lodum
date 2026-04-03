@@ -114,8 +114,11 @@ def merge_results(gh_pages_dir, artifacts_dir):
             
         sha_dates.append((dt, sha))
 
-    # Sort strictly ASCENDING by timestamp, then by SHA for stability
-    sha_dates.sort(key=lambda x: (x[0], x[1]))
+    # Sort strictly ASCENDING by timestamp, then by Tag (priority), then by SHA for stability
+    tag_shas = set(data.get("tags", {}).keys())
+    # Tie-breaker key: (timestamp, is_not_tagged, sha)
+    # is_not_tagged is 0 if tagged, 1 if not, so tagged comes first.
+    sha_dates.sort(key=lambda x: (x[0], 0 if x[1] in tag_shas else 1, x[1]))
     data["history"] = [s for _, s in sha_dates]
     
     print(f"Final history length: {len(data['history'])} points (Chronologically sorted).")
