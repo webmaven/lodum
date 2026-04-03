@@ -9,14 +9,6 @@
          <lastmod>2026-04-03</lastmod>
     </url>
     <url>
-         <loc>https://webmaven.github.io/lodum/dev/BENCHMARK_HISTORY/</loc>
-         <lastmod>2026-04-03</lastmod>
-    </url>
-    <url>
-         <loc>https://webmaven.github.io/lodum/dev/BENCHMARK_METHODOLOGY/</loc>
-         <lastmod>2026-04-03</lastmod>
-    </url>
-    <url>
          <loc>https://webmaven.github.io/lodum/dev/BENCHMARK_RESULTS/</loc>
          <lastmod>2026-04-03</lastmod>
     </url>
@@ -53,19 +45,11 @@
          <lastmod>2026-04-03</lastmod>
     </url>
     <url>
-         <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE_EVOLUTION/</loc>
-         <lastmod>2026-04-03</lastmod>
-    </url>
-    <url>
          <loc>https://webmaven.github.io/lodum/dev/PERFORMANCE_LOG/</loc>
          <lastmod>2026-04-03</lastmod>
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/ROADMAP/</loc>
-         <lastmod>2026-04-03</lastmod>
-    </url>
-    <url>
-         <loc>https://webmaven.github.io/lodum/dev/TECHNICAL_DEBT/</loc>
          <lastmod>2026-04-03</lastmod>
     </url>
     <url>
@@ -110,10 +94,6 @@
     </url>
     <url>
          <loc>https://webmaven.github.io/lodum/dev/plans/schema_to_code_cli_tool/</loc>
-         <lastmod>2026-04-03</lastmod>
-    </url>
-    <url>
-         <loc>https://webmaven.github.io/lodum/dev/plans/streaming_dump/</loc>
          <lastmod>2026-04-03</lastmod>
     </url>
     <url>
