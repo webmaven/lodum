@@ -69,7 +69,7 @@ def load_stream(cls: Type[T], stream: IO[bytes]) -> Iterator[T]:
         DeserializationError: If the stream contains invalid JSON or non-object items.
     """
     try:
-        import ijson  # type: ignore[import-untyped]
+        import ijson
     except ImportError:
         raise RuntimeError(
             "Streaming support requires 'ijson'. Install it with: pip install lodum[ijson]"
