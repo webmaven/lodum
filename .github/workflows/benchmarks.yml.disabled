@@ -1,0 +1,134 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      run_historical:
+        description: 'Run historical benchmarks (v0.1.0, v0.2.0)'
+        type: boolean
+        default: false
+      init_hardware:
+        description: 'Initialize/Update hardware signature for current runner'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  benchmark:
+    name: Performance Tracking (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[all]"
+        pip install pydantic ijson
+    - name: Record and Validate Hardware
+      run: |
+        if ("${{ github.event.inputs.init_hardware }}" == "true") {
+          python benchmarks/get_hw_info.py --init
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add benchmarks/metadata/
+          git commit -m "chore: update hardware signature for ${{ matrix.os }}"
+          git push origin main
+        } else {
+          python benchmarks/get_hw_info.py --check
+        }
+      shell: bash
+    - name: Run Standard Benchmarks
+      run: |
+        python benchmarks/run.py --json > standard_bench.json
+    - name: Run Streaming Benchmark
+      run: |
+        python benchmarks/streaming.py 500000 --json > streaming_bench.json
+    - name: Aggregate Results
+      shell: python
+      run: |
+        import json
+        with open('standard_bench.json') as f:
+            std = json.load(f)
+        with open('streaming_bench.json') as f:
+            stream = json.load(f)
+        # Add OS prefix to names to distinguish in graphs
+        for item in std + stream:
+            item['name'] = f"(${{ matrix.os }}) {item['name']}"
+        with open('all_benchmarks.json', 'w') as f:
+            json.dump(std + stream, f)
+    - name: Store Benchmark Results
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        name: Lodum Performance Index - ${{ matrix.os }}
+        tool: 'customGeneric'
+        output-file-path: all_benchmarks.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+        alert-threshold: '150%'
+        comment-on-alert: true
+        fail-on-alert: false
+
+  historical:
+    name: Historical Baseline (One-time)
+    if: github.event.inputs.run_historical == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['v0.1.0', 'v0.2.0']
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ matrix.version }}
+        path: lodum-old
+    - uses: actions/checkout@v4
+      with:
+        path: lodum-current
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+    - name: Install Old Version
+      run: |
+        cd lodum-old
+        python -m pip install --upgrade pip
+        pip install -e ".[all]"
+        pip install pydantic ijson
+    - name: Record Hardware
+      run: |
+        python lodum-current/benchmarks/get_hw_info.py
+    - name: Run Benchmarks (using current scripts on old code)
+      run: |
+        export PYTHONPATH=$GITHUB_WORKSPACE/lodum-old/src
+        python lodum-current/benchmarks/run.py --json > standard_bench.json
+        # streaming.py might fail on very old versions if load_stream doesn't exist
+        # but run.py should work for core performance
+    - name: Aggregate
+      shell: python
+      run: |
+        import json, os
+        with open('standard_bench.json') as f:
+            std = json.load(f)
+        for item in std:
+            item['name'] = f"(ubuntu-latest) {item['name']}"
+        with open('historical_bench.json', 'w') as f:
+            json.dump(std, f)
+    - name: Store Historical Results
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        name: Lodum Performance Index - ubuntu-latest
+        tool: 'customGeneric'
+        output-file-path: historical_bench.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
