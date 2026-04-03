@@ -29,6 +29,11 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.action.view
+    - content.action.edit
+    - content.tooltips
+    - content.revision.date
+    - content.revision.history
 
 extra_css:
   - stylesheets/extra.css
@@ -36,6 +41,8 @@ extra_css:
 extra:
   version:
     provider: mike
+  # Enable last updated date in footer
+  last_updated: true
 
 repo_url: https://github.com/webmaven/lodum
 repo_name: webmaven/lodum
@@ -48,14 +55,16 @@ nav:
     - Interactive Demo: demo.md
     - Field Customization: FIELD_CUSTOMIZATION.md
     - Validation: VALIDATION.md
-    - Performance: PERFORMANCE.md
+    - Performance:
+      - Overview: PERFORMANCE.md
+      - Performance Evolution: PERFORMANCE_EVOLUTION.md
+      - Benchmark Methodology: BENCHMARK_METHODOLOGY.md
+      - Benchmark History: BENCHMARK_HISTORY.md
     - Migration: MIGRATION.md
   - API Reference: api_reference.md
   - Technical Specs:
     - Architecture: ARCHITECTURE.md
     - Implementing Formats: IMPLEMENTING_FORMATS.md
-    - Benchmark Results: BENCHMARK_RESULTS.md
-    - Performance Analysis: PERFORMANCE_ANALYSIS.md
   - Project:
     - Roadmap: ROADMAP.md
     - Implementation Plans:
@@ -70,6 +79,9 @@ nav:
     - Contributing: CONTRIBUTING.md
 
 plugins:
+  - git-revision-date-localized:
+      type: datetime
+      enable_creation_date: true
   - search
   - mkdocstrings:
       handlers:

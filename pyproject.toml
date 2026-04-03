@@ -57,6 +57,7 @@ dependencies = [
   "pytest-cov",
   "mkdocs-material",
   "mkdocstrings[python]",
+  "mkdocs-git-revision-date-localized-plugin",
 ]
 
 [tool.hatch.envs.default.scripts]
