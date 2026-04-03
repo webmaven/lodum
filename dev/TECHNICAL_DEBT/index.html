@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/plans/streaming_dump/">
+        <link rel="canonical" href="https://webmaven.github.io/lodum/dev/TECHNICAL_DEBT/">
       
       
       
@@ -18,19 +18,19 @@
         
       
       
-      <link rel="icon" href="../../assets/dumptruck-icon.png">
+      <link rel="icon" href="../assets/dumptruck-icon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Detailed Design: Streaming Serialization (Phase 2) - lodum</title>
+        <title>Technical Debt and Performance Analysis Report (v0.4.0-dev) - lodum</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -49,11 +49,11 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#detailed-design-streaming-serialization-phase-2" class="md-skip">
+        <a href="#technical-debt-and-performance-analysis-report-v040-dev" class="md-skip">
           Skip to content
         </a>
       
@@ -98,9 +98,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href=".." title="lodum" class="md-header__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../../assets/dumptruck-icon.png" alt="logo">
+  <img src="../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Detailed Design: Streaming Serialization (Phase 2)
+              Technical Debt and Performance Analysis Report (v0.4.0-dev)
             
           </span>
         </div>
@@ -235,9 +235,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
+    <a href=".." title="lodum" class="md-nav__button md-logo" aria-label="lodum" data-md-component="logo">
       
-  <img src="../../assets/dumptruck-icon.png" alt="logo">
+  <img src="../assets/dumptruck-icon.png" alt="logo">
 
     </a>
     lodum
@@ -264,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -291,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../NEWS/" class="md-nav__link">
+      <a href="../NEWS/" class="md-nav__link">
         
   
   
@@ -370,7 +370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../GETTING_STARTED/" class="md-nav__link">
+      <a href="../GETTING_STARTED/" class="md-nav__link">
         
   
   
@@ -398,7 +398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../demo/" class="md-nav__link">
+      <a href="../demo/" class="md-nav__link">
         
   
   
@@ -426,7 +426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../FIELD_CUSTOMIZATION/" class="md-nav__link">
+      <a href="../FIELD_CUSTOMIZATION/" class="md-nav__link">
         
   
   
@@ -454,7 +454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../VALIDATION/" class="md-nav__link">
+      <a href="../VALIDATION/" class="md-nav__link">
         
   
   
@@ -531,7 +531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../PERFORMANCE/" class="md-nav__link">
+      <a href="../PERFORMANCE/" class="md-nav__link">
         
   
   
@@ -559,7 +559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../PERFORMANCE_EVOLUTION/" class="md-nav__link">
+      <a href="../PERFORMANCE_EVOLUTION/" class="md-nav__link">
         
   
   
@@ -587,7 +587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../BENCHMARK_METHODOLOGY/" class="md-nav__link">
+      <a href="../BENCHMARK_METHODOLOGY/" class="md-nav__link">
         
   
   
@@ -615,7 +615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../BENCHMARK_HISTORY/" class="md-nav__link">
+      <a href="../BENCHMARK_HISTORY/" class="md-nav__link">
         
   
   
@@ -651,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../MIGRATION/" class="md-nav__link">
+      <a href="../MIGRATION/" class="md-nav__link">
         
   
   
@@ -686,7 +686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api_reference/" class="md-nav__link">
+      <a href="../api_reference/" class="md-nav__link">
         
   
   
@@ -765,7 +765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ARCHITECTURE/" class="md-nav__link">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
         
   
   
@@ -793,7 +793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../IMPLEMENTING_FORMATS/" class="md-nav__link">
+      <a href="../IMPLEMENTING_FORMATS/" class="md-nav__link">
         
   
   
@@ -880,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ROADMAP/" class="md-nav__link">
+      <a href="../ROADMAP/" class="md-nav__link">
         
   
   
@@ -957,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../streaming_support/" class="md-nav__link">
+      <a href="../plans/streaming_support/" class="md-nav__link">
         
   
   
@@ -985,7 +985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partial_serialization/" class="md-nav__link">
+      <a href="../plans/partial_serialization/" class="md-nav__link">
         
   
   
@@ -1013,7 +1013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fastapi_integration/" class="md-nav__link">
+      <a href="../plans/fastapi_integration/" class="md-nav__link">
         
   
   
@@ -1041,7 +1041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../openapi_support/" class="md-nav__link">
+      <a href="../plans/openapi_support/" class="md-nav__link">
         
   
   
@@ -1069,7 +1069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../schema_to_code_cli_tool/" class="md-nav__link">
+      <a href="../plans/schema_to_code_cli_tool/" class="md-nav__link">
         
   
   
@@ -1097,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../compiler_enhancements_cython_mypyc/" class="md-nav__link">
+      <a href="../plans/compiler_enhancements_cython_mypyc/" class="md-nav__link">
         
   
   
@@ -1125,7 +1125,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../protocol_buffers_support/" class="md-nav__link">
+      <a href="../plans/protocol_buffers_support/" class="md-nav__link">
         
   
   
@@ -1153,7 +1153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ide_plugin/" class="md-nav__link">
+      <a href="../plans/ide_plugin/" class="md-nav__link">
         
   
   
@@ -1189,7 +1189,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../CONTRIBUTING/" class="md-nav__link">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -1244,10 +1244,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#status-revised-implementation-strategy" class="md-nav__link">
+  <a href="#1-performance-regression-analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Status: Revised Implementation Strategy
+        1. Performance Regression Analysis
       
     </span>
   </a>
@@ -1255,22 +1255,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture-the-stateful-dumper" class="md-nav__link">
+  <a href="#2-architectural-technical-debt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🏛️ Architecture: The Stateful Dumper
+        2. Architectural Technical Debt
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="🏛️ Architecture: The Stateful Dumper">
+    <nav class="md-nav" aria-label="2. Architectural Technical Debt">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-the-lodum-protocol-interface" class="md-nav__link">
+  <a href="#polymorphic-boilerplate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. The "Lodum Protocol" Interface
+        Polymorphic Boilerplate
       
     </span>
   </a>
@@ -1278,10 +1278,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-dual-mode-implementation-strategy" class="md-nav__link">
+  <a href="#mapping-loader-duplication" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Dual-Mode Implementation Strategy
+        Mapping Loader Duplication
       
     </span>
   </a>
@@ -1294,22 +1294,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-steps" class="md-nav__link">
+  <a href="#3-implementation-recommendations-phases-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🛠️ Implementation Steps
+        3. Implementation Recommendations (Phases 3+)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="🛠️ Implementation Steps">
+    <nav class="md-nav" aria-label="3. Implementation Recommendations (Phases 3+)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#phase-a-protocol-core-hygiene-surgical" class="md-nav__link">
+  <a href="#priority-1-restore-performance" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase A: Protocol &amp; Core Hygiene (Surgical)
+        Priority 1: Restore Performance
       
     </span>
   </a>
@@ -1317,21 +1317,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-b-compiler-refactor" class="md-nav__link">
+  <a href="#priority-2-refactor-for-maintainability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase B: Compiler Refactor
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#phase-c-the-json-streamer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase C: The JSON Streamer
+        Priority 2: Refactor for Maintainability
       
     </span>
   </a>
@@ -1344,10 +1333,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verification-regression-testing" class="md-nav__link">
+  <a href="#4-immediate-next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧪 Verification &amp; Regression Testing
+        4. Immediate Next Steps
       
     </span>
   </a>
@@ -1371,7 +1360,7 @@
 
 
   
-    <a href="https://github.com/webmaven/lodum/edit/master/docs/plans/streaming_dump.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/webmaven/lodum/edit/master/docs/TECHNICAL_DEBT.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1380,67 +1369,48 @@
     
       
     
-    <a href="https://github.com/webmaven/lodum/raw/master/docs/plans/streaming_dump.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/webmaven/lodum/raw/master/docs/TECHNICAL_DEBT.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="detailed-design-streaming-serialization-phase-2">Detailed Design: Streaming Serialization (Phase 2)</h1>
-<h2 id="status-revised-implementation-strategy">Status: Revised Implementation Strategy</h2>
-<p>This document specifies the technical architecture for enabling O(1) memory streaming serialization in Lodum via a <strong>Stateful Dumper Protocol</strong>.</p>
-<h2 id="architecture-the-stateful-dumper">🏛️ Architecture: The Stateful Dumper</h2>
-<p>The primary goal is to shift responsibility for "data shaping" from the compiler to the Dumper implementation. The compiler becomes a structural driver that informs the dumper about the object's topology.</p>
-<h3 id="1-the-lodum-protocol-interface">1. The "Lodum Protocol" Interface</h3>
-<p>The <code>Dumper</code> protocol in <code>core.py</code> will be expanded to include structural orchestration:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Dumper</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="c1"># Primitives (Standardized Signature)</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dump_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dump_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="c1"># ... other primitives ...</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="c1"># Struct Orchestration</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">begin_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">end_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="c1"># Collection Orchestration</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">begin_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">end_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">list_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">set</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
-</code></pre></div>
-<h3 id="2-dual-mode-implementation-strategy">2. Dual-Mode Implementation Strategy</h3>
+<h1 id="technical-debt-and-performance-analysis-report-v040-dev">Technical Debt and Performance Analysis Report (v0.4.0-dev)</h1>
+<h2 id="1-performance-regression-analysis">1. Performance Regression Analysis</h2>
+<p>Following the implementation of Stateful Orchestration and the Polymorphic API, we observed significant performance regressions (1.5x to 3.8x slower). Local benchmarking isolated the following overheads:</p>
 <ul>
-<li><strong>BaseDumper (IR Mode)</strong>: Implements these methods to build and return standard Python dictionaries and lists. This preserves backward compatibility for <code>dump(obj) -&gt; str</code>.</li>
-<li><strong>StreamingDumper (O(1) Mode)</strong>: Implements these methods to write tokens directly to an IO target, managing separators (commas) and depth internally.</li>
+<li><strong>Runtime <code>Field</code> Resolution</strong>: The <code>isinstance(val, Field)</code> check in compiled handlers is <strong>~2x slower</strong> than direct access.</li>
+<li><strong>Orchestration Calls</strong>: Calling <code>dumper.field()</code> for every field is <strong>~35% slower</strong> than direct dictionary assignment.</li>
+<li><strong>AST Bloat</strong>: Inlined cycle detection and depth checks add substantial instruction overhead to every compiled function.</li>
 </ul>
-<hr />
-<h2 id="implementation-steps">🛠️ Implementation Steps</h2>
-<h3 id="phase-a-protocol-core-hygiene-surgical">Phase A: Protocol &amp; Core Hygiene (Surgical)</h3>
-<ol>
-<li>Update <code>Dumper</code> protocol and <code>BaseDumper</code> in <code>core.py</code>. <ul>
-<li><strong>CRITICAL</strong>: Do not remove <code>Context</code>, <code>get_context</code>, or decorator analysis logic.</li>
-</ul>
-</li>
-<li>Update all primitive handlers in <code>handlers/</code> to support the 3-argument <code>(value, depth, seen)</code> signature.</li>
-</ol>
-<h3 id="phase-b-compiler-refactor">Phase B: Compiler Refactor</h3>
-<ol>
-<li>Update <code>dump_codegen.py</code> to use <code>dumper.field()</code> and <code>dumper.list_item()</code>.</li>
-<li>The generated AST should no longer create lists or dicts; it should purely call dumper orchestration methods.</li>
-</ol>
-<h3 id="phase-c-the-json-streamer">Phase C: The JSON Streamer</h3>
-<ol>
-<li>Implement <code>JsonStreamingDumper(StreamingDumper)</code> in <code>json.py</code>.</li>
-<li>Handle recursive state and separators using an internal depth stack.</li>
-</ol>
-<hr />
-<h2 id="verification-regression-testing">🧪 Verification &amp; Regression Testing</h2>
+<h2 id="2-architectural-technical-debt">2. Architectural Technical Debt</h2>
+<h3 id="polymorphic-boilerplate">Polymorphic Boilerplate</h3>
 <ul>
-<li><strong>Signature Parity</strong>: All 315 existing tests must pass with <code>BaseDumper</code>'s new orchestration logic.</li>
-<li><strong>Deep Parity</strong>: <code>test_json_streaming_dumper_deep</code> must confirm that nested structures and character escaping are identical between IR and Stream paths.</li>
-<li><strong>Memory Guard</strong>: Profile a 100k-object dump to ensure peak memory remains constant.</li>
+<li><strong>Observation</strong>: Duplicated <code>load</code>/<code>dump</code>/<code>stream</code> logic across all format modules (<code>json.py</code>, <code>msgpack.py</code>, <code>cbor.py</code>, <code>bson.py</code>, <code>yaml.py</code>, <code>toml.py</code>, <code>pickle.py</code>).</li>
+<li><strong>Impact</strong>: Maintenance burden. Standardizing error wrapping or size checks requires 7+ file updates.</li>
+</ul>
+<h3 id="mapping-loader-duplication">Mapping Loader Duplication</h3>
+<ul>
+<li><strong>Observation</strong>: Redundant logic for mapping types (<code>dict</code>, <code>defaultdict</code>, <code>OrderedDict</code>, <code>Counter</code>) exists in both <code>internal.py</code> and <code>handlers/collections.py</code>.</li>
+</ul>
+<h2 id="3-implementation-recommendations-phases-3">3. Implementation Recommendations (Phases 3+)</h2>
+<h3 id="priority-1-restore-performance">Priority 1: Restore Performance</h3>
+<ol>
+<li><strong>Wrap <code>__init__</code></strong>: Modify <code>@lodum</code> to wrap the class constructor. Resolve <code>Field</code> defaults at instantiation time. This removes the need for <code>isinstance(Field)</code> checks during serialization.</li>
+<li><strong>Runtime Recursion Helper</strong>: Move cycle detection and depth checks from inlined AST into a single <code>_check_recursion()</code> call.</li>
+<li><strong>Full-Speed IR Mode</strong>: Investigate "Fast-Path Branching" in the compiler where it generates <code>dict</code> building logic if the dumper is a <code>BaseDumper</code>, bypassing orchestration for non-streaming scenarios.</li>
+</ol>
+<h3 id="priority-2-refactor-for-maintainability">Priority 2: Refactor for Maintainability</h3>
+<ol>
+<li><strong>Unify IO Logic</strong>: Create <code>FormatHelper</code> in <code>internal.py</code> to consolidate source/target resolution and error wrapping.</li>
+<li><strong>Consolidate Mapping Loaders</strong>: Unify mapping handlers into a single generic implementation.</li>
+</ol>
+<h2 id="4-immediate-next-steps">4. Immediate Next Steps</h2>
+<ul>
+<li>[ ] Implement <code>__init__</code> wrapping to resolve <code>Field</code> objects.</li>
+<li>[ ] Refactor compiler to use a runtime recursion helper.</li>
+<li>[ ] Re-run benchmarks to verify recovery.</li>
 </ul>
 
 
@@ -1529,10 +1499,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.view", "content.action.edit", "content.tooltips", "content.revision.date", "content.revision.history"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.view", "content.action.edit", "content.tooltips", "content.revision.date", "content.revision.history"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
