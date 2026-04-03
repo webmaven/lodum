@@ -300,14 +300,14 @@
                     }
                 });
 
-                trend.setOption({
+                window.Sync.charts.trend.setOption({
                     tooltip: { 
                         trigger: 'axis', 
                         axisPointer: { type: 'cross' },
                         formatter: (params) => {
                             const sha = window.Sync.history[params[0].dataIndex];
                             const c = window.Sync.commitMap.get(sha);
-                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest'].commit.timestamp).toLocaleDateString() : 'Unknown';
+                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'Unknown';
                             return `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>` + params.map(p => `${p.seriesName}: ${p.value}us`).join('<br/>');
                         }
                     },

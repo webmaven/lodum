@@ -2,10 +2,11 @@ import json
 import sys
 import subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 def merge_results(gh_pages_dir, artifacts_dir):
     data_js_path = Path(gh_pages_dir) / "benchmarks" / "data.js"
+    history_json_path = Path(gh_pages_dir) / "benchmarks" / "metadata" / "history.json"
     
     # Always initialize data structure
     data = {"entries": {}, "history": [], "tags": {}}
@@ -20,7 +21,7 @@ def merge_results(gh_pages_dir, artifacts_dir):
         except Exception as e:
             print(f"Warning: Could not load existing data.js: {e}")
 
-    # 1. Process all new JSON artifacts first
+    # 1. Process all new JSON artifacts
     artifacts = list(Path(artifacts_dir).glob("**/*.json"))
     for artifact_path in artifacts:
         try:
@@ -46,7 +47,7 @@ def merge_results(gh_pages_dir, artifacts_dir):
             existing = next((p for p in data["entries"][suite_name] if p["commit"]["id"] == sha), None)
             entry = {
                 'commit': commit_info, 
-                'date': int(datetime.now().timestamp() * 1000), 
+                'date': int(datetime.now(timezone.utc).timestamp() * 1000), 
                 'tool': 'customSmallerIsBetter', 
                 'benches': new_benches
             }
@@ -68,56 +69,64 @@ def merge_results(gh_pages_dir, artifacts_dir):
         
         resolved_tags = data.get("tags", {})
         for line in tags_raw:
-            tag_name, tag_sha = line.split()
-            try:
-                # Resolve tag to the closest commit on the current branch
-                best_sha = subprocess.check_output(["git", "merge-base", tag_sha, "HEAD"], text=True).strip()
-                resolved_tags[best_sha] = tag_name
-            except:
-                resolved_tags[tag_sha] = tag_name
+            parts = line.split()
+            if len(parts) == 2:
+                tag_name, tag_sha = parts
+                try:
+                    best_sha = subprocess.check_output(["git", "merge-base", tag_sha, "HEAD"], text=True).strip()
+                    resolved_tags[best_sha] = tag_name
+                except:
+                    resolved_tags[tag_sha] = tag_name
         data["tags"] = resolved_tags
     except Exception as e:
         print(f"Warning: Tag resolution failed: {e}")
 
     # 3. RECONSTRUCT HISTORY (Chronological Sort)
-    # Collect all SHAs that have either data or a tag
-    all_shas = set(data.get("tags", {}).keys())
+    all_data_shas = set(data.get("tags", {}).keys())
     for suite in data["entries"].values():
         for p in suite:
-            all_shas.add(p["commit"]["id"])
+            all_data_shas.add(p["commit"]["id"])
 
-    # Get committer timestamps for all SHAs to ensure correct order
     sha_dates = []
-    for sha in all_shas:
+    for sha in all_data_shas:
+        dt = None
         try:
-            # Use %ci (ISO 8601) for precise timestamp sorting
+            # Use ISO 8601 for precise timestamp sorting
             iso_date = subprocess.check_output(["git", "show", "-s", "--format=%ci", sha], text=True).strip()
-            # Parse ISO date (e.g., 2026-03-20 14:41:20 +0200)
             dt = datetime.strptime(iso_date, "%Y-%m-%d %H:%M:%S %z")
-            sha_dates.append((dt, sha))
         except:
-            # Fallback if commit is missing from local history
-            # Try to find it in entries
-            found = False
+            # Fallback to entry metadata
             for suite in data["entries"].values():
                 entry = next((e for e in suite if e["commit"]["id"] == sha), None)
                 if entry and "timestamp" in entry["commit"]:
                     try:
                         dt = datetime.fromisoformat(entry["commit"]["timestamp"].replace('Z', '+00:00'))
-                        sha_dates.append((dt, sha))
-                        found = True; break
+                        break
                     except: pass
-            if not found:
-                sha_dates.append((datetime.min.replace(tzinfo=None), sha))
+        
+        if dt is None:
+            # Absolute fallback: far past
+            dt = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        
+        # Ensure dt is timezone-aware for comparison
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+            
+        sha_dates.append((dt, sha))
 
-    # Sort strictly by timestamp (date/time) and then by SHA
+    # Sort strictly ASCENDING by timestamp, then by SHA for stability
     sha_dates.sort(key=lambda x: (x[0], x[1]))
     data["history"] = [s for _, s in sha_dates]
     
     print(f"Final history length: {len(data['history'])} points (Chronologically sorted).")
 
+    # Update metadata/history.json if possible
+    if history_json_path.parent.exists():
+        with open(history_json_path, "w") as f:
+            json.dump(data["history"], f, indent=2)
+
     # Save
-    data["lastUpdate"] = int(datetime.now().timestamp() * 1000)
+    data["lastUpdate"] = int(datetime.now(timezone.utc).timestamp() * 1000)
     with open(data_js_path, "w") as f:
         f.write("window.BENCHMARK_DATA = ")
         json.dump(data, f, indent=2)
