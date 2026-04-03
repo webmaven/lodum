@@ -4,319 +4,484 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lodum Performance Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
-        :root {
-            --lodum-yellow: #fbc929;
-            --marshmallow-gray: #505256;
-            --pydantic-blue: #4f46e5;
-            --linux-color: #fbc929;
-            --windows-color: #3b82f6;
-            --pyodide-color: #10b981;
-            --bg-color: #f9fafb;
-            --card-bg: #ffffff;
-            --text-color: #111827;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        h1 { margin: 0; font-size: 1.8rem; }
-
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .kpi-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .kpi-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--lodum-yellow);
-            margin: 10px 0;
-        }
-
-        .kpi-label {
-            font-size: 0.9rem;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .chart-card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .chart-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .legend-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            margin-right: 5px;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
-        }
-
-        select {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid #d1d5db;
-            background: white;
-            font-size: 0.9rem;
-        }
+        :root { --lodum-yellow: #fbc929; --bg-muted: #f9fafb; --border: #e5e7eb; }
+        body { font-family: Inter, system-ui, sans-serif; margin: 0; padding: 20px; color: #1f2937; background: #f3f4f6; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { border-bottom: 2px solid var(--lodum-yellow); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 1.5rem; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+        .kpi-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .kpi-label { font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .kpi-value { font-size: 1.2rem; font-weight: 700; color: #000; }
+        .grid-main { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; }
+        .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .chart-container { height: 350px; width: 100%; touch-action: none; }
+        #ratio-chart { height: 250px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px; }
+        #frontier-chart { height: 280px; }
+        .heatmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .heatmap-cell { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; font-size: 0.8rem; transition: transform 0.1s; }
+        .cell-label { display: block; font-size: 0.6rem; color: #666; margin-bottom: 2px; }
+        .cell-value { font-weight: 700; }
+        .cell-good { background: #ecfdf5; color: #065f46; }
+        .cell-bad { background: #fef2f2; color: #991b1b; }
+        .cell-warn { background: #fffbeb; color: #92400e; }
+        .cell-neutral { background: #f9fafb; color: #374151; }
+        #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; font-family: monospace; border-radius: 4px; z-index: 100; opacity: 0.8; }
     </style>
 </head>
 <body>
+    <div id="status-bar">Dashboard Loading...</div>
     <div class="container">
         <header>
             <h1>Lodum Performance Index</h1>
-            <a href="https://github.com/webmaven/lodum" id="repository-link" style="text-decoration: none; color: #6b7280;">View on GitHub</a>
+            <div id="last-updated" style="font-size: 0.7rem; color: #666;"></div>
         </header>
 
-        <div class="kpi-container" id="kpi-container">
-            <div class="kpi-card">
-                <div class="kpi-label">Speedup vs Marshmallow</div>
-                <div class="kpi-value" id="kpi-speedup">--</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Streaming Memory Reduction</div>
-                <div class="kpi-value" id="kpi-memory">--</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">WASM Efficiency</div>
-                <div class="kpi-value" id="kpi-wasm">--</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">XL Throughput</div>
-                <div class="kpi-value" id="kpi-throughput">--</div>
-            </div>
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Speedup vs MM</div><div class="kpi-value" id="kpi-speedup">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Mem. Reduction</div><div class="kpi-value" id="kpi-memory">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">WASM Efficiency</div><div class="kpi-value" id="kpi-wasm">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Throughput</div><div class="kpi-value" id="kpi-throughput">--</div></div>
         </div>
 
-        <div class="chart-card">
-            <div class="chart-title">
-                <div>
-                    JSON Serialization Performance 
+        <div class="grid-main">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <b style="font-size: 0.9rem;">Serialization Latency (JSON)</b>
                     <select id="scenario-selector">
                         <option value="simple">Simple</option>
                         <option value="complex">Complex</option>
                         <option value="nested">Nested</option>
                     </select>
                 </div>
-                <div style="font-size: 0.8rem; font-weight: normal; color: #6b7280;">
-                    <span class="legend-indicator" style="background: var(--linux-color)"></span> Linux
-                    <span class="legend-indicator" style="background: var(--windows-color)"></span> Windows
-                    <span class="legend-indicator" style="background: var(--pyodide-color)"></span> WASM
+                <div id="trend-chart" class="chart-container"></div>
+                <div id="ratio-chart" class="chart-container"></div>
+            </div>
+            <div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Evolution Path (Synced)</b>
+                    <div id="frontier-chart" class="chart-container"></div>
+                </div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Regression vs v0.3.0</b>
+                    <div class="heatmap-grid" id="regression-heatmap"></div>
+                    <div id="hover-details" style="font-size: 0.75rem; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 10px;">Hover a point to explore.</div>
+                </div>
+                <div class="card">
+                    <b style="font-size: 0.9rem;">Binary Formats (Latest)</b>
+                    <div id="format-chart" style="height: 180px;"></div>
                 </div>
             </div>
-            <div id="main-chart"></div>
-            <div id="brush-chart"></div>
         </div>
 
-        <div class="grid-2">
-            <div class="chart-card">
-                <div class="chart-title">XL Streaming Efficiency (Time vs Memory)</div>
-                <div id="streaming-chart"></div>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Compiler Overhead (Cold Start)</div>
-                <div id="cold-start-chart"></div>
+        <div class="card" style="background: var(--bg-muted); border-left: 4px solid #cbd5e1;">
+            <b style="font-size: 0.8rem; text-transform: uppercase; color: #64748b;">Glossary & Methodology</b>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 15px; font-size: 0.8rem; line-height: 1.5;">
+                <div>
+                    <b>Latency (us/op)</b>: Time taken for one serialization operation. 
+                    <i>Benchmark</i>: Simple (flat dict), Complex (mixed), Nested (deep).
+                </div>
+                <div>
+                    <b>Evolution Path</b>: A Pareto-style frontier mapping Time (Speed) against RAM (Efficiency). 
+                    The path traces the architectural maturity of the project.
+                </div>
+                <div>
+                    <b>Throughput (MB/s)</b>: Theoretical maximum data rate during O(1) streaming operations, 
+                    derived from a 45MB benchmark payload.
+                </div>
             </div>
         </div>
     </div>
 
     <script src="./data.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const rawData = window.BENCHMARK_DATA;
-            if (!rawData) return;
-
-            const suites = rawData.entries;
-            
-            // 1. Data Transformation
-            const commitMap = new Map();
-            Object.values(suites).forEach(points => {
-                points.forEach(p => {
-                    const sha = p.commit.id.substring(0, 7);
-                    if (!commitMap.has(sha)) {
-                        commitMap.set(sha, { sha, date: p.date, msg: p.commit.message });
-                    }
-                });
-            });
-            const sortedCommits = Array.from(commitMap.values()).sort((a, b) => a.date - b.date);
-            const categories = sortedCommits.map(c => c.sha);
-
-            const getVal = (suiteName, benchPattern, sha) => {
-                const suite = suites[suiteName] || [];
-                const point = suite.find(p => p.commit.id.substring(0, 7) === sha);
-                if (!point) return null;
-                const bench = point.benches.find(b => b.name.includes(benchPattern));
-                return bench ? bench.value : null;
-            };
-
-            const envs = [
-                { id: 'ubuntu-latest', label: 'Linux', color: '#fbc929', dash: 0 },
-                { id: 'windows-latest', label: 'Windows', color: '#3b82f6', dash: 5 },
-                { id: 'Pyodide', label: 'WASM', color: '#10b981', dash: 2 }
-            ];
-
-            let mainChart, brushChart;
-
-            const updateTrendCharts = (scenario) => {
-                const series = [];
-                const benchName = `JSON Serialization Lodum ${scenario}`;
-                
-                envs.forEach(env => {
-                    const suiteKey = Object.keys(suites).find(k => k.includes(env.id));
-                    if (suiteKey) {
-                        series.push({
-                            name: `Lodum (${env.label})`,
-                            data: sortedCommits.map(c => getVal(suiteKey, benchName, c.sha)),
-                            color: env.color,
-                            dashArray: env.dash
+        window.UI = {
+            status: (msg) => document.getElementById('status-bar').innerText = msg,
+            updateKPIs: (sha) => {
+                const getVal = (pid, bench) => window.Sync.getVal(sha, pid, bench);
+                try {
+                    const lodum = getVal('ubuntu-latest', 'JSON Serialization Lodum simple');
+                    const mm = getVal('ubuntu-latest', 'JSON Serialization Marshmallow simple');
+                    if (lodum && mm) document.getElementById('kpi-speedup').innerText = (mm / lodum).toFixed(1) + 'x';
+                    
+                    const stdMem = getVal('ubuntu-latest', 'Standard (loads) Memory');
+                    const strmMem = getVal('ubuntu-latest', 'Streaming (load_stream) Memory');
+                    if (stdMem && strmMem) document.getElementById('kpi-memory').innerText = ((1 - (strmMem / stdMem)) * 100).toFixed(1) + '%';
+                    
+                    const wasm = getVal('Pyodide', 'JSON Serialization Lodum simple');
+                    if (lodum && wasm) document.getElementById('kpi-wasm').innerText = ((lodum / wasm) * 100).toFixed(0) + '%';
+                    
+                    const strmTime = getVal('ubuntu-latest', 'Streaming (load_stream) Time');
+                    if (strmTime) document.getElementById('kpi-throughput').innerText = (45 / strmTime).toFixed(1) + ' MB/s';
+                } catch(e) { console.error('KPI error', e); }
+            },
+            updateHeatmap: (sha) => {
+                const c = window.Sync.commitMap.get(sha);
+                if (!c) return;
+                const grid = document.getElementById('regression-heatmap');
+                if (grid) {
+                    grid.innerHTML = '';
+                    document.getElementById('hover-details').innerHTML = `<b>${c.short}</b>: ${c.msg}`;
+                    const platforms = {'ubuntu-latest':'Linux', 'windows-latest':'Windows', 'Pyodide':'WASM'};
+                    ['simple', 'complex', 'nested'].forEach(s => {
+                        Object.entries(platforms).forEach(([pid, label]) => {
+                            const cur = window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`);
+                            const base = window.Sync.getVal(window.Sync.baselineSha, pid, `JSON Serialization Lodum ${s}`);
+                            let delta = 0, cls = 'cell-neutral';
+                            if (cur && base) {
+                                delta = ((cur / base) - 1) * 100;
+                                cls = delta < -5 ? 'cell-good' : (delta > 15 ? 'cell-bad' : (delta > 5 ? 'cell-warn' : 'cell-neutral'));
+                            }
+                            const cell = document.createElement('div');
+                            cell.className = `heatmap-cell ${cls}`;
+                            cell.innerHTML = `<span class="cell-label">${label} / ${s}</span><span class="cell-value">${cur ? (delta>0?'+':'') + delta.toFixed(0) + '%' : 'N/A'}</span>`;
+                            grid.appendChild(cell);
                         });
-                    }
-                });
-
-                if (mainChart) mainChart.destroy();
-                if (brushChart) brushChart.destroy();
-
-                const mainOptions = {
-                    series: series,
-                    chart: { id: 'main-trend', height: 350, type: 'line', toolbar: { show: false } },
-                    stroke: { width: 3, curve: 'smooth', dashArray: series.map(s => s.dashArray) },
-                    xaxis: { categories: categories },
-                    yaxis: { title: { text: 'Execution Time (us)' } },
-                    tooltip: { shared: true, y: { formatter: v => v ? v.toFixed(2) + ' us' : 'N/A' } }
-                };
-                mainChart = new ApexCharts(document.querySelector("#main-chart"), mainOptions);
-                mainChart.render();
-
-                const brushOptions = {
-                    series: series,
-                    chart: { id: 'brush-trend', height: 130, type: 'area', brush: { target: 'main-trend', enabled: true }, selection: { enabled: true, xaxis: { min: Math.max(0, categories.length - 10), max: categories.length - 1 } } },
-                    colors: series.map(s => s.color),
-                    xaxis: { categories: categories, labels: { show: false } },
-                    yaxis: { labels: { show: false } }
-                };
-                brushChart = new ApexCharts(document.querySelector("#brush-chart"), brushOptions);
-                brushChart.render();
-            };
-
-            // Initial render
-            updateTrendCharts('simple');
-            document.getElementById('scenario-selector').addEventListener('change', (e) => updateTrendCharts(e.target.value));
-
-            // 4. Calculate KPIs (Latest commit)
-            const latestSha = categories[categories.length - 1];
-            const linuxSuite = Object.keys(suites).find(k => k.includes('ubuntu-latest'));
-            const wasmSuite = Object.keys(suites).find(k => k.includes('Pyodide'));
-
-            if (linuxSuite) {
-                const lodumVal = getVal(linuxSuite, 'JSON Serialization Lodum simple', latestSha);
-                const mmVal = getVal(linuxSuite, 'JSON Serialization Marshmallow simple', latestSha);
-                if (lodumVal && mmVal) {
-                    document.getElementById('kpi-speedup').textContent = (mmVal / lodumVal).toFixed(1) + 'x';
-                }
-
-                const stdTime = getVal(linuxSuite, 'Lodum Standard (loads) Time', latestSha);
-                const streamTime = getVal(linuxSuite, 'Lodum Streaming (load_stream) Time', latestSha);
-                const stdMem = getVal(linuxSuite, 'Lodum Standard (loads) Memory', latestSha);
-                const streamMem = getVal(linuxSuite, 'Lodum Streaming (load_stream) Memory', latestSha);
-
-                if (stdMem && streamMem) {
-                    document.getElementById('kpi-memory').textContent = ((1 - (streamMem / stdMem)) * 100).toFixed(1) + '%';
-                }
-                
-                if (streamTime) {
-                    // 45MB / time = throughput
-                    const throughput = 45 / streamTime;
-                    document.getElementById('kpi-throughput').textContent = throughput.toFixed(1) + ' MB/s';
-                }
-
-                if (lodumVal && wasmSuite) {
-                    const wasmVal = getVal(wasmSuite, 'JSON Serialization Lodum simple', latestSha);
-                    if (wasmVal) {
-                        document.getElementById('kpi-wasm').textContent = ((lodumVal / wasmVal) * 100).toFixed(0) + '%';
-                    }
-                }
-
-                // 5. Streaming Chart
-                if (stdTime && streamTime) {
-                    const streamOptions = {
-                        series: [
-                            { name: 'Time (s)', type: 'column', data: [stdTime, streamTime] },
-                            { name: 'Memory (MB)', type: 'line', data: [stdMem, streamMem] }
-                        ],
-                        chart: { height: 300, type: 'line', toolbar: { show: false } },
-                        stroke: { width: [0, 4] },
-                        colors: ['#d1d5db', '#fbc929'],
-                        labels: ['Standard loads', 'Streaming load_stream'],
-                        yaxis: [{ title: { text: 'Time (s)' } }, { opposite: true, title: { text: 'Memory (MB)' } }]
-                    };
-                    new ApexCharts(document.querySelector("#streaming-chart"), streamOptions).render();
-                }
-
-                // 6. Cold Start Chart
-                const coldSimple = getVal(linuxSuite, 'JSON Serialization Lodum simple (Cold Start)', latestSha);
-                const warmSimple = getVal(linuxSuite, 'JSON Serialization Lodum simple', latestSha);
-                if (coldSimple && warmSimple) {
-                    const coldOptions = {
-                        series: [{ name: 'Latency (us)', data: [coldSimple, warmSimple] }],
-                        chart: { type: 'bar', height: 300, toolbar: { show: false } },
-                        plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-                        colors: ['#fbc929'],
-                        xaxis: { categories: ['Cold Start (Compiling)', 'Warm Start (Steady State)'] }
-                    };
-                    new ApexCharts(document.querySelector("#cold-start-chart"), coldOptions).render();
+                    });
                 }
             }
+        };
+
+        window.Sync = {
+            history: [],
+            commitMap: new Map(),
+            tags: {},
+            charts: {},
+            selectedSha: null,
+            baselineSha: null,
+            isRefreshing: false,
+            init: () => {
+                const data = window.BENCHMARK_DATA;
+                window.Sync.history = data.history || [];
+                window.Sync.tags = data.tags || {};
+                Object.entries(data.entries).forEach(([suite, points]) => {
+                    points.forEach(p => {
+                        const id = p.commit.id;
+                        if (!id || !window.Sync.history.includes(id)) return;
+                        if (!window.Sync.commitMap.has(id)) window.Sync.commitMap.set(id, { id, short: id.substring(0,7), msg: p.commit.message, data: {} });
+                        const c = window.Sync.commitMap.get(id);
+                        c.data[suite] = p;
+                    });
+                });
+                Object.entries(window.Sync.tags).forEach(([sha, label]) => {
+                    if (label === 'v0.3.0') window.Sync.baselineSha = sha;
+                });
+                if (!window.Sync.baselineSha) window.Sync.baselineSha = window.Sync.history[0];
+                if (data.lastUpdate) document.getElementById('last-updated').innerText = 'Data Version: ' + new Date(data.lastUpdate).toLocaleString();
+            },
+            getVal: (sha, pid, bench) => {
+                const c = window.Sync.commitMap.get(sha); if (!c) return null;
+                const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
+                if (!suiteKey) return null;
+                const b = c.data[suiteKey].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
+                return b ? b.value : null;
+            },
+            refresh: (sha, source) => {
+                if (window.Sync.isRefreshing) return;
+                window.Sync.isRefreshing = true;
+                try {
+                    window.UI.status(`[${source.toUpperCase()}] ${sha.substring(0,7)}`);
+                    window.UI.updateKPIs(sha);
+                    window.UI.updateHeatmap(sha);
+                    window.Sync.updateFormats(sha);
+                    
+                    const idx = window.Sync.history.indexOf(sha);
+                    const fIdx = window.Sync.frontierData.findIndex(d => d && d[3] === sha);
+
+                    if (idx !== -1 && source !== 'trend' && source !== 'ratio') {
+                        window.Sync.charts.trend.dispatchAction({ type: 'downplay' });
+                        window.Sync.charts.ratio.dispatchAction({ type: 'downplay' });
+                        window.Sync.charts.trend.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
+                        window.Sync.charts.trend.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
+                        window.Sync.charts.ratio.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx });
+                        window.Sync.charts.ratio.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx });
+                    }
+                    if (fIdx !== -1 && source !== 'frontier') {
+                        window.Sync.charts.frontier.dispatchAction({ type: 'downplay' });
+                        window.Sync.charts.frontier.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: fIdx });
+                        window.Sync.charts.frontier.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: fIdx });
+                    }
+
+                    if (source === 'click' || source === 'init') {
+                        window.Sync.updateSelectionMarkers(sha);
+                    }
+                } finally {
+                    window.Sync.isRefreshing = false;
+                }
+            },
+            updateSelectionMarkers: (sha) => {
+                const idx = window.Sync.history.indexOf(sha);
+                const fPt = window.Sync.frontierData.find(d => d && d[3] === sha);
+                const scenario = document.getElementById('scenario-selector').value;
+                
+                if (idx !== -1) {
+                    const yVal = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`) || 0;
+                    const markLines = window.updateTrendMarkers();
+                    
+                    window.Sync.charts.trend.setOption({
+                        series: window.Sync.charts.trend.getOption().series.map((s, i) => ({
+                            markLine: i === 0 ? {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [...markLines, { xAxis: idx }, { yAxis: yVal }]
+                            } : undefined,
+                            markPoint: i === 0 ? {
+                                symbol: 'circle', symbolSize: 10,
+                                data: [{ coord: [idx, yVal] }],
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
+                            } : undefined
+                        }))
+                    });
+                    
+                    // Update ratio crosshair
+                    const lodum = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`);
+                    const mm = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Marshmallow ${scenario}`);
+                    const ratio = (lodum && mm) ? (mm / lodum) : 0;
+                    window.Sync.charts.ratio.setOption({
+                        series: [{
+                            markLine: {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [...markLines, { xAxis: idx }, { yAxis: ratio }]
+                            },
+                            markPoint: {
+                                symbol: 'circle', symbolSize: 10,
+                                data: [{ coord: [idx, ratio] }],
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
+                            }
+                        }]
+                    });
+                }
+                if (fPt) {
+                    window.Sync.charts.frontier.setOption({
+                        series: [{
+                            markLine: {
+                                symbol: ['none', 'none'], label: { show: false },
+                                lineStyle: { color: '#ef4444', type: 'dotted', width: 1, opacity: 0.8 },
+                                data: [{ xAxis: fPt[0] }, { yAxis: fPt[1] }]
+                            },
+                            markPoint: {
+                                symbol: 'circle', symbolSize: 12,
+                                data: [{ coord: [fPt[0], fPt[1]] }],
+                                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
+                            }
+                        }]
+                    });
+                }
+            },
+            updateFormats: (sha) => {
+                const c = window.Sync.commitMap.get(sha);
+                if (!c) return;
+                const platforms = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
+                const colors = ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'];
+                const vals = platforms.map((f, i) => {
+                    const suiteKey = Object.keys(c.data).find(k => k.includes('ubuntu-latest'));
+                    if (!suiteKey) return { value: 0, itemStyle: { color: colors[i] } };
+                    const b = c.data[suiteKey].benches.find(x => x.name.includes(f.p));
+                    return { value: b ? b.value : 0, itemStyle: { color: colors[i] } };
+                });
+                window.Sync.charts.formats.setOption({
+                    xAxis: { type: 'value', show: false },
+                    yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
+                    grid: { top: 10, bottom: 10, left: 60, right: 40 },
+                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c}us' } }]
+                });
+            }
+        };
+
+        window.updateTrendMarkers = () => {
+            return Object.entries(window.Sync.tags).map(([sha, label]) => {
+                const idx = window.Sync.history.indexOf(sha);
+                return idx !== -1 ? { 
+                    xAxis: idx, 
+                    label: { show: true, formatter: label, position: 'end', distance: [0, 10] }, 
+                    lineStyle: { color: '#fbc929', type: 'dashed', width: 2 } 
+                } : null;
+            }).filter(m => m !== null);
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.Sync.init();
+            const latestSha = window.Sync.history[window.Sync.history.length - 1];
+            window.Sync.selectedSha = latestSha;
+
+            const trend = echarts.init(document.getElementById('trend-chart'));
+            window.Sync.charts.trend = trend;
+            trend.setOption({ xAxis: { type: 'category' }, yAxis: { type: 'value' }, series: [] });
+
+            const ratioChart = echarts.init(document.getElementById('ratio-chart'));
+            window.Sync.charts.ratio = ratioChart;
+
+            window.updateTrend = (scenario) => {
+                const markLines = window.updateTrendMarkers();
+                const getPlatformSeries = (pid, name, color) => ({
+                    name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
+                    data: window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
+                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
+                });
+
+                trend.setOption({
+                    tooltip: { 
+                        trigger: 'axis', 
+                        axisPointer: { type: 'cross' },
+                        formatter: (params) => {
+                            const sha = window.Sync.history[params[0].dataIndex];
+                            const c = window.Sync.commitMap.get(sha);
+                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'Unknown';
+                            return `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>` + params.map(p => `${p.seriesName}: ${p.value}us`).join('<br/>');
+                        }
+                    },
+                    legend: { bottom: 0 },
+                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
+                    xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
+                    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
+                    series: [
+                        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
+                        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
+                        getPlatformSeries('Pyodide', 'WASM', '#10b981')
+                    ],
+                    dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
+                });
+
+                // New Ratio Chart
+                window.Sync.charts.ratio.setOption({
+                    title: { text: 'Speedup vs Marshmallow (Ratio)', textStyle: { fontSize: 12, color: '#666' }, left: 'center' },
+                    tooltip: { 
+                        trigger: 'axis', 
+                        axisPointer: { type: 'cross' },
+                        formatter: (params) => {
+                            const sha = window.Sync.history[params[0].dataIndex];
+                            const c = window.Sync.commitMap.get(sha);
+                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'Unknown';
+                            return `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>Ratio: ${params[0].value}x`;
+                        }
+                    },
+                    grid: { top: 40, left: 40, right: 20, bottom: 40 },
+                    xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), show: false },
+                    yAxis: { type: 'value', name: 'multiplier', splitLine: { lineStyle: { type: 'dashed' } } },
+                    series: [{
+                        name: 'Linux Speedup', type: 'line', smooth: true, color: '#10b981', areaStyle: { opacity: 0.1 },
+                        data: window.Sync.history.map(sha => {
+                            const lodum = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`);
+                            const mm = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Marshmallow ${scenario}`);
+                            return (lodum && mm) ? (mm / lodum).toFixed(2) : null;
+                        }),
+                        markLine: { symbol: 'none', data: markLines }
+                    }]
+                });
+            };
+
+            const frontier = echarts.init(document.getElementById('frontier-chart'));
+            window.Sync.charts.frontier = frontier;
+            
+            window.Sync.frontierData = window.Sync.history.map(sha => {
+                const t = window.Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Time') || window.Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Time');
+                const m = window.Sync.getVal(sha, 'ubuntu-latest', 'Streaming (load_stream) Memory') || window.Sync.getVal(sha, 'ubuntu-latest', 'Standard (loads) Memory');
+                return (t && m) ? [t, m, sha.substring(0,7), sha] : null;
+            }).filter(p => p !== null);
+
+            frontier.setOption({
+                tooltip: { 
+                    trigger: 'item',
+                    formatter: function(p) {
+                        if (!p.data || !Array.isArray(p.data)) return ""; 
+                        return "<b>" + p.data[2] + "</b><br/>Time: " + p.data[0].toFixed(3) + "s<br/>Mem: " + p.data[1].toFixed(1) + "MB";
+                    }
+                },
+                xAxis: { type: 'value', name: 'Time (s)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
+                yAxis: { type: 'value', name: 'RAM (MB)', splitLine: { show: true, lineStyle: { type: 'dashed' } } },
+                series: [{ 
+                    type: 'line', data: window.Sync.frontierData, symbolSize: 8, smooth: true,
+                    lineStyle: { width: 2, color: '#e2e8f0' },
+                    itemStyle: { color: '#94a3b8' },
+                    emphasis: { 
+                        scale: 2,
+                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                    }
+                }]
+            });
+
+            const formatC = echarts.init(document.getElementById('format-chart'));
+            window.Sync.charts.formats = formatC;
+
+            trend.on('updateAxisPointer', (event) => {
+                const idx = event.axesInfo[0]?.value;
+                if (idx !== undefined) {
+                    const sha = window.Sync.history[idx];
+                    window.Sync.refresh(sha, 'trend');
+                }
+            });
+
+            ratioChart.on('updateAxisPointer', (event) => {
+                const idx = event.axesInfo[0]?.value;
+                if (idx !== undefined) {
+                    const sha = window.Sync.history[idx];
+                    window.Sync.refresh(sha, 'ratio');
+                }
+            });
+
+            trend.getZr().on('click', (params) => {
+                const pointInPixel = [params.offsetX, params.offsetY];
+                if (trend.containPixel('grid', pointInPixel)) {
+                    const data = trend.convertFromPixel({ seriesIndex: 0 }, pointInPixel);
+                    const idx = Math.round(data[0]);
+                    const sha = window.Sync.history[idx];
+                    if (sha) { window.Sync.selectedSha = sha; window.Sync.refresh(sha, 'click'); }
+                }
+            });
+
+            frontier.on('updateAxisPointer', (event) => {
+                if (event.dataIndex !== undefined) {
+                    const sha = window.Sync.frontierData[event.dataIndex][3];
+                    window.Sync.refresh(sha, 'frontier');
+                }
+            });
+            
+            frontier.on('mouseover', (params) => {
+                if (params.data && params.data[3]) window.Sync.refresh(params.data[3], 'frontier');
+            });
+
+            frontier.getZr().on('click', (params) => {
+                const pointInPixel = [params.offsetX, params.offsetY];
+                if (frontier.containPixel('grid', pointInPixel)) {
+                    const data = frontier.convertFromPixel({ seriesIndex: 0 }, pointInPixel);
+                    let closest = null, minDist = Infinity;
+                    window.Sync.frontierData.forEach(d => {
+                        const dist = Math.pow(d[0] - data[0], 2) + Math.pow(d[1] - data[1], 2);
+                        if (dist < minDist) { minDist = dist; closest = d; }
+                    });
+                    if (closest) { 
+                        window.Sync.selectedSha = closest[3]; 
+                        window.Sync.refresh(closest[3], 'click'); 
+                    }
+                }
+            });
+
+            window.updateTrend('simple');
+            setTimeout(() => window.Sync.refresh(latestSha, 'init'), 100);
+            document.getElementById('scenario-selector').onchange = (e) => window.updateTrend(e.target.value);
+
+            window.addEventListener('mousemove', (e) => {
+                const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
+                const frontierRect = document.getElementById('frontier-chart').getBoundingClientRect();
+                const isOverTrend = (e.clientX >= trendRect.left && e.clientX <= trendRect.right && e.clientY >= trendRect.top && e.clientY <= trendRect.bottom);
+                const isOverFrontier = (e.clientX >= frontierRect.left && e.clientX <= frontierRect.right && e.clientY >= frontierRect.top && e.clientY <= frontierRect.bottom);
+                
+                if (!isOverTrend && !isOverFrontier && !window.Sync.isRefreshing) {
+                    window.Sync.charts.trend.dispatchAction({ type: 'downplay' });
+                    window.Sync.charts.ratio.dispatchAction({ type: 'downplay' });
+                    window.Sync.charts.frontier.dispatchAction({ type: 'downplay' });
+                    window.Sync.charts.trend.dispatchAction({ type: 'hideTip' });
+                    window.Sync.charts.ratio.dispatchAction({ type: 'hideTip' });
+                    window.Sync.charts.frontier.dispatchAction({ type: 'hideTip' });
+                }
+            });
         });
     </script>
 </body>
