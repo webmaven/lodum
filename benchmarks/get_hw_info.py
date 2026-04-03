@@ -1,57 +1,61 @@
-import platform
-import os
-import subprocess
 import json
+import os
+import platform
+import subprocess
 import sys
 
 def get_cpu_info():
     try:
-        if platform.system() == "Linux":
-            command = "cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d':' -f2"
+        if platform.system() == "Windows":
+            # Use PowerShell as wmic is deprecated and sometimes missing
+            command = 'powershell -Command "(Get-CimInstance Win32_Processor).Name"'
             return subprocess.check_output(command, shell=True).decode().strip()
-        elif platform.system() == "Windows":
-            command = "wmic cpu get name"
-            output = subprocess.check_output(command, shell=True).decode().split('\n')
-            for line in output:
-                if line.strip() and "Name" not in line:
-                    return line.strip()
+        elif platform.system() == "Linux":
+            with open("/proc/cpuinfo", "r") as f:
+                for line in f:
+                    if "model name" in line:
+                        return line.split(":")[1].strip()
+        elif platform.system() == "Darwin":
+            return subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"]).decode().strip()
     except Exception:
         return "Unknown CPU"
     return "Unknown CPU"
 
-def get_hw_info():
-    info = {
-        "os": platform.system(),
-        "processor": get_cpu_info(),
-        "python_version": platform.python_version(),
-    }
-    return info
-
-if __name__ == "__main__":
-    info = get_hw_info()
+def main():
     if "--init" in sys.argv:
-        os.makedirs("benchmarks/metadata", exist_ok=True)
+        info = {
+            "system": platform.system(),
+            "cpu": get_cpu_info(),
+            "machine": platform.machine()
+        }
         filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
+        os.makedirs("benchmarks/metadata", exist_ok=True)
         with open(filename, "w") as f:
             json.dump(info, f, indent=2)
         print(f"Initialized hardware signature for {platform.system()} at {filename}")
     elif "--check" in sys.argv:
         filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
         if not os.path.exists(filename):
-            print(f"⚠️ No reference hardware found at {filename}. Use --init to create one.")
-            sys.exit(0)
-            
-        with open(filename, "r") as f:
-            ref = json.load(f)
+            print(f"Warning: Baseline hardware file {filename} not found. Skipping check.")
+            return
         
-        # Compare OS family and CPU model
-        if info["processor"] != ref["processor"] or info["os"] != ref["os"]:
-            print("❌ HARDWARE CHANGE DETECTED!")
-            print(f"Current:   {info['processor']} ({info['os']})")
-            print(f"Reference: {ref['processor']} ({ref['os']})")
-            print("\nAction required: Run historical benchmarks to update baseline, then run with --init to update signature.")
+        with open(filename, "r") as f:
+            baseline = json.load(f)
+        
+        current = {
+            "system": platform.system(),
+            "cpu": get_cpu_info(),
+            "machine": platform.machine()
+        }
+        
+        if current != baseline:
+            print("HARDWARE CHANGE DETECTED!")
+            print(f"Baseline: {baseline}")
+            print(f"Current:  {current}")
+            # Exit with error to block benchmark run on mismatched hardware
             sys.exit(1)
         else:
-            print(f"✅ Hardware matches reference: {info['processor']} ({info['os']})")
-    else:
-        print(json.dumps(info, indent=2))
+            print(f"Hardware validation successful: {current['cpu']}")
+
+if __name__ == "__main__":
+    main()
