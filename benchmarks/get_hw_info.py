@@ -4,23 +4,6 @@ import subprocess
 import json
 import sys
 
-            # Use PowerShell as wmic is deprecated and sometimes missing
-            command = 'powershell -Command "(Get-CimInstance Win32_Processor).Name"'
-            return subprocess.check_output(command, shell=True).decode().strip()
-    except Exception:
-        return "Unknown CPU"
-    return "Unknown CPU"
-
-
-if __name__ == "__main__":
-    # Ensure stdout handles UTF-8 for emoji-like characters if we decide to keep them,
-    # but better to just avoid them for maximum compatibility.
-    info = get_hw_info()
-    if "--init" in sys.argv:
-        os.makedirs("benchmarks/metadata", exist_ok=True)
-        filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
-        with open(filename, "w") as f:
-            json.dump(info, f, indent=2)
         print(f"Initialized hardware signature for {platform.system()} at {filename}")
     elif "--check" in sys.argv:
         filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
