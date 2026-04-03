@@ -1,6 +1,10 @@
-# Lodum Performance
+## Performance Tracking
 
-Lodum is designed for high performance by using runtime bytecode compilation (via Python AST) to generate specialized serialization and deserialization handlers for your classes.
+Lodum performance is automatically tracked on every push to the `main` branch. You can view the historical performance dashboard here:
+
+👉 **[Lodum Performance Dashboard](https://webmaven.github.io/lodum/dev/benchmarks)**
+
+We track performance across both **Linux** and **Windows** environments to ensure consistent quality for all users.
 
 ## Benchmark Results
 

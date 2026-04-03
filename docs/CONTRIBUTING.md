@@ -169,7 +169,7 @@ Lodum uses a `Context` object to manage global state. All handlers must be state
 When a new version of `lodum` is ready for release, follow these steps:
 
 1.  **Prepare the Release Branch**:
-    - Create a new branch `feature/issue-XX-release-prep` (replacing XX with the release tracking issue number).
+    - Create a new branch `release/vX.Y.Z`.
 2.  **Update Version**:
     - Update `__version__` in `src/lodum/__init__.py`.
     - Update the `version` field in `pyproject.toml`.
@@ -177,19 +177,19 @@ When a new version of `lodum` is ready for release, follow these steps:
     - Add a new section to `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
     - Set the release date.
 4.  **Final Checks**:
-    - Run the full test suite: `PYTHONPATH=src pytest`.
-    - Run Pyodide tests: `node run_pyodide_node.js` and `PYODIDE_SHARED_MEMORY=1 node run_pyodide_node.js`.
-    - Build and preview the documentation: `mkdocs serve`.
-    - Ensure all branding assets (headers, social previews) are correct.
+    - Ensure CI is passing on the release branch (includes native and Pyodide tests).
+    - Ensure all branding assets are correct.
 5.  **Merge and Tag**:
-    - Merge the release branch into `main`.
-    - Create a signed Git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
-    - Push the tag: `git push origin vX.Y.Z`.
-6.  **Deploy and Publish**:
-    - Build the distribution: `python3 -m build`.
-    - Upload to PyPI: `twine upload dist/*`.
-    - Deploy versioned documentation: `mike deploy --push --update-aliases vX.Y.Z latest`.
-    - Set the new version as default (if applicable): `mike set-default --push latest`.
+    - Merge the release branch into `main` via Pull Request.
+    - Create and push a signed Git tag:
+      ```bash
+      git tag -a vX.Y.Z -m "Release vX.Y.Z"
+      git push origin vX.Y.Z
+      ```
+6.  **Automated Deployment**:
+    - Pushing the tag triggers the **Release Workflow**, which automatically:
+        - Builds and uploads the package to **PyPI**.
+        - Deploys versioned documentation and updates the **latest** alias.
 
 ## License
 

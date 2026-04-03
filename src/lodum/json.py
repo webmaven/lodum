@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import json
-from typing import Any, Dict, Iterator, Type, TypeVar
+from typing import Any, Dict, Iterator, Type, TypeVar, IO
 
 from .core import Loader, BaseDumper, BaseLoader
 from .exception import DeserializationError
@@ -50,6 +50,38 @@ def loads(cls: Type[T], json_string: str, max_size: int = DEFAULT_MAX_SIZE) -> T
     data = json.loads(json_string)
     loader = JsonLoader(data)
     return load(cls, loader)
+
+
+def load_stream(cls: Type[T], stream: IO[bytes]) -> Iterator[T]:
+    """
+    Lazily decodes a stream of JSON objects into instances of `cls`.
+    This is intended for streams containing a top-level array of objects.
+
+    Args:
+        cls: The class to instantiate for each item in the array.
+        stream: A binary stream (file-like object) containing a JSON array.
+
+    Returns:
+        An iterator yielding instances of `cls`.
+
+    Raises:
+        RuntimeError: If `ijson` is not installed.
+        DeserializationError: If the stream contains invalid JSON or non-object items.
+    """
+    try:
+        import ijson
+    except ImportError:
+        raise RuntimeError(
+            "Streaming support requires 'ijson'. Install it with: pip install lodum[ijson]"
+        )
+
+    # Use 'item' to target each element in the top-level array.
+    # ijson.items yields standard Python dicts for each element.
+    try:
+        for item in ijson.items(stream, "item"):
+            yield load(cls, JsonLoader(item))
+    except ijson.common.JSONError as e:
+        raise DeserializationError(f"Streaming JSON error: {e}")
 
 
 def schema(cls: Type[Any]) -> Dict[str, Any]:
