@@ -14,6 +14,7 @@ from typing import (
 
 from .field import Field
 from .core import DEFAULT_MAX_DEPTH, get_context
+from .compiler.analyzer import _analyze_class
 
 
 def _sanitize_name(name: str) -> str:
@@ -34,6 +35,10 @@ def generate_schema(
 
     if visited is None:
         visited = set()
+
+    # Ensure class metadata is populated if it's a lodum-enabled class
+    if inspect.isclass(t) and getattr(t, "_lodum_enabled", False):
+        _analyze_class(t)
 
     ctx = get_context()
 

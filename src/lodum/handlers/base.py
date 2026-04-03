@@ -17,32 +17,32 @@ T = TypeVar("T")
 
 
 def _dump_int(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> int:
-    return dumper.dump_int(obj)
+    return dumper.dump_int(obj, depth, seen)
 
 
 def _dump_str(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> str:
-    return dumper.dump_str(obj)
+    return dumper.dump_str(obj, depth, seen)
 
 
 def _dump_float(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> float:
-    return dumper.dump_float(obj)
+    return dumper.dump_float(obj, depth, seen)
 
 
 def _dump_bool(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> bool:
-    return dumper.dump_bool(obj)
+    return dumper.dump_bool(obj, depth, seen)
 
 
 def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
     if isinstance(obj, bool):
-        return dumper.dump_bool(obj)
+        return dumper.dump_bool(obj, depth, seen)
     if isinstance(obj, int):
-        return dumper.dump_int(obj)
+        return dumper.dump_int(obj, depth, seen)
     if isinstance(obj, str):
-        return dumper.dump_str(obj)
+        return dumper.dump_str(obj, depth, seen)
     if isinstance(obj, float):
-        return dumper.dump_float(obj)
+        return dumper.dump_float(obj, depth, seen)
     if obj is None:
-        return None
+        return dumper.dump_none(depth, seen)
     raise SerializationError(f"Unsupported primitive type: {type(obj).__name__}")
 
 

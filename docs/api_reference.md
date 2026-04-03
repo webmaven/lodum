@@ -19,6 +19,7 @@ This page contains the technical documentation for all core modules in `lodum`.
       members:
         - Context
         - Dumper
+        - StreamingDumper
         - Loader
 
 ::: lodum.field

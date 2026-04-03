@@ -16,14 +16,14 @@ This document outlines the planned future enhancements for `lodum`. Our goal is 
 - **Robust Concurrency Detection**: Implemented active probing for native threading capability in Pyodide/WASM environments.
 - **WASM Shims**: Introduced `SequentialThread`, `DummyLock`, and `DummyLocal` to ensure graceful degradation in restricted environments.
 - **Unified Threading API**: Refactored core internals to use a cross-platform concurrency abstraction, enabling the same code to run on high-concurrency servers and in single-threaded browsers.
+- **O(1) Streaming Serialization**: Fully implemented the stateful `Dumper` protocol, enabling constant-memory JSON serialization via `dump_stream`.
 
 ## 1. Current Milestone (v0.4.0+)
 
-### Streaming Support ([Plan](plans/streaming_support.md))
+### Streaming Enhancements ([Plan](plans/streaming_support.md))
 
-* **Goal**: Enable processing of datasets larger than memory.
-* **Implementation**: Add `dump_stream(obj, stream)` and `load_stream(cls, stream)` to the IDumper/ILoader protocols.
-* **Target Formats**: JSON (via `ijson` or similar), MsgPack, CBOR.
+* **Goal**: Expand streaming support to more formats.
+* **Implementation**: Add `dump_stream(obj, stream)` support for MsgPack and CBOR.
 
 ### Partial Serialization ([Plan](plans/partial_serialization.md))
 
