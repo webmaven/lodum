@@ -26,8 +26,13 @@ jobs:
         pip install pytest pytest-cov ruff mypy pandas-stubs
     - name: Lint with ruff
       run: |
+<<<<<<< HEAD
         ruff check src tests benchmarks --fix
         ruff format src tests benchmarks
+=======
+        ruff check src tests benchmarks
+        ruff format --check src tests benchmarks
+>>>>>>> main
     - name: Type check with mypy
       run: |
         mypy src tests

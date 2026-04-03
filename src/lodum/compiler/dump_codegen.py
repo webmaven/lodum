@@ -126,6 +126,15 @@ def _build_dump_function_ast(
         # val = obj.field_name
         main_body.append(b.assign("val", b.attr("obj", field_name)))
 
+        # Handle Field objects used as defaults in __init__
+        main_body.append(
+            ast.If(
+                test=b.isinstance("val", b.load("Field")),
+                body=[b.assign("val", b.call(b.attr("val", "get_default")))],
+                orelse=[],
+            )
+        )
+
         if field_info.serializer:
             ser_name = f"ser_{i}"
             context[ser_name] = field_info.serializer

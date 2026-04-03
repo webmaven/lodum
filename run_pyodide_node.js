@@ -3,28 +3,13 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  const isBenchmark = process.argv.includes("--benchmark");
-  const outputFile = process.argv.find(arg => arg.startsWith("--output="))?.split("=")[1];
-  
-  if (!isBenchmark) {
-    console.log("Starting Pyodide...");
-  }
-  
+  console.log("Starting Pyodide...");
   const pyodide = await loadPyodide();
   await pyodide.loadPackage("micropip");
   const micropip = pyodide.pyimport("micropip");
 
-  // Find the wheel (look in local dist/ then parent dist/ for historical runs)
-  let distDir = path.join(__dirname, "dist");
-  if (!fs.existsSync(distDir) && fs.existsSync(path.join(__dirname, "..", "dist"))) {
-      distDir = path.join(__dirname, "..", "dist");
-  }
-  
-  if (!fs.existsSync(distDir)) {
-      console.error(`dist directory not found in ${__dirname} or parent.`);
-      process.exit(1);
-  }
-
+  // Find the wheel
+  const distDir = path.join(__dirname, "dist");
   const wheels = fs.readdirSync(distDir).filter(f => f.endsWith(".whl"));
   if (wheels.length === 0) {
     console.error("No wheel found in dist/ - run 'python -m build' first");
@@ -37,111 +22,31 @@ async function main() {
   // Write wheel to emulated FS
   pyodide.FS.writeFile(wheelName, wheelData);
 
-  if (!isBenchmark) {
-    console.log(`Installing ${wheelName} and dependencies...`);
-  }
-  
-  // Install lodum and dependencies
-  try {
-    await micropip.install([
-        `emfs:${wheelName}`, 
-        "pytest", 
-        "cbor2", 
-        "msgpack",
-        "tomli",
-        "tomli-w",
-        "ruamel.yaml",
-        "numpy",
-        "pandas",
-        "ijson",
-        "marshmallow",
-        "pydantic"
-      ]);
-  } catch (err) {
-    if (!isBenchmark) console.warn("Optional dependencies failed to install, retrying with core only...");
-    await micropip.install([`emfs:${wheelName}`, "pytest", "ijson"]);
-  }
+  console.log(`Installing ${wheelName} and dependencies...`);
+  // Install lodum and pytest
+  // Try to install some optional dependencies that are likely pure python or have pyodide ports
+  await micropip.install([
+    `emfs:${wheelName}`, 
+    "pytest", 
+    "cbor2", 
+    "msgpack",
+    "tomli",
+    "tomli-w",
+    "ruamel.yaml",
+    "numpy",
+    "pandas",
+    "ijson",
+  ]);
 
-  if (isBenchmark) {
-    // Copy benchmark scripts
-    let benchDir = path.join(__dirname, "benchmarks");
-    if (!fs.existsSync(benchDir) && fs.existsSync(path.join(__dirname, "..", "benchmarks"))) {
-        benchDir = path.join(__dirname, "..", "benchmarks");
-    }
-
-    if (fs.existsSync(benchDir)) {
-        if (!pyodide.FS.analyzePath("benchmarks").exists) {
-            pyodide.FS.mkdir("benchmarks");
-        }
-        const benchFiles = fs.readdirSync(benchDir).filter(f => f.endsWith(".py"));
-        for (const file of benchFiles) {
-          const data = fs.readFileSync(path.join(benchDir, file));
-          pyodide.FS.writeFile(path.join("benchmarks", file), data);
-        }
-        
-        if (fs.existsSync(path.join(benchDir, "models.py"))) {
-            const data = fs.readFileSync(path.join(benchDir, "models.py"));
-            pyodide.FS.writeFile(path.join("benchmarks", "models.py"), data);
-        }
-    } else if (!isBenchmark) {
-        console.warn("Benchmarks directory not found.");
-    }
-
-    // Run benchmarks and return JSON string
-    try {
-      const jsonResult = await pyodide.runPythonAsync(`
-import sys
-import os
-import json
-import io
-from contextlib import redirect_stdout
-
-sys.path.append(os.getcwd())
-
-from benchmarks.run import run_all
-
-f = io.StringIO()
-with redirect_stdout(f):
-    # Pass --json and --use-baselines
-    sys.argv = ["benchmarks/run.py", "--json", "--use-baselines"]
-    try:
-        run_all()
-    except Exception as e:
-        # Fallback to empty results if something goes wrong
-        print("[]")
-
-f.getvalue()
-      `);
-      
-      if (outputFile) {
-        fs.writeFileSync(outputFile, jsonResult.trim());
-      } else {
-        process.stdout.write(jsonResult.trim());
-      }
-      process.exit(0);
-    } catch (err) {
-      console.error("Benchmark execution failed:");
-      console.error(err);
-      if (outputFile) fs.writeFileSync(outputFile, "[]");
-      process.exit(1);
-    }
-    return;
-  }
-
-  // --- Standard Test Runner Path ---
+  // Copy tests to emulated FS
   console.log("Copying tests...");
+  pyodide.FS.mkdir("tests");
   const testsDir = path.join(__dirname, "tests");
-  if (fs.existsSync(testsDir)) {
-      if (!pyodide.FS.analyzePath("tests").exists) {
-          pyodide.FS.mkdir("tests");
-      }
-      const testFiles = fs.readdirSync(testsDir).filter(f => f.endsWith(".py"));
-      for (const file of testFiles) {
-        const data = fs.readFileSync(path.join(testsDir, file));
-        pyodide.FS.writeFile(path.join("tests", file), data);
-      }
-  } else {
-      console.warn("Tests directory not found.");
+  // Recursive copy would be better, but for now we just get the top level
+  const testFiles = fs.readdirSync(testsDir).filter(f => f.endsWith(".py"));
+  for (const file of testFiles) {
+    const data = fs.readFileSync(path.join(testsDir, file));
+    pyodide.FS.writeFile(path.join("tests", file), data);
   }
 
   console.log("Running pytest...");
@@ -151,14 +56,16 @@ import pytest
 import sys
 import os
 
+# Propagate host environment variable to Python
 if "${process.env.PYODIDE_SHARED_MEMORY || ''}" == "1":
     os.environ["PYODIDE_SHARED_MEMORY"] = "1"
 
+# Ignore tests with heavy/missing dependencies in Pyodide
 ignore_args = [
     "--ignore=tests/test_polars.py",
-    "--ignore=tests/test_yaml.py",
-    "--ignore=tests/test_bson.py",
-    "-k not bson and not test_format_parity_bytes",
+    "--ignore=tests/test_yaml.py",  # ruamel.yaml has C extensions
+    "--ignore=tests/test_bson.py",  # pymongo has C extensions
+    "-k not bson and not test_format_parity_bytes", # we don't have pymongo and parity bytes check is problematic
 ]
 
 try:
@@ -166,6 +73,7 @@ try:
 except SystemExit as e:
     retcode = e.code
 
+print(f"Pytest exited with code: {retcode}")
 if retcode != 0:
     raise Exception(f"Pytest failed with code {retcode}")
     `);

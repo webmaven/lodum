@@ -2,23 +2,23 @@ from typing import List, Dict
 
 try:
     # Try the modern public API
-    from lodum import lodum  # type: ignore
+    from lodum import lodum
 except (ImportError, AttributeError):
     try:
         # Try the v0.2.0 internal location
-        from lodum.core import lodum  # type: ignore
+        from lodum.core import lodum
     except (ImportError, AttributeError):
         try:
             # Fallback for v0.1.0 where it was named 'serializable'
-            from lodum.core import serializable as lodum  # type: ignore
+            from lodum.core import serializable as lodum
         except (ImportError, AttributeError):
             # Last resort: try direct import of core
-            import lodum.core  # type: ignore
+            import lodum.core
 
-            if hasattr(lodum.core, "lodum"):  # type: ignore
-                lodum = lodum.core.lodum  # type: ignore
-            elif hasattr(lodum.core, "serializable"):  # type: ignore
-                lodum = lodum.core.serializable  # type: ignore
+            if hasattr(lodum.core, "lodum"):
+                lodum = lodum.core.lodum
+            elif hasattr(lodum.core, "serializable"):
+                lodum = lodum.core.serializable
             else:
                 raise ImportError("Could not find lodum or serializable decorator")
 from pydantic import BaseModel

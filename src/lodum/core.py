@@ -97,27 +97,6 @@ def lodum(
 
         register_type(c)
 
-        # Wrap __init__ to resolve Field defaults
-        from functools import wraps
-        from .field import Field
-
-        original_init = c.__init__
-
-        @wraps(original_init)
-        def new_init(self, *args, **kwargs):
-            original_init(self, *args, **kwargs)
-            # Resolve Field defaults if any were left as instance attributes
-            if hasattr(c, "_lodum_fields"):
-                for name in c._lodum_fields:
-                    try:
-                        val = getattr(self, name)
-                        if isinstance(val, Field):
-                            setattr(self, name, val.get_default())
-                    except AttributeError:
-                        continue
-
-        c.__init__ = new_init
-
         # Analysis is still officially lazy, but we perform it here
         # to ensure metadata is available for immediate use (e.g. in tests).
         from .compiler.analyzer import _analyze_class
