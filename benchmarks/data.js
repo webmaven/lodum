@@ -8412,11 +8412,13 @@ window.BENCHMARK_DATA = {
     "41b1889f62dc4a7b9b4d77a3fcefa0e77a7bcdd8",
     "7045e5c6f7e471e9eb08c4c575c53a723efb5d62",
     "244850c47f45f8f142eedceb4b8dd24a668d7b24",
-    "b9ee729ac3438f64f376eb8920b0eb2e8a4fbeee"
+    "b9ee729ac3438f64f376eb8920b0eb2e8a4fbeee",
+    "f228e12d93aebd785c8270aa71caa209676fd8a6"
   ],
   "tags": {
+    "9265587501b6597cd995730e37fc95f64ddca79f": "v0.1.0",
     "f20be747e4c40c1bd1389a09954242a01353a5b6": "v0.2.0",
     "159df1cc05981de0d3f091cde9bfd4fc076d5b9e": "v0.3.0"
   },
-  "lastUpdate": 1775937180021
+  "lastUpdate": 1775937556875
 };
