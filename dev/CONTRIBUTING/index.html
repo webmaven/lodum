@@ -1771,13 +1771,23 @@
 </code></pre></div></p>
 </li>
 <li>
-<p><strong>Install the package in editable mode with all optional dependencies:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[all]&quot;</span>
+<p><strong>Create and activate a virtual environment:</strong>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># On Windows: venv\Scripts\activate</span>
 </code></pre></div></p>
 </li>
 <li>
-<p><strong>Install development tools:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pytest<span class="w"> </span>ruff<span class="w"> </span>mypy<span class="w"> </span>pandas-stubs
+<p><strong>Install the package in editable mode with all optional dependencies:</strong>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[all]&quot;</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Install development and benchmarking tools:</strong>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Standard dev tools</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span>pytest<span class="w"> </span>ruff<span class="w"> </span>mypy<span class="w"> </span>pandas-stubs
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Benchmarking dependencies</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pip<span class="w"> </span>install<span class="w"> </span>pydantic<span class="w"> </span>marshmallow<span class="w"> </span>orjson<span class="w"> </span>ijson<span class="w"> </span>pyinstrument
 </code></pre></div></p>
 </li>
 </ol>
@@ -1878,29 +1888,29 @@ You can view the overall project status and progress on our <a href="https://git
 <p>We use <code>pytest</code> for native testing and a Node.js-based runner for Pyodide (WASM) testing.</p>
 <h3 id="native-tests">Native Tests</h3>
 <p>Run the full test suite locally:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">PYTHONPATH</span><span class="o">=</span>src<span class="w"> </span>pytest
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">PYTHONPATH</span><span class="o">=</span>src<span class="w"> </span>pytest
 </code></pre></div></p>
 <h3 id="pyodide-wasm-tests">Pyodide (WASM) Tests</h3>
 <p>To ensure compatibility with browser environments, we run tests in Pyodide via Node.js.</p>
 <ol>
 <li>
 <p><strong>Install Node.js dependencies:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>npm<span class="w"> </span>install
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npm<span class="w"> </span>install
 </code></pre></div></p>
 </li>
 <li>
 <p><strong>Build the distribution wheel:</strong>
     The Pyodide runner requires a built wheel to install the package in the virtual WASM environment.
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>build
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>build
 </code></pre></div></p>
 </li>
 <li>
 <p><strong>Run the Pyodide tests:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Run standard sequential tests</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>node<span class="w"> </span>run_pyodide_node.js
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Run with simulated shared memory (concurrency testing)</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nv">PYODIDE_SHARED_MEMORY</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>node<span class="w"> </span>run_pyodide_node.js
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Run standard sequential tests</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>node<span class="w"> </span>run_pyodide_node.js
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Run with simulated shared memory (concurrency testing)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nv">PYODIDE_SHARED_MEMORY</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>node<span class="w"> </span>run_pyodide_node.js
 </code></pre></div></p>
 </li>
 </ol>
@@ -1909,13 +1919,13 @@ You can view the overall project status and progress on our <a href="https://git
 <ol>
 <li>
 <p><strong>Linting &amp; Formatting:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ruff<span class="w"> </span>check<span class="w"> </span>src<span class="w"> </span>tests<span class="w"> </span>benchmarks
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>ruff<span class="w"> </span>format<span class="w"> </span>--check<span class="w"> </span>src<span class="w"> </span>tests<span class="w"> </span>benchmarks
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>ruff<span class="w"> </span>check<span class="w"> </span>src<span class="w"> </span>tests<span class="w"> </span>benchmarks
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>ruff<span class="w"> </span>format<span class="w"> </span>--check<span class="w"> </span>src<span class="w"> </span>tests<span class="w"> </span>benchmarks
 </code></pre></div></p>
 </li>
 <li>
 <p><strong>Type Checking:</strong>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mypy<span class="w"> </span>src<span class="w"> </span>tests
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mypy<span class="w"> </span>src<span class="w"> </span>tests
 </code></pre></div></p>
 </li>
 </ol>
@@ -1958,8 +1968,8 @@ You can view the overall project status and progress on our <a href="https://git
 <li><strong>Merge and Tag</strong>:<ul>
 <li>Merge the release branch into <code>main</code> via Pull Request.</li>
 <li>Create and push a signed Git tag:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>vX.Y.Z<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Release vX.Y.Z&quot;</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>vX.Y.Z
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>vX.Y.Z<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Release vX.Y.Z&quot;</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>vX.Y.Z
 </code></pre></div></li>
 </ul>
 </li>
@@ -1996,7 +2006,7 @@ You can view the overall project status and progress on our <a href="https://git
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="April 3, 2026 14:48:20 UTC">April 3, 2026 14:48:20</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="April 11, 2026 12:39:16 UTC">April 11, 2026 12:39:16</span>
   </span>
 
     
@@ -2006,7 +2016,7 @@ You can view the overall project status and progress on our <a href="https://git
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="April 3, 2026 14:48:20 UTC">April 3, 2026 14:48:20</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="April 11, 2026 12:39:16 UTC">April 11, 2026 12:39:16</span>
   </span>
 
     
