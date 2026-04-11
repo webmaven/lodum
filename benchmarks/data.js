@@ -2,5 +2,5 @@ window.BENCHMARK_DATA = {
   "entries": {},
   "history": [],
   "tags": {},
-  "lastUpdate": 1775934137546
+  "lastUpdate": 1775934190193
 };
