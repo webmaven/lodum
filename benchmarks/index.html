@@ -318,6 +318,7 @@
                 const markLines = window.updateTrendMarkers();
                 const getPlatformSeries = (pid, name, color) => ({
                     name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
+                    connectNulls: true,
                     data: window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
                     markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
                     emphasis: { 
@@ -333,8 +334,11 @@
                         formatter: (params) => {
                             const sha = window.Sync.history[params[0].dataIndex];
                             const c = window.Sync.commitMap.get(sha);
-                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'Unknown';
-                            return `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>` + params.map(p => `${p.seriesName}: ${p.value}us`).join('<br/>');
+                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'N/A';
+                            let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
+                            if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
+                            res += params.map(p => `${p.seriesName}: ${p.value !== undefined && p.value !== null ? p.value + 'us' : 'N/A'}`).join('<br/>');
+                            return res;
                         }
                     },
                     legend: { bottom: 0 },
@@ -358,8 +362,11 @@
                         formatter: (params) => {
                             const sha = window.Sync.history[params[0].dataIndex];
                             const c = window.Sync.commitMap.get(sha);
-                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'Unknown';
-                            return `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>Ratio: ${params[0].value}x`;
+                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'N/A';
+                            let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
+                            if (!c) res += `<i style="color:#f87171">Data Gap</i><br/>`;
+                            res += `Ratio: ${params[0].value !== undefined && params[0].value !== null ? params[0].value + 'x' : 'N/A'}`;
+                            return res;
                         }
                     },
                     grid: { top: 40, left: 40, right: 20, bottom: 40 },
@@ -367,6 +374,7 @@
                     yAxis: { type: 'value', name: 'multiplier', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [{
                         name: 'Linux Speedup', type: 'line', smooth: true, color: '#10b981', areaStyle: { opacity: 0.1 },
+                        connectNulls: true,
                         data: window.Sync.history.map(sha => {
                             const lodum = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Lodum ${scenario}`);
                             const mm = window.Sync.getVal(sha, 'ubuntu-latest', `JSON Serialization Marshmallow ${scenario}`);
