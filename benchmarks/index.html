@@ -179,7 +179,6 @@
                 return b ? b.value : null;
             },
             refresh: (sha, source) => {
-                if (!sha) return;
                 if (window.Sync.isRefreshing) return;
                 window.Sync.isRefreshing = true;
                 try {
