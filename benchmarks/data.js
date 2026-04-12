@@ -5284,6 +5284,142 @@ window.BENCHMARK_DATA = {
             "value": 186.11600000895123
           }
         ]
+      },
+      {
+        "commit": {
+          "id": "82ab58c0e692450b39f90b3bf3e4f3612211f538",
+          "message": "fix(benchmarks): implement explicit, version-aware compatibility shims",
+          "timestamp": "2026-04-12T20:00:10+03:00",
+          "author": {
+            "name": "Michael R. Bernstein",
+            "email": "zopemaven@gmail.com"
+          },
+          "url": "https://github.com/webmaven/lodum/commit/82ab58c0e692450b39f90b3bf3e4f3612211f538"
+        },
+        "date": 1776013210000,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "JSON Serialization Pydantic (v2) simple",
+            "unit": "us",
+            "value": 1.3880340134283877
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 19.829999999387837
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex",
+            "unit": "us",
+            "value": 1.8803625487381188
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 11.297000000354274
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested",
+            "unit": "us",
+            "value": 3.4539205636261707
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 30.91399999988198
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple",
+            "unit": "us",
+            "value": 7.4223369077407355
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 83.73499999692058
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex",
+            "unit": "us",
+            "value": 16.274451964285422
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 69.95399999709662
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested",
+            "unit": "us",
+            "value": 44.36416546428618
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 99.2179999954601
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple",
+            "unit": "us",
+            "value": 1.4563381896818155
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 254.89899999797672
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex",
+            "unit": "us",
+            "value": 2.443886181635612
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 18.83799999546909
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested",
+            "unit": "us",
+            "value": 5.391064858852369
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 31.006000000388667
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple",
+            "unit": "us",
+            "value": 17.782847964285356
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 125.79599999895663
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex",
+            "unit": "us",
+            "value": 39.779844399999575
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 86.7689999992649
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested",
+            "unit": "us",
+            "value": 125.40652339285708
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 189.33799999842904
+          }
+        ]
       }
     ],
     "Lodum Performance Index - ubuntu-latest": [
@@ -18432,12 +18568,14 @@ window.BENCHMARK_DATA = {
     "ad3d67c384598b985567e65bffdae2abaf0bfe17",
     "e40d57f35b5fc6be67a5302714851cb9e512b733",
     "b3d0b9966a2e67d89478ab7e526e5b39d12c2d44",
-    "9ee172cc7364ff830077344d08d4c533bda52a6a"
+    "9ee172cc7364ff830077344d08d4c533bda52a6a",
+    "5def0430288d676c3029ffc0fce92c551ff0c307",
+    "82ab58c0e692450b39f90b3bf3e4f3612211f538"
   ],
   "tags": {
     "9265587501b6597cd995730e37fc95f64ddca79f": "v0.1.0",
     "f20be747e4c40c1bd1389a09954242a01353a5b6": "v0.2.0",
     "159df1cc05981de0d3f091cde9bfd4fc076d5b9e": "v0.3.0"
   },
-  "lastUpdate": 1776012334625
+  "lastUpdate": 1776013300037
 };
