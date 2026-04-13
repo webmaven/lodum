@@ -13,122 +13,122 @@
     {
       "name": "JSON Serialization Pydantic (v2) simple",
       "unit": "us",
-      "value": 1.380810640434478
+      "value": 1.3886630330058352
     },
     {
       "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
       "unit": "us",
-      "value": 19.02900000061436
+      "value": 13.916000000335771
     },
     {
       "name": "JSON Serialization Pydantic (v2) complex",
       "unit": "us",
-      "value": 1.908842793562776
+      "value": 1.852234090090113
     },
     {
       "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
       "unit": "us",
-      "value": 10.966000004941634
+      "value": 11.160999989101583
     },
     {
       "name": "JSON Serialization Pydantic (v2) nested",
       "unit": "us",
-      "value": 3.460395112324403
+      "value": 3.567825910102133
     },
     {
       "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
       "unit": "us",
-      "value": 30.415000004779813
+      "value": 25.597999993465237
     },
     {
       "name": "JSON Serialization Marshmallow simple",
       "unit": "us",
-      "value": 7.656175647812757
+      "value": 7.516689825960604
     },
     {
       "name": "JSON Serialization Marshmallow simple (Cold Start)",
       "unit": "us",
-      "value": 63.88500000298336
+      "value": 59.12999999679869
     },
     {
       "name": "JSON Serialization Marshmallow complex",
       "unit": "us",
-      "value": 16.758705000000162
+      "value": 16.52900153846122
     },
     {
       "name": "JSON Serialization Marshmallow complex (Cold Start)",
       "unit": "us",
-      "value": 69.29300000280136
+      "value": 65.04199998857985
     },
     {
       "name": "JSON Serialization Marshmallow nested",
       "unit": "us",
-      "value": 45.699704200000234
+      "value": 44.25358203846103
     },
     {
       "name": "JSON Serialization Marshmallow nested (Cold Start)",
       "unit": "us",
-      "value": 92.32699999728311
+      "value": 75.12000000531316
     },
     {
       "name": "JSON Deserialization Pydantic (v2) simple",
       "unit": "us",
-      "value": 1.4269960816529232
+      "value": 1.3807025390711767
     },
     {
       "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
       "unit": "us",
-      "value": 194.5850000026894
+      "value": 182.8320000072381
     },
     {
       "name": "JSON Deserialization Pydantic (v2) complex",
       "unit": "us",
-      "value": 2.364408303486143
+      "value": 2.313720179893685
     },
     {
       "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
       "unit": "us",
-      "value": 18.9720000065563
+      "value": 14.747000008696887
     },
     {
       "name": "JSON Deserialization Pydantic (v2) nested",
       "unit": "us",
-      "value": 5.479962732919235
+      "value": 5.419877221443926
     },
     {
       "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
       "unit": "us",
-      "value": 32.61900000239848
+      "value": 25.648000004707683
     },
     {
       "name": "JSON Deserialization Marshmallow simple",
       "unit": "us",
-      "value": 17.74191264285742
+      "value": 18.950961269230614
     },
     {
       "name": "JSON Deserialization Marshmallow simple (Cold Start)",
       "unit": "us",
-      "value": 135.40300000158823
+      "value": 118.3209999879864
     },
     {
       "name": "JSON Deserialization Marshmallow complex",
       "unit": "us",
-      "value": 39.86194569999976
+      "value": 45.775180071427
     },
     {
       "name": "JSON Deserialization Marshmallow complex (Cold Start)",
       "unit": "us",
-      "value": 94.85199999659244
+      "value": 101.1390000087431
     },
     {
       "name": "JSON Deserialization Marshmallow nested",
       "unit": "us",
-      "value": 125.57091342307722
+      "value": 141.32381673076986
     },
     {
       "name": "JSON Deserialization Marshmallow nested (Cold Start)",
       "unit": "us",
-      "value": 213.8699999960636
+      "value": 224.73000001355103
     }
   ]
 }
