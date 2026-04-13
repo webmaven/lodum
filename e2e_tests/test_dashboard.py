@@ -15,10 +15,15 @@ async def run():
         await page.wait_for_selector("#trend-chart canvas", timeout=60000)
         print("Dashboard loaded successfully.")
 
-        # Test 1: Check KPIs
+        # Test 1: Check KPIs (wait for them to populate)
+        print("Waiting for KPIs to populate...")
+        await page.wait_for_function(
+            "document.getElementById('kpi-speedup').innerText !== '--'",
+            timeout=30000
+        )
         speedup = await page.inner_text("#kpi-speedup")
         print(f"Speedup KPI: {speedup}")
-        assert "x" in speedup or speedup != "--"
+        assert "x" in speedup
 
         # Test 2: Check Title
         title = await page.inner_text("header h1")
