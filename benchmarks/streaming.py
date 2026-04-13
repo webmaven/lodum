@@ -7,17 +7,22 @@ import subprocess
 from typing import List, Type, Any, Iterator, Union, Optional
 from pathlib import Path
 
-# --- Compatibility Shims ---
-# This is the single source of truth for library evolution compatibility.
+# --- Robust Instrumentation & Shims ---
+print(f"DEBUG: sys.path = {sys.path}")
+
 try:
     from lodum import lodum
     from lodum import json as lodum_json
-except ImportError:
-    # Pre v0.4.0 import structure
+    print(f"DEBUG: Found 'lodum' package: {lodum}")
+    print(f"DEBUG: Found 'lodum.json' module: {lodum_json}")
+except ImportError as e:
+    print(f"DEBUG: Initial import failed: {e}")
     try:
         from lodum.core import serializable as lodum
         import lodum.json as lodum_json  # type: ignore
-    except ImportError:
+        print("DEBUG: Found legacy 'serializable' and 'lodum.json'")
+    except ImportError as e2:
+        print(f"DEBUG: Legacy import failed: {e2}")
         lodum = None
         lodum_json = None
 
@@ -35,22 +40,27 @@ class LargeItem:
 def get_stream_func(lodum_json_module):
     """Dynamically resolves the streaming API for the current version."""
     if not lodum_json_module:
+        print("DEBUG: No lodum_json_module provided to get_stream_func")
         return None
         
     if hasattr(lodum_json_module, 'load_stream'):
+        print("DEBUG: Found 'load_stream' in lodum_json")
         return lodum_json_module.load_stream
     elif hasattr(lodum_json_module, 'stream'):
+        print("DEBUG: Found 'stream' in lodum_json")
         return lodum_json_module.stream
     elif hasattr(lodum_json_module, 'from_iter'):
+        print("DEBUG: Found 'from_iter' in lodum_json")
         return lodum_json_module.from_iter
     elif hasattr(lodum_json_module, 'from_json'):
-        # Fallback for very old versions: if they have from_json but no stream,
-        # we can't really stream, but we can provide a compatible interface
+        print("DEBUG: Falling back to 'from_json' for streaming shim")
         def fallback(cls, source):
             if isinstance(source, io.IOBase):
                 source = source.read().decode('utf-8')
             return lodum_json_module.from_json(cls, source)
         return fallback
+    
+    print("DEBUG: No streaming API found in lodum_json")
     return None
 
 stream_func = get_stream_func(lodum_json)
@@ -58,16 +68,16 @@ stream_func = get_stream_func(lodum_json)
 def loads_shim(cls: Type[Any], data: str) -> Any:
     """Dynamically resolves the loading API."""
     if not lodum_json:
-        # Emergency fallback to standard json if library is totally broken/missing
-        # but we want to avoid this if possible.
-        raise ImportError("Lodum module not found")
+        print("DEBUG: No lodum_json module for loads_shim")
+        return None
         
     if hasattr(lodum_json, 'loads'):
         return lodum_json.loads(cls, data)
     elif hasattr(lodum_json, 'from_json'):
         return lodum_json.from_json(cls, data)
-    else:
-        raise RuntimeError("No compatible load API found")
+    
+    print("DEBUG: No loading API found in lodum_json")
+    return None
 
 # --- Rest of Benchmark Logic ---
 def generate_large_json(count: int) -> bytes:
@@ -86,24 +96,25 @@ def run_benchmark(count: int):
     results = []
 
     # --- Standard Load ---
-    tracemalloc.start()
-    start_time = time.perf_counter()
-    try:
-        json_str = raw_data.decode("utf-8")
-        items = loads_shim(List[LargeItem], json_str)
-        _ = len(items)
-        end_time = time.perf_counter()
-        _, peak = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
-        
-        results.append({
-            "name": "Lodum Standard (loads)",
-            "time": end_time - start_time,
-            "memory_mb": peak / (1024 * 1024)
-        })
-    except Exception as e:
-        tracemalloc.stop()
-        print(f"DEBUG: Standard load failed: {e}")
+    if lodum_json:
+        tracemalloc.start()
+        start_time = time.perf_counter()
+        try:
+            json_str = raw_data.decode("utf-8")
+            items = loads_shim(List[LargeItem], json_str)
+            if items is not None:
+                _ = len(items)
+                end_time = time.perf_counter()
+                _, peak = tracemalloc.get_traced_memory()
+                results.append({
+                    "name": "Lodum Standard (loads)",
+                    "time": end_time - start_time,
+                    "memory_mb": peak / (1024 * 1024)
+                })
+        except Exception as e:
+            print(f"DEBUG: Standard load failed: {e}")
+        finally:
+            tracemalloc.stop()
 
     # --- Streaming Load ---
     if stream_func:
@@ -112,20 +123,21 @@ def run_benchmark(count: int):
         try:
             stream = io.BytesIO(raw_data)
             items_iter = stream_func(LargeItem, stream)
-            items_count = 0
-            for _ in items_iter:
-                items_count += 1
-            end_time = time.perf_counter()
-            _, peak = tracemalloc.get_traced_memory()
-            tracemalloc.stop()
-            results.append({
-                "name": "Lodum Streaming",
-                "time": end_time - start_time,
-                "memory_mb": peak / (1024 * 1024)
-            })
+            if items_iter:
+                items_count = 0
+                for _ in items_iter:
+                    items_count += 1
+                end_time = time.perf_counter()
+                _, peak = tracemalloc.get_traced_memory()
+                results.append({
+                    "name": "Lodum Streaming",
+                    "time": end_time - start_time,
+                    "memory_mb": peak / (1024 * 1024)
+                })
         except Exception as e:
-            tracemalloc.stop()
             print(f"DEBUG: Streaming load failed: {e}")
+        finally:
+            tracemalloc.stop()
 
     # Output JSON results for the dashboard
     if "--json" in sys.argv:
