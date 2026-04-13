@@ -1,159 +1,59 @@
 import json
 import sys
-import subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
-
-def merge_results(gh_pages_dir, artifacts_dir):
-    data_js_path = Path(gh_pages_dir) / "benchmarks" / "data.js"
-    if not data_js_path.exists():
-        print(f"Error: {data_js_path} not found.")
-        return
-
-    # Load existing data.js
-    with open(data_js_path, "r") as f:
-        content = f.read()
-
-    json_start = content.find("{")
-    json_end = content.rfind("}") + 1
-    data = json.loads(content[json_start:json_end])
-
-    # Add history and tags from git
-    try:
-        # Get full topological history
-        history = subprocess.check_output(
-            ["git", "rev-list", "--topo-order", "--reverse", "HEAD"], text=True
-        ).splitlines()
-        data["history"] = history
-
-        # Get all tags and resolve them to the closest commit on main
-        tags_raw = subprocess.check_output(
-            [
-                "git",
-                "for-each-ref",
-                "--format=%(refname:short) %(objectname)",
-                "refs/tags",
-            ],
-            text=True,
-        ).splitlines()
-
-        resolved_tags = {}
-        for line in tags_raw:
-            parts = line.split()
-            if len(parts) != 2:
-                continue
-            tag_name, tag_sha = parts
-            try:
-                # Find the first commit on main that contains this tag's changes
-                # or is the tag itself.
-                best_sha = subprocess.check_output(
-                    ["git", "merge-base", tag_sha, "HEAD"], text=True
-                ).strip()
-                resolved_tags[best_sha] = tag_name
-            except subprocess.CalledProcessError:
-                resolved_tags[tag_sha] = tag_name
-
-        data["tags"] = resolved_tags
-        print(f"Captured {len(history)} commits and {len(data['tags'])} resolved tags.")
-    except Exception as e:
-        print(f"Warning: Could not retrieve history or tags: {e}")
-
-    # Process all JSON artifacts
-    artifacts = list(Path(artifacts_dir).glob("**/*.json"))
-    print(f"Found {len(artifacts)} result files.")
-
+def save_results(history_dir, artifacts_dir):
+    """
+    Saves new JSON benchmark results into the atomic history structure.
+    history_dir: Path to benchmarks/history in gh-pages
+    artifacts_dir: Path where CI uploaded new result JSONs
+    """
+    history_dir = Path(history_dir)
+    artifacts_dir = Path(artifacts_dir)
+    
+    # Process all new JSON artifacts
+    # The artifacts are expected to be named results-benchmark-<platform>.json
+    # and contain {"commit": {...}, "results": [...]}
+    artifacts = list(artifacts_dir.glob("**/*.json"))
+    
     for artifact_path in artifacts:
-        print(f"Processing {artifact_path}...")
         try:
             with open(artifact_path, "r") as f:
                 payload = json.load(f)
+            
+            commit_info = payload.get("commit")
+            new_benches = payload.get("results")
+            
+            if not commit_info or not new_benches:
+                print(f"Skipping malformed artifact: {artifact_path}")
+                continue
+            
+            sha = commit_info["id"]
+            
+            # Infer platform from full path
+            path_str = str(artifact_path).lower()
+            platform = "unknown"
+            if "ubuntu" in path_str: platform = "ubuntu-latest"
+            elif "windows" in path_str: platform = "windows-latest"
+            elif "pyodide" in path_str: platform = "Pyodide"
+            
+            sha_dir = history_dir / sha
+            sha_dir.mkdir(parents=True, exist_ok=True)
+            
+            output_file = sha_dir / f"{platform}.json"
+            
+            # Save the atomic result
+            with open(output_file, "w") as f:
+                json.dump(payload, f, indent=2)
+                
+            print(f"Saved atomic results for {sha} on {platform}")
+            
         except Exception as e:
-            print(f"  Error reading {artifact_path}: {e}")
-            continue
-
-        if not payload or "results" not in payload:
-            print(f"  Skipping {artifact_path}: No results found.")
-            continue
-
-        commit_info = payload.get("commit")
-        new_benches = payload.get("results")
-
-        if not commit_info or new_benches is None:
-            print(f"  Skipping {artifact_path}: Missing commit info or benches.")
-            continue
-
-        if not isinstance(new_benches, list):
-            print(
-                f"  Error: 'results' in {artifact_path} is not a list! Type: {type(new_benches)}"
-            )
-            print(f"  Payload keys: {list(payload.keys())}")
-            continue
-
-        # Determine platform from artifact path or benchmark names
-        platform_name = ""
-
-        # 1. Try artifact path first (more reliable)
-        dir_name = artifact_path.parent.name
-        if "ubuntu" in dir_name:
-            platform_name = "ubuntu-latest"
-        elif "windows" in dir_name:
-            platform_name = "windows-latest"
-        elif "Pyodide" in dir_name:
-            platform_name = "Pyodide"
-
-        # 2. Fallback to benchmark names if not in path
-        if not platform_name:
-            for b in new_benches:
-                if not isinstance(b, dict):
-                    continue
-                name = b.get("name", "")
-                if "(" in name and ")" in name:
-                    content = name.split("(")[1].split(")")[0]
-                    if content not in ["Cold Start", "Safe"]:
-                        platform_name = content
-                        break
-
-        if not platform_name:
-            print(f"  Warning: Could not determine platform for {artifact_path}")
-            continue
-
-        suite_name = f"Lodum Performance Index - {platform_name}"
-        if suite_name not in data["entries"]:
-            data["entries"][suite_name] = []
-
-        sha = commit_info["id"]
-        # Check if this SHA already exists in this suite
-        existing = next(
-            (p for p in data["entries"][suite_name] if p["commit"]["id"] == sha), None
-        )
-
-        entry = {
-            "commit": commit_info,
-            "date": int(datetime.now().timestamp() * 1000),
-            "tool": "customSmallerIsBetter",
-            "benches": new_benches,
-        }
-
-        if existing:
-            print(f"  Updating existing entry for {sha[:7]} in {suite_name}")
-            existing["benches"] = new_benches
-            existing["date"] = entry["date"]
-        else:
-            print(f"  Adding new entry for {sha[:7]} to {suite_name}")
-            data["entries"][suite_name].append(entry)
-
-    # Save updated data.js
-    data["lastUpdate"] = int(datetime.now().timestamp() * 1000)
-    with open(data_js_path, "w") as f:
-        f.write("window.BENCHMARK_DATA = ")
-        json.dump(data, f, indent=2)
-        f.write(";")
-    print("Done merging results.")
-
+            print(f"Error processing {artifact_path}: {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python merge_data.py <gh_pages_dir> <artifacts_dir>")
+        print("Usage: python3 merge_data.py <history_dir> <artifacts_dir>")
         sys.exit(1)
-    merge_results(sys.argv[1], sys.argv[2])
+    save_results(sys.argv[1], sys.argv[2])
