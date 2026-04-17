@@ -13,17 +13,17 @@ from typing import Callable, Dict, Optional, List, Any
 # Optional dependencies
 try:
     import orjson
-except ImportError:
+except Exception:
     orjson = None  # type: ignore
 
 try:
     import msgpack  # type: ignore
-except ImportError:
+except Exception:
     msgpack = None  # type: ignore
 
 try:
     import cbor2
-except ImportError:
+except Exception:
     cbor2 = None  # type: ignore
 
 try:
@@ -37,12 +37,12 @@ except (ImportError, NameError):
 
 try:
     import tomli_w
-except ImportError:
+except Exception:
     tomli_w = None  # type: ignore
 
 try:
     import pyinstrument
-except ImportError:
+except Exception:
     pyinstrument = None
 
 from benchmarks.models import (
@@ -60,50 +60,50 @@ from benchmarks.models import (
 # --- Lodum Imports with fallbacks for very old versions ---
 try:
     from lodum import json as lodum_json
-except ImportError:
+except Exception:
     try:
         import lodum.json as lodum_json  # type: ignore
-    except ImportError:
+    except Exception:
         lodum_json = None  # type: ignore
 
 try:
     from lodum import msgpack as lodum_msgpack
-except ImportError:
+except Exception:
     try:
         import lodum.msgpack as lodum_msgpack  # type: ignore
-    except ImportError:
+    except Exception:
         lodum_msgpack = None  # type: ignore
 
 try:
     from lodum import cbor as lodum_cbor
-except ImportError:
+except Exception:
     try:
         import lodum.cbor as lodum_cbor  # type: ignore
-    except ImportError:
+    except Exception:
         lodum_cbor = None  # type: ignore
 
 try:
     from lodum import pickle as lodum_pickle
-except ImportError:
+except Exception:
     try:
         import lodum.pickle as lodum_pickle  # type: ignore
-    except ImportError:
+    except Exception:
         lodum_pickle = None  # type: ignore
 
 try:
     from lodum import yaml as lodum_yaml
-except ImportError:
+except Exception:
     try:
         import lodum.yaml as lodum_yaml  # type: ignore
-    except ImportError:
+    except Exception:
         lodum_yaml = None  # type: ignore
 
 try:
     from lodum import toml as lodum_toml
-except ImportError:
+except Exception:
     try:
         import lodum.toml as lodum_toml  # type: ignore
-    except ImportError:
+    except Exception:
         lodum_toml = None  # type: ignore
 
 # Fallbacks for function names in v0.1.0
