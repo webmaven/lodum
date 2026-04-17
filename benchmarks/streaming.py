@@ -7,16 +7,16 @@ import subprocess
 from typing import List, Optional, Type, Any
 try:
     from lodum import lodum, json as lodum_json
-except ImportError:
+except Exception:
     try:
         from lodum.core import lodum
         import lodum.json as lodum_json  # type: ignore
-    except ImportError:
+    except Exception:
         try:
             # v0.1.0 fallback
             from lodum.core import serializable as lodum
             import lodum.json as lodum_json  # type: ignore
-        except ImportError:
+        except Exception:
             lodum = None  # type: ignore
             lodum_json = None  # type: ignore
 
@@ -29,7 +29,7 @@ if lodum_json:
 
 try:
     from pydantic import TypeAdapter, BaseModel  # type: ignore
-except ImportError:
+except Exception:
     TypeAdapter = None  # type: ignore
     BaseModel = object  # type: ignore
 
