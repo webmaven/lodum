@@ -13,122 +13,122 @@
     {
       "name": "JSON Serialization Pydantic (v2) simple",
       "unit": "us",
-      "value": 1.9334384555897943
+      "value": 1.811613223315484
     },
     {
       "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
       "unit": "us",
-      "value": 22.21099999388798
+      "value": 21.02300000217383
     },
     {
       "name": "JSON Serialization Pydantic (v2) complex",
       "unit": "us",
-      "value": 2.4405299808682215
+      "value": 2.1942490184835455
     },
     {
       "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
       "unit": "us",
-      "value": 12.974000000554042
+      "value": 13.070999997921717
     },
     {
       "name": "JSON Serialization Pydantic (v2) nested",
       "unit": "us",
-      "value": 4.512940175209324
+      "value": 4.144887731359104
     },
     {
       "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
       "unit": "us",
-      "value": 29.875999999262604
+      "value": 26.84900000105017
     },
     {
       "name": "JSON Serialization Marshmallow simple",
       "unit": "us",
-      "value": 7.70957757326016
+      "value": 7.061953119681265
     },
     {
       "name": "JSON Serialization Marshmallow simple (Cold Start)",
       "unit": "us",
-      "value": 72.85600000273007
+      "value": 60.21200000105864
     },
     {
       "name": "JSON Serialization Marshmallow complex",
       "unit": "us",
-      "value": 16.98399069999965
+      "value": 15.229321766666951
     },
     {
       "name": "JSON Serialization Marshmallow complex (Cold Start)",
       "unit": "us",
-      "value": 67.48500000242075
+      "value": 60.691999998141455
     },
     {
       "name": "JSON Serialization Marshmallow nested",
       "unit": "us",
-      "value": 44.46974814285706
+      "value": 41.28995853846198
     },
     {
       "name": "JSON Serialization Marshmallow nested (Cold Start)",
       "unit": "us",
-      "value": 95.66800000015974
+      "value": 83.54399999888074
     },
     {
       "name": "JSON Deserialization Pydantic (v2) simple",
       "unit": "us",
-      "value": 1.440968401783292
+      "value": 1.3825911382183123
     },
     {
       "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
       "unit": "us",
-      "value": 95.31199999912587
+      "value": 81.96000000282311
     },
     {
       "name": "JSON Deserialization Pydantic (v2) complex",
       "unit": "us",
-      "value": 2.4192406027286424
+      "value": 2.1262096013798146
     },
     {
       "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
       "unit": "us",
-      "value": 17.512999995972223
+      "value": 14.865999993673995
     },
     {
       "name": "JSON Deserialization Pydantic (v2) nested",
       "unit": "us",
-      "value": 5.573688286249659
+      "value": 5.551545625857776
     },
     {
       "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
       "unit": "us",
-      "value": 57.89800000144396
+      "value": 39.11799999656296
     },
     {
       "name": "JSON Deserialization Marshmallow simple",
       "unit": "us",
-      "value": 19.25546671428613
+      "value": 17.21192109999971
     },
     {
       "name": "JSON Deserialization Marshmallow simple (Cold Start)",
       "unit": "us",
-      "value": 112.00899999863623
+      "value": 95.98200000482393
     },
     {
       "name": "JSON Deserialization Marshmallow complex",
       "unit": "us",
-      "value": 45.991835433333016
+      "value": 41.12440889285729
     },
     {
       "name": "JSON Deserialization Marshmallow complex (Cold Start)",
       "unit": "us",
-      "value": 93.10400000117625
+      "value": 84.66200000611934
     },
     {
       "name": "JSON Deserialization Marshmallow nested",
       "unit": "us",
-      "value": 139.0898101071425
+      "value": 123.05152013333303
     },
     {
       "name": "JSON Deserialization Marshmallow nested (Cold Start)",
       "unit": "us",
-      "value": 195.99600000219652
+      "value": 169.49700000168377
     }
   ]
 }
