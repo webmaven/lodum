@@ -27,7 +27,14 @@ except Exception as e:
         lodum_json = None
 
 # Shim for decorator
-decorator = lodum if lodum else lambda x: x
+raw_decorator = lodum if lodum else lambda x: x
+def safe_decorator(cls):
+    try:
+        return raw_decorator(cls)
+    except Exception as e:
+        print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
+        return cls
+decorator = safe_decorator
 
 @decorator
 class LargeItem:
