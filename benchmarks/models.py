@@ -20,7 +20,7 @@ def get_lodum_decorator():
                 print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
                 return cls
         return safe_decorator
-    except (ImportError, AttributeError) as e:
+    except Exception as e:
         print(f"DEBUG: 'from lodum import lodum' failed: {e}")
 
     # 2. Try v0.2.0 internal location
@@ -35,7 +35,7 @@ def get_lodum_decorator():
                 print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
                 return cls
         return safe_decorator
-    except (ImportError, AttributeError) as e:
+    except Exception as e:
         print(f"DEBUG: 'from lodum.core import lodum' failed: {e}")
 
     # 3. Try v0.1.0 'serializable'
@@ -50,7 +50,7 @@ def get_lodum_decorator():
                 print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
                 return cls
         return safe_decorator
-    except (ImportError, AttributeError) as e:
+    except Exception as e:
         print(f"DEBUG: 'from lodum.core import serializable' failed: {e}")
 
     # 4. Last resort: manual attribute check
@@ -95,12 +95,12 @@ lodum = get_lodum_decorator()
 
 try:
     from pydantic import BaseModel
-except ImportError:
+except Exception:
     BaseModel = object
 
 try:
     from marshmallow import Schema, fields, post_load
-except ImportError:
+except Exception:
     Schema = object
     fields = None
 

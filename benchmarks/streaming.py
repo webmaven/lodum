@@ -15,7 +15,7 @@ try:
     from lodum import json as lodum_json
     print(f"DEBUG: Found 'lodum' package: {lodum}")
     print(f"DEBUG: Found 'lodum.json' module: {lodum_json}")
-except ImportError as e:
+except Exception as e:
     print(f"DEBUG: Initial import failed: {e}")
     try:
         from lodum.core import serializable as lodum
