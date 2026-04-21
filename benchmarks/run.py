@@ -57,6 +57,31 @@ from benchmarks.models import (
     MarshmallowNestedSchema,
 )
 
+def calibrate():
+    """Measures standard library JSON performance as a hardware baseline."""
+    import json
+    import time
+    import statistics
+    
+    # Fixed dataset
+    data = {f"key_{i}": list(range(100)) for i in range(100)}
+    iterations = 500
+    times = []
+    
+    # Warmup
+    json.dumps(data)
+    
+    for _ in range(iterations):
+        start = time.perf_counter()
+        json.dumps(data)
+        times.append(time.perf_counter() - start)
+    
+    return statistics.median(times)
+
+REFERENCE_BASELINE = calibrate()
+print(f"DEBUG: Hardware Calibration Baseline: {REFERENCE_BASELINE:.8f}s")
+
+
 # --- Lodum Imports with fallbacks for very old versions ---
 try:
     from lodum import json as lodum_json
