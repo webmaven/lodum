@@ -127,11 +127,25 @@ def generate_dashboard(history_dir, output_file, repo_dir):
                 if "results" not in payload or "commit" not in payload:
                     continue
                     
+                # Normalize results if available
+                final_benches = []
+                for bench in payload["results"]:
+                    new_bench = bench.copy()
+                    if "normalized" in bench:
+                        # Use normalized value as the primary display value (as a 'virtual' microsecond)
+                        # We multiply by 100 to make it readable in the charts (e.g. 0.05 -> 5.0)
+                        # This doesn't change the relative performance, just the scale.
+                        new_bench["value"] = bench["normalized"] * 100
+                        new_bench["unit"] = "pts" # Performance Points
+                        new_bench["raw_value"] = bench["value"]
+                        new_bench["raw_unit"] = bench["unit"]
+                    final_benches.append(new_bench)
+
                 entry = {
                     "commit": payload["commit"],
                     "date": int(datetime.fromisoformat(payload["commit"].get("timestamp", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00')).timestamp() * 1000),
                     "tool": "customSmallerIsBetter",
-                    "benches": payload["results"]
+                    "benches": final_benches
                 }
                 data["entries"][suite_name].append(entry)
                 mapped_count += 1
