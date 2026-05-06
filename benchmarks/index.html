@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Lodum Performance Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
@@ -36,7 +39,10 @@
     <div class="container">
         <header>
             <h1>Lodum Performance Index</h1>
-            <div id="last-updated" style="font-size: 0.7rem; color: #666;"></div>
+            <div style="text-align: right; font-size: 0.7rem; color: #666;">
+                <div style="font-weight: bold;">Dashboard Version: 2026-05-06 23:30:00 UTC</div>
+                <div id="last-updated"></div>
+            </div>
         </header>
 
         <div class="kpi-grid">
