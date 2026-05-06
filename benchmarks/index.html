@@ -80,7 +80,7 @@
             <b style="font-size: 0.8rem; text-transform: uppercase; color: #64748b;">Glossary & Methodology</b>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 15px; font-size: 0.8rem; line-height: 1.5;">
                 <div>
-                    <b>Latency (us/op)</b>: Time taken for one serialization operation. 
+                    <b>Performance Points (pts)</b>: Normalized time taken for one serialization operation. 
                     <i>Benchmark</i>: Simple (flat dict), Complex (mixed), Nested (deep).
                 </div>
                 <div>
@@ -286,7 +286,7 @@
                     xAxis: { type: 'value', show: false },
                     yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
                     grid: { top: 10, bottom: 10, left: 60, right: 40 },
-                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c}us' } }]
+                    series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: '{c} pts' } }]
                 });
             }
         };
@@ -337,14 +337,14 @@
                             const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'N/A';
                             let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
                             if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
-                            res += params.map(p => `${p.seriesName}: ${p.value !== undefined && p.value !== null ? p.value + 'us' : 'N/A'}`).join('<br/>');
+                            res += params.map(p => `${p.seriesName}: ${p.value !== undefined && p.value !== null ? p.value + ' pts' : 'N/A'}`).join('<br/>');
                             return res;
                         }
                     },
                     legend: { bottom: 0 },
                     grid: { top: 40, left: 40, right: 20, bottom: 80 },
                     xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
-                    yAxis: { type: 'value', name: 'us/op', splitLine: { lineStyle: { type: 'dashed' } } },
+                    yAxis: { type: 'value', name: 'pts', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
                         getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
                         getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
