@@ -361,10 +361,20 @@ def bench(func, name: str = "unknown"):
         return None
 
 
+def calibrate():
+    """Runs a reference workload (json.dumps + json.loads) to calibrate runner speed."""
+    def ref():
+        json.loads(json.dumps(complex_data))
+    
+    res = bench(ref, name="Calibration Reference")
+    return res["mean"] if res else 1.0
+
+
 def run_group(
     group_name: str,
     benchmarks: Dict[str, Dict[str, Optional[Callable]]],
     results_collector: List[Dict[str, Any]],
+    reference_us: float = 1.0,
 ):
     use_baselines = "--use-baselines" in sys.argv
     is_json = "--json" in sys.argv
@@ -390,7 +400,8 @@ def run_group(
             if res and is_json:
                 results_collector.append(
                     {"name": full_name, "unit": "us", "value": res["mean"],
-                     "stdev": res["stdev"], "iterations": res["iterations"]}
+                     "stdev": res["stdev"], "iterations": res["iterations"],
+                     "normalized": res["mean"] / reference_us}
                 )
                 if "cold" in res:
                     results_collector.append(
@@ -481,7 +492,7 @@ def run_all():
         if use_baselines:
             print("Note: Using stored competitor baselines for comparison.\n")
 
-    def run_filtered_group(name, benchmarks, results):
+    def run_filtered_group(name, benchmarks, results, reference_us=1.0):
         if only_filter and only_filter not in name:
             return
         
@@ -494,7 +505,14 @@ def run_all():
                 filtered_benchmarks[lib] = scenarios
         
         if filtered_benchmarks:
-            run_group(name, filtered_benchmarks, results)
+            run_group(name, filtered_benchmarks, results, reference_us=reference_us)
+
+    # Calibration phase
+    if not is_json:
+        print("Calibrating runner speed...")
+    reference_us = calibrate()
+    if not is_json:
+        print(f"Reference workload (JSON complex): {reference_us:.2f} us\n")
 
     # JSON Serialization
     run_filtered_group(
@@ -517,6 +535,7 @@ def run_all():
             },
         },
         all_results,
+        reference_us=reference_us
     )
 
     # JSON Deserialization
@@ -540,6 +559,7 @@ def run_all():
             },
         },
         all_results,
+        reference_us=reference_us
     )
 
     # MsgPack
