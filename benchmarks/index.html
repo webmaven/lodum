@@ -121,6 +121,7 @@
                     
                     const strmTime = getVal('ubuntu-latest', 'Streaming (load_stream) Time');
                     if (strmTime) document.getElementById('kpi-throughput').innerText = (45 / strmTime).toFixed(1) + ' MB/s';
+                } catch(e) { console.error('KPI error', e); }
             },
             updateHeatmap: (sha) => {
                 const c = window.Sync.commitMap.get(sha);
