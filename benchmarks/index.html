@@ -128,7 +128,9 @@
                     ['simple', 'complex', 'nested'].forEach(s => {
                         Object.entries(platforms).forEach(([pid, label]) => {
                             const cur = window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`);
+                            const curStdev = window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`, 'stdev');
                             const base = window.Sync.getVal(window.Sync.baselineSha, pid, `JSON Serialization Lodum ${s}`);
+                            const cv = (cur && curStdev) ? (curStdev / cur) : 0;
                             let delta = 0, cls = 'cell-neutral';
                             if (cur && base) {
                                 delta = ((cur / base) - 1) * 100;
@@ -136,7 +138,12 @@
                             }
                             const cell = document.createElement('div');
                             cell.className = `heatmap-cell ${cls}`;
-                            cell.innerHTML = `<span class="cell-label">${label} / ${s}</span><span class="cell-value">${cur ? (delta>0?'+':'') + delta.toFixed(0) + '%' : 'N/A'}</span>`;
+                            if (cv > 0.15) cell.style.border = '2px dashed #f59e0b';
+                            cell.innerHTML = `
+                                <span class="cell-label">${label} / ${s}</span>
+                                <span class="cell-value">${cur ? (delta>0?'+':'') + delta.toFixed(0) + '%' : 'N/A'}</span>
+                                ${cv > 0.15 ? '<span style="font-size:0.6rem; color:#f59e0b;">⚠ Noisy</span>' : ''}
+                            `;
                             grid.appendChild(cell);
                         });
                     });
@@ -171,12 +178,12 @@
                 if (!window.Sync.baselineSha) window.Sync.baselineSha = window.Sync.history[0];
                 if (data.lastUpdate) document.getElementById('last-updated').innerText = 'Data Version: ' + new Date(data.lastUpdate).toLocaleString();
             },
-            getVal: (sha, pid, bench) => {
+            getVal: (sha, pid, bench, field = 'value') => {
                 const c = window.Sync.commitMap.get(sha); if (!c) return null;
                 const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
                 if (!suiteKey) return null;
                 const b = c.data[suiteKey].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
-                return b ? b.value : null;
+                return b ? b[field] : null;
             },
             refresh: (sha, source) => {
                 if (window.Sync.isRefreshing) return;
@@ -316,16 +323,34 @@
 
             window.updateTrend = (scenario) => {
                 const markLines = window.updateTrendMarkers();
-                const getPlatformSeries = (pid, name, color) => ({
-                    name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
-                    connectNulls: true,
-                    data: window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`)),
-                    markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
-                    emphasis: { 
-                        scale: 2,
-                        itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
-                    }
-                });
+                const getPlatformSeries = (pid, name, color) => {
+                    const means = window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`));
+                    const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
+                    
+                    const lower = means.map((m, i) => (m !== null && stdevs[i] !== null) ? m - stdevs[i] : null);
+                    const range = means.map((m, i) => (m !== null && stdevs[i] !== null) ? 2 * stdevs[i] : null);
+
+                    return [
+                        {
+                            name: name + ' (Lower)', type: 'line', data: lower, lineStyle: { opacity: 0 },
+                            stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true
+                        },
+                        {
+                            name: name + ' (Range)', type: 'line', data: range, lineStyle: { opacity: 0 },
+                            stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true,
+                            areaStyle: { color: color, opacity: 0.15 }
+                        },
+                        {
+                            name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
+                            connectNulls: true, data: means,
+                            markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
+                            emphasis: { 
+                                scale: 2,
+                                itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                            }
+                        }
+                    ];
+                };
 
                 trend.setOption({
                     tooltip: { 
@@ -337,7 +362,13 @@
                             const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'N/A';
                             let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
                             if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
-                            res += params.map(p => `${p.seriesName}: ${p.value !== undefined && p.value !== null ? p.value.toFixed(2) + ' µs/op' : 'N/A'}`).join('<br/>');
+                            res += params.filter(p => !p.seriesName.includes('(')).map(p => {
+                                const sha = window.Sync.history[p.dataIndex];
+                                const stdev = window.Sync.getVal(sha, p.seriesId.split('\0')[0].replace(' (Lower)', '').replace(' (Range)', ''), `JSON Serialization Lodum ${scenario}`, 'stdev');
+                                const valStr = p.value !== undefined && p.value !== null ? p.value.toFixed(2) : 'N/A';
+                                const stdevStr = stdev ? ` ± ${stdev.toFixed(2)}` : '';
+                                return `${p.seriesName}: ${valStr}${stdevStr} µs/op`;
+                            }).join('<br/>');
                             return res;
                         }
                     },
@@ -346,9 +377,9 @@
                     xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'µs/op', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
-                        getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
-                        getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
-                        getPlatformSeries('Pyodide', 'WASM', '#10b981')
+                        ...getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
+                        ...getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
+                        ...getPlatformSeries('Pyodide', 'WASM', '#10b981')
                     ],
                     dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
                 });
