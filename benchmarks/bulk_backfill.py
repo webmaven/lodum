@@ -42,9 +42,9 @@ def discover_gaps():
         f"Stats: Linux({len(linux_shas)}), Windows({len(windows_shas)}), Pyodide({len(pyodide_shas)})"
     )
 
-    # Get all commits on main for the last 30 days
+    # Get ALL commits on main (full history, not just recent)
     all_commits = run_cmd(
-        "git log main --since='30 days ago' --format='%H'"
+        "git rev-list --topo-order --reverse main"
     ).stdout.splitlines()
 
     gaps = []
