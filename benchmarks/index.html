@@ -202,7 +202,13 @@
                 const c = window.Sync.commitMap.get(sha); if (!c) return null;
                 const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
                 if (!suiteKey) return null;
-                const b = c.data[suiteKey].benches.find(x => x.name.toLowerCase().includes(bench.toLowerCase()));
+                const b = c.data[suiteKey].benches.find(x => {
+                    const n = x.name.toLowerCase();
+                    const bLower = bench.toLowerCase();
+                    // Match either the new name (Lodum) or old name (Pydantic (v2))
+                    const target = bLower.replace('lodum', '').replace('pydantic (v2)', '').trim();
+                    return n.includes(target) && (n.includes('lodum') || n.includes('pydantic (v2)'));
+                });
                 return b ? b[field] : null;
             },
             refresh: (sha, source) => {
@@ -380,9 +386,11 @@
                         trigger: 'axis', 
                         axisPointer: { type: 'cross' },
                         formatter: (params) => {
+                            if (!params || params.length === 0) return '';
                             const sha = window.Sync.history[params[0].dataIndex];
                             const c = window.Sync.commitMap.get(sha);
-                            const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'N/A';
+                            const firstSuite = c ? Object.values(c.data)[0] : null;
+                            const dateStr = firstSuite ? new Date(firstSuite.commit.timestamp).toLocaleDateString() : 'N/A';
                             let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
                             if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
                             const entries = params.filter(p => !p.seriesName.includes('(')).map(p => {
