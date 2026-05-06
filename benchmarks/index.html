@@ -385,23 +385,28 @@
                             const dateStr = c ? new Date(c.data['Lodum Performance Index - ubuntu-latest']?.commit.timestamp || 0).toLocaleDateString() : 'N/A';
                             let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
                             if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
-                            res += params.filter(p => !p.seriesName.includes('(')).map(p => {
+                            const entries = params.filter(p => !p.seriesName.includes('(')).map(p => {
                                 const platformMap = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
                                 const pid = platformMap[p.seriesName] || p.seriesName;
                                 const benchName = `JSON Serialization Lodum ${scenario}`;
                                 const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
                                 const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
-                                const valStr = p.value !== undefined && p.value !== null ? p.value.toFixed(2) : 'N/A';
+                                const valStr = p.value !== undefined && p.value !== null ? p.value.toFixed(2) : null;
+                                if (!valStr) return null;
+                                
                                 const stdevStr = stdev ? ` ± ${stdev.toFixed(2)}` : '';
                                 const unit = rawVal ? 'pts' : 'µs/op';
                                 const rawStr = rawVal ? ` (raw: ${rawVal.toFixed(2)} µs/op)` : '';
                                 return `${p.seriesName}: ${valStr}${stdevStr} ${unit}${rawStr}`;
-                            }).join('<br/>');
+                            }).filter(e => e !== null);
+                            
+                            if (entries.length === 0 && c) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
+                            res += entries.join('<br/>');
                             return res;
                         }
                     },
-                    legend: { top: 0, left: 'center' },
-                    grid: { top: 40, left: 40, right: 20, bottom: 80 },
+                    legend: { bottom: 45, left: 'center' },
+                    grid: { top: 40, left: 40, right: 20, bottom: 110 },
                     xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'Score / µs', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
@@ -409,7 +414,7 @@
                         ...getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
                         ...getPlatformSeries('Pyodide', 'WASM', '#10b981')
                     ],
-                    dataZoom: [{ type: 'slider', bottom: 30 }, { type: 'inside' }]
+                    dataZoom: [{ type: 'slider', bottom: 10 }, { type: 'inside' }]
                 });
 
                 // New Ratio Chart
