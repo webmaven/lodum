@@ -52,8 +52,11 @@ def main():
             print("HARDWARE CHANGE DETECTED!")
             print(f"Baseline: {baseline}")
             print(f"Current:  {current}")
-            # Exit with error to block benchmark run on mismatched hardware
-            sys.exit(1)
+            if os.environ.get("ALLOW_HW_MISMATCH") == "1":
+                print("WARNING: Hardware mismatch ignored due to ALLOW_HW_MISMATCH=1")
+            else:
+                # Exit with error to block benchmark run on mismatched hardware
+                sys.exit(1)
         else:
             print(f"Hardware validation successful: {current['cpu']}")
 

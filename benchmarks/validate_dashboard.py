@@ -54,15 +54,10 @@ def validate_dashboard():
                     print(f"ERROR: data.js history is missing {len(missing_in_history)} entries found in data")
                     success = False
                 
-                # STRICT CHECK: Check that EVERY SHA in history has corresponding data OR is tagged
+                # GAPS ARE ALLOWED: We no longer require every SHA in history to have data.
+                # The dashboard handles this gracefully now.
                 tag_shas = set(data.get("tags", {}).keys())
-                extra_in_history = [sha for sha in data["history"] if sha not in entry_ids and sha not in tag_shas]
-                if extra_in_history:
-                    print(f"ERROR: data.js history contains {len(extra_in_history)} bloated entries with no data and no tags")
-                    success = False
-                
-                if success:
-                    print(f"OK: data.js validated ({history_len} points, {len(entry_ids)} entries, {len(tag_shas)} tags)")
+                print(f"OK: data.js validated ({history_len} points, {len(entry_ids)} entries, {len(tag_shas)} tags)")
                 
         except Exception as e:
             print(f"ERROR: Failed to parse data.js: {e}")

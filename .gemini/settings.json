@@ -1,0 +1,39 @@
+{
+  "general": {
+    "defaultApprovalMode": "auto_edit",
+    "enableNotifications": true,
+    "sessionRetention": {
+      "maxAge": "120d"
+    }
+  },
+  "ui": {
+    "inlineThinkingMode": "full",
+    "showStatusInTitle": true,
+    "footer": {
+      "hideContextPercentage": false
+    },
+    "showMemoryUsage": true,
+    "showCitations": true,
+    "showModelInfoInChat": true,
+    "useAlternateBuffer": true,
+    "errorVerbosity": "full"
+  },
+  "agents": {
+    "browser": {
+      "confirmSensitiveActions": true
+    }
+  },
+  "tools": {
+    "sandboxNetworkAccess": true
+  },
+  "security": {
+    "enablePermanentToolApproval": true,
+    "autoAddToPolicyByDefault": true
+  },
+  "experimental": {
+    "modelSteering": true,
+    "directWebFetch": true,
+    "memoryManager": true,
+    "topicUpdateNarration": true
+  }
+}

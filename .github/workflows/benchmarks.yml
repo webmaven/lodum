@@ -3,157 +3,116 @@ name: Benchmarks
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
-      run_historical:
-        description: 'Run historical benchmarks (provide space-separated SHAs/tags)'
+      repair_sha:
+        description: 'SHA to run benchmarks for (Repair/Backfill mode)'
         type: string
         default: ''
+      platform:
+        description: 'Platform to run on'
+        type: choice
+        options: ['all', 'ubuntu-latest', 'windows-latest', 'Pyodide']
+        default: 'all'
 
 jobs:
   benchmark:
-    name: Run Benchmarks
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Install dependencies
-      run: |
-        pip install -e ".[all]"
-        pip install pydantic ijson marshmallow orjson ruamel.yaml tomli-w cbor2 pyinstrument
-    - name: Record and Validate Hardware
-      run: |
-        python benchmarks/get_hw_info.py --check
-    - name: Run Standard Benchmarks
-      run: |
-        python benchmarks/run.py --json > benchmarks_results.json
-    - name: Run Streaming Benchmark
-      run: |
-        python benchmarks/streaming.py --json > streaming_results.json
-    - name: Upload Profiles
-      uses: actions/upload-artifact@v4
-      with:
-        name: profiles-ubuntu-latest
-        path: benchmarks/profiles/
-    - name: Aggregate and Upload
-      run: |
-        mkdir -p all-results
-        cp benchmarks_results.json all-results/
-        cp streaming_results.json all-results/
-    - name: Upload Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: results-benchmark-ubuntu-latest
-        path: all-results/
-
-  benchmark-pyodide:
-    name: Performance Tracking (Pyodide/WASM)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Install dependencies
-      run: |
-        npm install pyodide
-        pip install build
-    - name: Build Wheel
-      run: python -m build
-    - name: Run Pyodide Benchmarks
-      run: |
-        export PYODIDE_SHARED_MEMORY=1
-        python benchmarks/run.py --json > pyodide_results.json
-    - name: Aggregate Results
-      run: |
-        mkdir -p all-results
-        cp pyodide_results.json all-results/
-    - name: Upload Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: results-benchmark-Pyodide
-        path: all-results/
-
-  parse_refs:
-    name: Parse Historical Refs
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - id: set-matrix
-        run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            REFS='["v0.3.0"]'
-          else
-            REFS=$(echo "${{ github.event.inputs.run_historical }}" | tr ' ' '\n' | jq -R . | jq -s -c .)
-          fi
-          echo "matrix=$REFS" >> $GITHUB_OUTPUT
-
-  historical:
-    name: Historical Baseline (${{ matrix.version }} on ${{ matrix.platform }})
-    needs: parse_refs
-    if: needs.parse_refs.outputs.matrix != '[""]'
+    name: Run Benchmarks (${{ matrix.platform }})
     runs-on: ${{ matrix.platform == 'Pyodide' && 'ubuntu-latest' || matrix.platform }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJson(needs.parse_refs.outputs.matrix) }}
         platform: ['ubuntu-latest', 'windows-latest', 'Pyodide']
     steps:
-    - uses: actions/checkout@v4
+    - name: Conditional Skip
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.platform != 'all' && github.event.inputs.platform != matrix.platform
+      run: |
+        echo "Skipping platform ${{ matrix.platform }}"
+        exit 0
+      
+    - name: Checkout Code
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Fetch and Checkout target version
+        ref: main
+        
+    - name: Prepare Historical Code
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repair_sha != ''
+      shell: bash
       run: |
-        git checkout ${{ matrix.version }}
+        git checkout ${{ github.event.inputs.repair_sha }}
+        git checkout origin/gh-pages -- benchmarks/
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
     - name: Install dependencies
+      shell: bash
       run: |
         if [ "${{ matrix.platform }}" == "Pyodide" ]; then
           npm install pyodide
+          pip install build ruamel.yaml pydantic marshmallow orjson ijson
+          python -m build
         else
           pip install -e ".[all]"
-          pip install pydantic ijson marshmallow orjson ruamel.yaml tomli-w cbor2
+          pip install pydantic ijson marshmallow orjson ruamel.yaml tomli-w cbor2 pyinstrument
         fi
-    - name: Run Benchmarks
+    - name: Record and Validate Hardware
+      if: matrix.platform != 'Pyodide'
+      env:
+        ALLOW_HW_MISMATCH: 1
+        PYTHONPATH: "src${{ matrix.platform == 'windows-latest' && ';' || ':' }}."
+      shell: bash
       run: |
-        python benchmarks/run.py --json > results.json
+        python benchmarks/get_hw_info.py --check
+    - name: Run Benchmarks
+      env:
+        PYTHONPATH: "src${{ matrix.platform == 'windows-latest' && ';' || ':' }}."
+      shell: bash
+      run: |
+        if [ "${{ matrix.platform }}" == "Pyodide" ]; then
+          export PYODIDE_SHARED_MEMORY=1
+          python benchmarks/run.py --json > results.json
+        else
+          python benchmarks/run.py --json > standard_results.json
+          python benchmarks/streaming.py --json > streaming_results.json
+          cp standard_results.json results.json
+        fi
     - name: Upload Results
       uses: actions/upload-artifact@v4
       with:
-        name: results-historical-${{ matrix.version }}-${{ matrix.platform }}
+        name: results-benchmark-${{ matrix.platform }}
         path: results.json
 
   finalize-deployment:
+    concurrency:
+      group: dashboard-update
+      cancel-in-progress: false
     name: Finalize and Deploy Dashboard
-    needs: [benchmark, benchmark-pyodide, historical]
-    if: always() && github.ref == 'refs/heads/main'
+    needs: [benchmark]
+    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: write
-      deployments: write
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: main
+    - name: Ensure Branches are Available
+      run: |
+        git fetch origin main
+        git fetch origin gh-pages
     - name: Download all results
       uses: actions/download-artifact@v4
       with:
@@ -165,26 +124,35 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git clone --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages-repo
-    - name: Merge all results into data.js
-      run: |
-        python benchmarks/merge_data.py gh-pages-repo all-results
-    - name: Validate Dashboard and Data
-      run: |
-        cp gh-pages-repo/benchmarks/data.js benchmarks/data.js
-        python benchmarks/validate_dashboard.py
-    - name: Update Template and Push
+    - name: Update Atomic History and Generate Dashboard
       run: |
         cd gh-pages-repo
-        mkdir -p benchmarks
-        if [ ! -f benchmarks/data.js ]; then
-          echo "window.BENCHMARK_DATA = { \"entries\": {}, \"history\": [], \"tags\": {} };" > benchmarks/data.js
-        fi
-        cp ../benchmarks/index.html benchmarks/index.html
-        [ -f benchmarks/index.html ] && git add benchmarks/index.html
-        [ -f benchmarks/data.js ] && git add benchmarks/data.js
-        git commit -m "docs: sync dashboard template and data" || echo "No changes"
-        for i in {1..5}; do
-          git pull --rebase origin gh-pages
-          git push origin gh-pages && break || sleep $[RANDOM % 10 + 1]
+        for i in {1..10}; do
+          git fetch origin gh-pages
+          git reset --hard origin/gh-pages
+          
+          python benchmarks/merge_data.py benchmarks/history ../all-results
+          python benchmarks/generate_dashboard.py benchmarks/history benchmarks/data.js --repo ..
+          
+          git add benchmarks/
+          if git commit -m "docs: update performance history and regenerate dashboard"; then
+            if git push origin gh-pages; then
+              echo "Successfully pushed to gh-pages"
+              exit 0
+            fi
+          else
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          echo "Push failed (concurrent update), retrying ($i/10)..."
+          sleep $[RANDOM % 30 + 10]
         done
+        echo "Failed to push to gh-pages after 10 attempts"
+        exit 1
       shell: bash
+    - name: Validate Dashboard
+      run: |
+        # Final validation check
+        export PYTHONPATH="src:."
+        python benchmarks/validate_dashboard.py

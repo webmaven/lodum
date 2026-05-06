@@ -31,8 +31,7 @@ try:
     from ruamel.yaml import YAML
 
     yaml_obj = YAML(typ="safe")
-except (ImportError, NameError):
-    ruamel = None  # type: ignore
+except (ImportError, AttributeError):
     yaml_obj = None  # type: ignore
 
 try:

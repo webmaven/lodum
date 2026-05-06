@@ -12,14 +12,24 @@ To set up a local development environment:
     cd lodum
     ```
 
-2.  **Install the package in editable mode with all optional dependencies:**
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+
+3.  **Install the package in editable mode with all optional dependencies:**
     ```bash
     pip install -e ".[all]"
     ```
 
-3.  **Install development tools:**
+4.  **Install development and benchmarking tools:**
     ```bash
+    # Standard dev tools
     pip install pytest ruff mypy pandas-stubs
+    
+    # Benchmarking dependencies
+    pip install pydantic marshmallow orjson ijson pyinstrument
     ```
 
 ## How Can I Contribute?
