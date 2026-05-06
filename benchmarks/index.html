@@ -393,7 +393,7 @@
                             return res;
                         }
                     },
-                    legend: { bottom: 0 },
+                    legend: { top: 0, left: 'center' },
                     grid: { top: 40, left: 40, right: 20, bottom: 80 },
                     xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'Score / µs', splitLine: { lineStyle: { type: 'dashed' } } },
