@@ -65,7 +65,13 @@
                     <div id="frontier-chart" class="chart-container"></div>
                 </div>
                 <div class="card">
-                    <b style="font-size: 0.9rem;">Regression vs v0.3.0</b>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <b style="font-size: 0.9rem;">Regression</b>
+                        <select id="baseline-mode" style="font-size: 0.75rem; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="baseline">vs v0.3.0</option>
+                            <option value="previous">vs Previous</option>
+                        </select>
+                    </div>
                     <div class="heatmap-grid" id="regression-heatmap"></div>
                     <div id="hover-details" style="font-size: 0.75rem; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 10px;">Hover a point to explore.</div>
                 </div>
@@ -115,7 +121,6 @@
                     
                     const strmTime = getVal('ubuntu-latest', 'Streaming (load_stream) Time');
                     if (strmTime) document.getElementById('kpi-throughput').innerText = (45 / strmTime).toFixed(1) + ' MB/s';
-                } catch(e) { console.error('KPI error', e); }
             },
             updateHeatmap: (sha) => {
                 const c = window.Sync.commitMap.get(sha);
@@ -124,12 +129,20 @@
                 if (grid) {
                     grid.innerHTML = '';
                     document.getElementById('hover-details').innerHTML = `<b>${c.short}</b>: ${c.msg}`;
+                    
+                    const mode = document.getElementById('baseline-mode').value;
+                    let baseSha = window.Sync.baselineSha;
+                    if (mode === 'previous') {
+                        const idx = window.Sync.history.indexOf(sha);
+                        baseSha = idx > 0 ? window.Sync.history[idx-1] : sha;
+                    }
+
                     const platforms = {'ubuntu-latest':'Linux', 'windows-latest':'Windows', 'Pyodide':'WASM'};
                     ['simple', 'complex', 'nested'].forEach(s => {
                         Object.entries(platforms).forEach(([pid, label]) => {
                             const cur = window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`);
                             const curStdev = window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${s}`, 'stdev');
-                            const base = window.Sync.getVal(window.Sync.baselineSha, pid, `JSON Serialization Lodum ${s}`);
+                            const base = window.Sync.getVal(baseSha, pid, `JSON Serialization Lodum ${s}`);
                             const cv = (cur && curStdev) ? (curStdev / cur) : 0;
                             let delta = 0, cls = 'cell-neutral';
                             if (cur && base) {
@@ -512,6 +525,7 @@
             window.updateTrend('simple');
             setTimeout(() => window.Sync.refresh(latestSha, 'init'), 100);
             document.getElementById('scenario-selector').onchange = (e) => window.updateTrend(e.target.value);
+            document.getElementById('baseline-mode').onchange = (e) => window.UI.updateHeatmap(window.Sync.selectedSha);
 
             window.addEventListener('mousemove', (e) => {
                 const trendRect = document.getElementById('trend-chart').getBoundingClientRect();
