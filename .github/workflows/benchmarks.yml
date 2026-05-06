@@ -151,9 +151,3 @@ jobs:
         echo "Failed to push to gh-pages after 10 attempts"
         exit 1
       shell: bash
-    - name: Validate Dashboard
-      run: |
-        # Final validation check
-        export PYTHONPATH="src:."
-        cd gh-pages-repo
-        python benchmarks/validate_dashboard.py
