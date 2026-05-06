@@ -380,7 +380,8 @@
                             let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
                             if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
                             res += params.filter(p => !p.seriesName.includes('(')).map(p => {
-                                const pid = p.seriesId.split('\0')[0].replace(' (Lower)', '').replace(' (Range)', '');
+                                const platformMap = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
+                                const pid = platformMap[p.seriesName] || p.seriesName;
                                 const benchName = `JSON Serialization Lodum ${scenario}`;
                                 const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
                                 const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
