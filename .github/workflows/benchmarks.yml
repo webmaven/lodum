@@ -155,4 +155,5 @@ jobs:
       run: |
         # Final validation check
         export PYTHONPATH="src:."
+        cd gh-pages-repo
         python benchmarks/validate_dashboard.py
