@@ -5,6 +5,7 @@ import pickle
 import io
 import os
 import time
+import gc
 import subprocess
 import traceback
 import cProfile
@@ -297,13 +298,22 @@ def bench(func, name: str = "unknown"):
         all_times = []
 
         # 1. Measurement Phase (Clean numbers)
-        for _ in range(repeats):
-            # We measure the whole loop to avoid per-op perf_counter overhead
-            start = time.perf_counter()
-            for _ in range(iterations):
-                func()
-            duration = time.perf_counter() - start
-            all_times.append((duration / iterations) * 1e6)  # us per op
+        # Disable GC during timing to avoid GC-pause variance
+        # (same approach as Python's timeit module)
+        gc.collect()
+        gc_was_enabled = gc.isenabled()
+        gc.disable()
+        try:
+            for _ in range(repeats):
+                # We measure the whole loop to avoid per-op perf_counter overhead
+                start = time.perf_counter()
+                for _ in range(iterations):
+                    func()
+                duration = time.perf_counter() - start
+                all_times.append((duration / iterations) * 1e6)  # us per op
+        finally:
+            if gc_was_enabled:
+                gc.enable()
 
         # 2. Optional Profiling Phase (Separate run to avoid skewing numbers)
         if should_profile:
@@ -379,7 +389,8 @@ def run_group(
             results[scenario] = res
             if res and is_json:
                 results_collector.append(
-                    {"name": full_name, "unit": "us", "value": res["mean"]}
+                    {"name": full_name, "unit": "us", "value": res["mean"],
+                     "stdev": res["stdev"], "iterations": res["iterations"]}
                 )
                 if "cold" in res:
                     results_collector.append(
