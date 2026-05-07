@@ -415,8 +415,16 @@
                     const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
 
                     // Use 0-variance fallback instead of null to ensure the spline has enough points to curve
-                    const lower = means.map((m, i) => (m !== null) ? (stdevs[i] !== null ? m - stdevs[i] : m) : null);
-                    const range = means.map((m, i) => (m !== null) ? (stdevs[i] !== null ? 2 * stdevs[i] : 0) : null);
+                    const lower = means.map((m, i) => {
+                        const s = stdevs[i];
+                        if (m === null) return null;
+                        return (typeof s === 'number') ? m - s : m;
+                    });
+                    const range = means.map((m, i) => {
+                        const s = stdevs[i];
+                        if (m === null) return null;
+                        return (typeof s === 'number') ? 2 * s : 0;
+                    });
 
                     // 1. Add Variance Series (or clear them if hidden)
                     finalSeries.push(
