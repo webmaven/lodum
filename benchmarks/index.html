@@ -20,7 +20,7 @@
         .kpi-value { font-size: 1.2rem; font-weight: 700; color: #000; }
         .grid-main { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; }
         .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .chart-container { height: 350px; width: 100%; touch-action: none; }
+        .chart-container { height: 350px; width: 100%; }
         #ratio-chart { height: 250px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px; }
         #frontier-chart { height: 280px; }
         .heatmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -32,6 +32,12 @@
         .cell-warn { background: #fffbeb; color: #92400e; }
         .cell-neutral { background: #f9fafb; color: #374151; }
         #status-bar { position: fixed; bottom: 10px; right: 10px; background: #000; color: #0f0; padding: 5px 10px; font-size: 10px; font-family: monospace; border-radius: 4px; z-index: 100; opacity: 0.8; }
+        
+        .external-legend { display: flex; gap: 15px; margin-bottom: 15px; justify-content: center; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; padding: 4px 10px; border-radius: 6px; border: 1px solid transparent; transition: all 0.2s; background: #fff; }
+        .legend-item:hover { background: #f8fafc; border-color: #e2e8f0; }
+        .legend-item.inactive { opacity: 0.4; filter: grayscale(1); }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -61,6 +67,11 @@
                         <option value="complex">Complex</option>
                         <option value="nested">Nested</option>
                     </select>
+                </div>
+                <div class="external-legend" id="trend-legend">
+                    <div class="legend-item" onclick="window.UI.toggleSeries('Linux')"><div class="legend-color" style="background: #fbc929;"></div><span>Linux</span></div>
+                    <div class="legend-item" onclick="window.UI.toggleSeries('Windows')"><div class="legend-color" style="background: #3b82f6;"></div><span>Windows</span></div>
+                    <div class="legend-item" onclick="window.UI.toggleSeries('WASM')"><div class="legend-color" style="background: #10b981;"></div><span>WASM</span></div>
                 </div>
                 <div id="trend-chart" class="chart-container"></div>
                 <div id="ratio-chart" class="chart-container"></div>
@@ -115,6 +126,20 @@
     <script>
         window.UI = {
             status: (msg) => document.getElementById('status-bar').innerText = msg,
+            toggleSeries: (name) => {
+                const chart = window.Sync.charts.trend;
+                if (!chart) return;
+                chart.dispatchAction({ type: 'legendToggleSelect', name: name });
+                
+                // Update UI state
+                const items = document.querySelectorAll('#trend-legend .legend-item');
+                items.forEach(item => {
+                    if (item.innerText.includes(name)) {
+                        const isSelected = chart.getOption().legend[0].selected[name] !== false;
+                        item.classList.toggle('inactive', !isSelected);
+                    }
+                });
+            },
             updateKPIs: (sha) => {
                 const getVal = (pid, bench) => window.Sync.getVal(sha, pid, bench);
                 try {
@@ -393,63 +418,26 @@
                     ];
                 };
 
-                trend.setOption({
-                    tooltip: { 
-                        show: true,
-                        trigger: 'axis',
-                        confine: true,
-                        axisPointer: { type: 'cross' },
-                        appendToBody: true,
-                        formatter: (params) => {
-                            try {
+                    trend.setOption({
+                        tooltip: { 
+                            show: true, trigger: 'axis', axisPointer: { type: 'cross' }, appendToBody: true,
+                            formatter: (params) => {
                                 if (!params || params.length === 0) return '';
                                 const di = params[0].dataIndex;
                                 const sha = window.Sync.history[di];
-                                if (!sha) return '';
                                 const c = window.Sync.commitMap.get(sha);
+                                if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
                                 
-                                let res = "";
-                                if (!c) {
-                                    res = `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
-                                } else {
-                                    const firstSuite = Object.values(c.data)[0];
-                                    const ts = firstSuite && firstSuite.commit ? firstSuite.commit.timestamp : null;
-                                    const dateStr = ts ? new Date(ts).toLocaleDateString() : 'N/A';
-                                    res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
-                                    
-                                    // Map results from the series data itself (params)
-                                    // Filter out 'Range' series and only keep the main lines
-                                    const entries = params.filter(p => p.seriesName && !p.seriesName.includes('Range')).map(p => {
-                                        const val = p.value;
-                                        if (val === null || val === undefined) return null;
-                                        
-                                        // Try to find raw_value/stdev from Sync for extra info
-                                        const pid = p.seriesId.includes('windows') ? 'windows-latest' : (p.seriesId.includes('ubuntu') ? 'ubuntu-latest' : 'Pyodide');
-                                        const benchName = `JSON Serialization Lodum ${scenario}`;
-                                        const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
-                                        const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
-                                        
-                                        const unit = rawVal ? 'pts' : 'µs/op';
-                                        return `${p.seriesName}: ${val.toFixed(2)}${stdev ? ' ± ' + stdev.toFixed(2) : ''} ${unit}${rawVal ? ' (raw: ' + rawVal.toFixed(2) + ' µs/op)' : ''}`;
-                                    }).filter(e => e !== null);
-
-                                    if (entries.length === 0) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
-                                    res += entries.join('<br/>');
-                                }
-                                const dbg = document.getElementById('tooltip-debug');
-                                if (dbg) dbg.innerHTML = `<b>[DEBUG]</b> SHA: ${sha} | Index: ${di} | Commit: ${c ? 'Found' : 'Missing'} <br/> ${res}`;
+                                let res = `<b>${sha.substring(0,7)}</b><br/>`;
+                                params.filter(p => p.seriesName && !p.seriesName.includes('Range')).forEach(p => {
+                                    if (p.value !== null) res += `${p.marker} ${p.seriesName}: ${p.value.toFixed(2)}<br/>`;
+                                });
                                 return res;
-                            } catch (e) {
-                                console.error('Tooltip Error:', e);
-                                const dbg = document.getElementById('tooltip-debug');
-                                if (dbg) dbg.innerText = 'Tooltip Error: ' + e.message;
-                                return 'Tooltip Error: ' + e.message;
                             }
-                        }
-                    },
-                    legend: { bottom: 45, left: 'center' },
-                    grid: { top: 40, left: 40, right: 20, bottom: 110 },
-                    xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
+                        },
+                        legend: { show: false },
+                        grid: { top: 40, left: 40, right: 20, bottom: 60 },
+                        xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'Score / µs', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
                         ...getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
