@@ -431,14 +431,16 @@
                         {
                             name: p.name + ' (Lower)', type: 'line', data: showBands ? lower : [], 
                             smooth: true,
-                            lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
+                            lineStyle: { color: p.color, opacity: 0.2, width: 1, type: 'dashed' }, 
+                            itemStyle: { opacity: 0 },
                             stack: 'confidence-' + p.name, symbol: 'none', 
                             connectNulls: true, silent: true
                         },
                         {
                             name: p.name + ' (Range)', type: 'line', data: showBands ? range : [], 
                             smooth: true,
-                            lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
+                            lineStyle: { color: p.color, opacity: 0.2, width: 1, type: 'dashed' }, 
+                            itemStyle: { opacity: 0 },
                             stack: 'confidence-' + p.name, symbol: 'none', 
                             connectNulls: true, silent: true,
                             areaStyle: { color: p.color, opacity: 0.3 }
