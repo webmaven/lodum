@@ -401,43 +401,49 @@
             window.updateTrend = (scenario) => {
                 const showBands = document.getElementById('variance-selector').value === 'bands';
                 const markLines = window.updateTrendMarkers();
-                const getPlatformSeries = (pid, name, color) => {
-                    const means = window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`));
-                    const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
+
+                const allPlatforms = [
+                    { pid: 'ubuntu-latest', name: 'Linux', color: '#fbc929' },
+                    { pid: 'windows-latest', name: 'Windows', color: '#3b82f6' },
+                    { pid: 'Pyodide', name: 'WASM', color: '#10b981' }
+                ];
+
+                const finalSeries = [];
+
+                allPlatforms.forEach(p => {
+                    const means = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`));
+                    const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
 
                     const lower = means.map((m, i) => (m !== null && stdevs[i] !== null) ? m - stdevs[i] : null);
                     const range = means.map((m, i) => (m !== null && stdevs[i] !== null) ? 2 * stdevs[i] : null);
 
-                    const series = [
+                    // 1. Add Variance Series (or clear them if hidden)
+                    finalSeries.push(
                         {
-                            name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
-                            connectNulls: true, data: means,
-                            markLine: name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
-                            emphasis: { 
-                                scale: 2,
-                                itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
-                            }
+                            name: p.name + ' (Lower)', type: 'line', data: showBands ? lower : [], 
+                            lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
+                            stack: 'confidence-' + p.name, symbol: 'none', connectNulls: true, silent: true
+                        },
+                        {
+                            name: p.name + ' (Range)', type: 'line', data: showBands ? range : [], 
+                            lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
+                            stack: 'confidence-' + p.name, symbol: 'none', connectNulls: true, silent: true,
+                            areaStyle: { color: p.color, opacity: 0.3 }
                         }
-                    ];
+                    );
 
-                    if (showBands) {
-                        series.unshift(
-                            {
-                                name: name + ' (Lower)', type: 'line', data: lower, 
-                                lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
-                                stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true
-                            },
-                            {
-                                name: name + ' (Range)', type: 'line', data: range, 
-                                lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
-                                stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true,
-                                areaStyle: { color: color, opacity: 0.3 }
-                            }
-                        );
-                    }
+                    // 2. Add Main Line
+                    finalSeries.push({
+                        name: p.name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color: p.color,
+                        connectNulls: true, data: means,
+                        markLine: p.name === 'Linux' ? { symbol: 'none', data: markLines } : undefined,
+                        emphasis: { 
+                            scale: 2,
+                            itemStyle: { color: '#fbc929', borderColor: '#1f2937', borderWidth: 2 }
+                        }
+                    });
+                });
 
-                    return series;
-                };
                 trend.setOption({
                     tooltip: { 
                         show: true, trigger: 'axis', axisPointer: { type: 'cross' }, appendToBody: true,
@@ -463,13 +469,10 @@
                     grid: { top: 40, left: 40, right: 20, bottom: 60 },
                     xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'Score / µs', splitLine: { lineStyle: { type: 'dashed' } } },
-                    series: [
-                        ...getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
-                        ...getPlatformSeries('windows-latest', 'Windows', '#3b82f6'),
-                        ...getPlatformSeries('Pyodide', 'WASM', '#10b981')
-                    ],
+                    series: finalSeries,
                     dataZoom: [{ type: 'slider', bottom: 10 }, { type: 'inside' }]
-                }); // Removed true (notMerge) to allow zoom persistence
+                });
+
                 // New Ratio Chart
                 window.Sync.charts.ratio.setOption({
                     title: { text: 'Speedup vs Marshmallow (Ratio)', textStyle: { fontSize: 12, color: '#666' }, left: 'center' },
