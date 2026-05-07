@@ -418,18 +418,23 @@
                     const range = means.map((m, i) => (m !== null && stdevs[i] !== null) ? 2 * stdevs[i] : null);
 
                     // 1. Add Variance Series (or clear them if hidden)
+                    // We explicitly add them as empty if hidden to clear any previous state in the merge
                     finalSeries.push(
                         {
                             name: p.name + ' (Lower)', type: 'line', data: showBands ? lower : [], 
                             smooth: true,
                             lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
-                            stack: 'confidence-' + p.name, symbol: 'none', connectNulls: true, silent: true
+                            stack: 'confidence-' + p.name, symbol: 'none', 
+                            connectNulls: false, // Critical: don't connect over gaps
+                            silent: true
                         },
                         {
                             name: p.name + ' (Range)', type: 'line', data: showBands ? range : [], 
                             smooth: true,
                             lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
-                            stack: 'confidence-' + p.name, symbol: 'none', connectNulls: true, silent: true,
+                            stack: 'confidence-' + p.name, symbol: 'none', 
+                            connectNulls: false, // Critical: don't connect over gaps
+                            silent: true,
                             areaStyle: { color: p.color, opacity: 0.3 }
                         }
                     );
