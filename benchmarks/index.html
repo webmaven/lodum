@@ -40,7 +40,7 @@
         <header>
             <h1>Lodum Performance Index</h1>
             <div style="text-align: right; font-size: 0.7rem; color: #666;">
-                <div style="font-weight: bold;">Dashboard Version: 2026-05-06 23:30:00 UTC</div>
+                <div style="font-weight: bold;">Dashboard Version: 2026-05-07 00:25:00 UTC</div>
                 <div id="last-updated"></div>
             </div>
         </header>
@@ -391,34 +391,44 @@
 
                 trend.setOption({
                     tooltip: { 
-                        trigger: 'axis', 
+                        show: true,
+                        trigger: 'axis',
+                        confine: true,
                         axisPointer: { type: 'cross' },
                         formatter: (params) => {
-                            if (!params || params.length === 0) return '';
-                            const sha = window.Sync.history[params[0].dataIndex];
-                            const c = window.Sync.commitMap.get(sha);
-                            if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
-                            const firstSuite = Object.values(c.data)[0];
-                            const dateStr = firstSuite ? new Date(firstSuite.commit.timestamp).toLocaleDateString() : 'N/A';
-                            let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
-                            
-                            const platforms = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
-                            const entries = Object.entries(platforms).map(([name, pid]) => {
-                                const benchName = `JSON Serialization Lodum ${scenario}`;
-                                const val = window.Sync.getVal(sha, pid, benchName, 'value');
-                                if (val === null || val === undefined) return null;
+                            try {
+                                if (!params || params.length === 0) return '';
+                                const sha = window.Sync.history[params[0].dataIndex];
+                                if (!sha) return '';
+                                const c = window.Sync.commitMap.get(sha);
+                                if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
                                 
-                                const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
-                                const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
-                                const unit = rawVal ? 'pts' : 'µs/op';
-                                const stdevStr = stdev ? ` ± ${stdev.toFixed(2)}` : '';
-                                const rawStr = rawVal ? ` (raw: ${rawVal.toFixed(2)} µs/op)` : '';
-                                return `${name}: ${val.toFixed(2)}${stdevStr} ${unit}${rawStr}`;
-                            }).filter(e => e !== null);
+                                const firstSuite = Object.values(c.data)[0];
+                                const ts = firstSuite && firstSuite.commit ? firstSuite.commit.timestamp : null;
+                                const dateStr = ts ? new Date(ts).toLocaleDateString() : 'N/A';
+                                let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
+                                
+                                const platforms = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
+                                const entries = Object.entries(platforms).map(([name, pid]) => {
+                                    const benchName = `JSON Serialization Lodum ${scenario}`;
+                                    const val = window.Sync.getVal(sha, pid, benchName, 'value');
+                                    if (val === null || val === undefined) return null;
+                                    
+                                    const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
+                                    const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
+                                    const unit = rawVal ? 'pts' : 'µs/op';
+                                    const stdevStr = stdev ? ` ± ${stdev.toFixed(2)}` : '';
+                                    const rawStr = rawVal ? ` (raw: ${rawVal.toFixed(2)} µs/op)` : '';
+                                    return `${name}: ${val.toFixed(2)}${stdevStr} ${unit}${rawStr}`;
+                                }).filter(e => e !== null);
 
-                            if (entries.length === 0) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
-                            res += entries.join('<br/>');
-                            return res;
+                                if (entries.length === 0) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
+                                res += entries.join('<br/>');
+                                return res;
+                            } catch (e) {
+                                console.error('Tooltip Error:', e);
+                                return 'Tooltip Error: ' + e.message;
+                            }
                         }
                     },
                     legend: { bottom: 45, left: 'center' },
