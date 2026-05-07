@@ -200,13 +200,19 @@
             },
             getVal: (sha, pid, bench, field = 'value') => {
                 const c = window.Sync.commitMap.get(sha); if (!c) return null;
-                const suiteKey = Object.keys(c.data).find(k => k.toLowerCase().includes(pid.toLowerCase()));
+                const suiteKey = Object.keys(c.data).find(k => {
+                    const kClean = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const pClean = pid.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return kClean.includes(pClean);
+                });
                 if (!suiteKey) return null;
                 const b = c.data[suiteKey].benches.find(x => {
-                    const n = x.name.toLowerCase();
-                    const bLower = bench.toLowerCase();
-                    // Match either the new name (Lodum) or old name (Pydantic (v2))
-                    const target = bLower.replace('lodum', '').replace('pydantic (v2)', '').trim();
+                    const n = x.name.toLowerCase().replace(/\s+/g, ' ');
+                    const bLower = bench.toLowerCase().replace(/\s+/g, ' ');
+                    if (n.includes(bLower)) return true;
+                    // Handle alias names (Lodum vs Pydantic)
+                    const target = bLower.replace('lodum', '').replace('pydantic (v2)', '').replace(/\s+/g, ' ').trim();
+                    if (!target) return false;
                     return n.includes(target) && (n.includes('lodum') || n.includes('pydantic (v2)'));
                 });
                 return b ? b[field] : null;
