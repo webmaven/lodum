@@ -67,6 +67,10 @@
                         <option value="complex">Complex</option>
                         <option value="nested">Nested</option>
                     </select>
+                    <select id="variance-selector" style="margin-left: 10px;">
+                        <option value="none">Variance: None</option>
+                        <option value="bands">Variance: Shaded Bands</option>
+                    </select>
                 </div>
                 <div class="external-legend" id="trend-legend">
                     <div class="legend-item" onclick="window.UI.toggleSeries('Linux')"><div class="legend-color" style="background: #fbc929;"></div><span>Linux</span></div>
@@ -131,6 +135,10 @@
                 if (!chart) return;
                 chart.dispatchAction({ type: 'legendToggleSelect', name: name });
                 
+                // Also toggle related band series if they exist
+                chart.dispatchAction({ type: 'legendToggleSelect', name: name + ' (Lower)' });
+                chart.dispatchAction({ type: 'legendToggleSelect', name: name + ' (Range)' });
+
                 // Update UI state
                 const items = document.querySelectorAll('#trend-legend .legend-item');
                 items.forEach(item => {
@@ -390,24 +398,16 @@
             window.Sync.charts.ratio = ratioChart;
 
             window.updateTrend = (scenario) => {
+                const showBands = document.getElementById('variance-selector').value === 'bands';
                 const markLines = window.updateTrendMarkers();
                 const getPlatformSeries = (pid, name, color) => {
                     const means = window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`));
                     const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
-                    
+
                     const lower = means.map((m, i) => (m !== null && stdevs[i] !== null) ? m - stdevs[i] : null);
                     const range = means.map((m, i) => (m !== null && stdevs[i] !== null) ? 2 * stdevs[i] : null);
 
-                    return [
-                        {
-                            name: name + ' (Lower)', type: 'line', data: lower, lineStyle: { opacity: 0 },
-                            stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true
-                        },
-                        {
-                            name: name + ' (Range)', type: 'line', data: range, lineStyle: { opacity: 0 },
-                            stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true,
-                            areaStyle: { color: color, opacity: 0.15 }
-                        },
+                    const series = [
                         {
                             name, type: 'line', smooth: true, showSymbol: true, symbolSize: 6, color,
                             connectNulls: true, data: means,
@@ -418,28 +418,48 @@
                             }
                         }
                     ];
+
+                    if (showBands) {
+                        series.unshift(
+                            {
+                                name: name + ' (Lower)', type: 'line', data: lower, lineStyle: { opacity: 0 },
+                                stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true
+                            },
+                            {
+                                name: name + ' (Range)', type: 'line', data: range, lineStyle: { opacity: 0 },
+                                stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true,
+                                areaStyle: { color: color, opacity: 0.15 }
+                            }
+                        );
+                    }
+
+                    return series;
                 };
 
-                    trend.setOption({
-                        tooltip: { 
-                            show: true, trigger: 'axis', axisPointer: { type: 'cross' }, appendToBody: true,
-                            formatter: (params) => {
-                                if (!params || params.length === 0) return '';
-                                const di = params[0].dataIndex;
-                                const sha = window.Sync.history[di];
-                                const c = window.Sync.commitMap.get(sha);
-                                if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
-                                
-                                let res = `<b>${sha.substring(0,7)}</b><br/>`;
-                                params.filter(p => p.seriesName && !p.seriesName.includes('(Lower)') && !p.seriesName.includes('(Range)')).forEach(p => {
-                                    if (p.value !== null) res += `${p.marker} ${p.seriesName}: ${p.value.toFixed(2)}<br/>`;
-                                });
-                                return res;
-                            }
-                        },
-                        legend: { show: false },
-                        grid: { top: 40, left: 40, right: 20, bottom: 60 },
-                        xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
+                trend.setOption({
+                    tooltip: { 
+                        show: true, trigger: 'axis', axisPointer: { type: 'cross' }, appendToBody: true,
+                        formatter: (params) => {
+                            if (!params || params.length === 0) return '';
+                            const di = params[0].dataIndex;
+                            const sha = window.Sync.history[di];
+                            const c = window.Sync.commitMap.get(sha);
+                            if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
+
+                            let res = `<b>${sha.substring(0,7)}</b><br/>`;
+                            params.filter(p => p.seriesName && !p.seriesName.includes('(Lower)') && !p.seriesName.includes('(Range)')).forEach(p => {
+                                if (p.value !== null) {
+                                    const pid = p.seriesName === 'Linux' ? 'ubuntu-latest' : (p.seriesName === 'Windows' ? 'windows-latest' : 'Pyodide');
+                                    const stdev = window.Sync.getVal(sha, pid, `JSON Serialization Lodum ${scenario}`, 'stdev');
+                                    res += `${p.marker} ${p.seriesName}: ${p.value.toFixed(2)}${stdev ? ' ±' + stdev.toFixed(2) : ''}<br/>`;
+                                }
+                            });
+                            return res;
+                        }
+                    },
+                    legend: { show: false },
+                    grid: { top: 40, left: 40, right: 20, bottom: 60 },
+                    xAxis: { type: 'category', data: window.Sync.history.map(s => s.substring(0,7)), triggerEvent: true },
                     yAxis: { type: 'value', name: 'Score / µs', splitLine: { lineStyle: { type: 'dashed' } } },
                     series: [
                         ...getPlatformSeries('ubuntu-latest', 'Linux', '#fbc929'),
@@ -447,8 +467,7 @@
                         ...getPlatformSeries('Pyodide', 'WASM', '#10b981')
                     ],
                     dataZoom: [{ type: 'slider', bottom: 10 }, { type: 'inside' }]
-                });
-
+                }, true); // Use true for notMerge to handle series removal/addition correctly
                 // New Ratio Chart
                 window.Sync.charts.ratio.setOption({
                     title: { text: 'Speedup vs Marshmallow (Ratio)', textStyle: { fontSize: 12, color: '#666' }, left: 'center' },
@@ -570,6 +589,7 @@
             window.updateTrend('simple');
             setTimeout(() => window.Sync.refresh(latestSha, 'init'), 100);
             document.getElementById('scenario-selector').onchange = (e) => window.updateTrend(e.target.value);
+            document.getElementById('variance-selector').onchange = (e) => window.updateTrend(document.getElementById('scenario-selector').value);
             document.getElementById('baseline-mode').onchange = (e) => window.UI.updateHeatmap(window.Sync.selectedSha);
 
             window.addEventListener('mousemove', (e) => {
