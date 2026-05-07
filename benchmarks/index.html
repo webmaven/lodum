@@ -414,16 +414,16 @@
                     const means = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`));
                     const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
 
-                    // Use 0-variance fallback instead of null to ensure the spline has enough points to curve
+                    // Use Adaptive Amplification for visibility: (stdev * 10) + 1.0 minimum offset
                     const lower = means.map((m, i) => {
                         const s = stdevs[i];
-                        if (m === null) return null;
-                        return (typeof s === 'number') ? m - s : m;
+                        if (m === null || typeof s !== 'number') return null;
+                        return m - (s * 10 + 1.0);
                     });
                     const range = means.map((m, i) => {
                         const s = stdevs[i];
-                        if (m === null) return null;
-                        return (typeof s === 'number') ? 2 * s : 0;
+                        if (m === null || typeof s !== 'number') return null;
+                        return 2 * (s * 10 + 1.0);
                     });
 
                     // 1. Add Variance Series (or clear them if hidden)
@@ -431,18 +431,16 @@
                         {
                             name: p.name + ' (Lower)', type: 'line', data: showBands ? lower : [], 
                             smooth: true,
-                            lineStyle: { color: p.color, opacity: 0.2, width: 1, type: 'dashed' }, 
-                            itemStyle: { opacity: 0 },
+                            lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
                             stack: 'confidence-' + p.name, symbol: 'none', 
-                            connectNulls: true, silent: true
+                            connectNulls: false, silent: true
                         },
                         {
                             name: p.name + ' (Range)', type: 'line', data: showBands ? range : [], 
                             smooth: true,
-                            lineStyle: { color: p.color, opacity: 0.2, width: 1, type: 'dashed' }, 
-                            itemStyle: { opacity: 0 },
+                            lineStyle: { opacity: 0 }, itemStyle: { opacity: 0 },
                             stack: 'confidence-' + p.name, symbol: 'none', 
-                            connectNulls: true, silent: true,
+                            connectNulls: false, silent: true,
                             areaStyle: { color: p.color, opacity: 0.3 }
                         }
                     );
