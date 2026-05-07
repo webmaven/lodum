@@ -428,7 +428,8 @@
                             {
                                 name: name + ' (Range)', type: 'line', data: range, lineStyle: { opacity: 0 },
                                 stack: 'confidence-' + name, symbol: 'none', connectNulls: true, silent: true,
-                                areaStyle: { color: color, opacity: 0.15 }
+                                areaStyle: { color: color, opacity: 0.3 },
+                                lineStyle: { color: color, opacity: 0.2, width: 0.5 }
                             }
                         );
                     }
@@ -467,7 +468,7 @@
                         ...getPlatformSeries('Pyodide', 'WASM', '#10b981')
                     ],
                     dataZoom: [{ type: 'slider', bottom: 10 }, { type: 'inside' }]
-                }, true); // Use true for notMerge to handle series removal/addition correctly
+                }); // Removed true (notMerge) to allow zoom persistence
                 // New Ratio Chart
                 window.Sync.charts.ratio.setOption({
                     title: { text: 'Speedup vs Marshmallow (Ratio)', textStyle: { fontSize: 12, color: '#666' }, left: 'center' },
