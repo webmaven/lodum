@@ -344,10 +344,10 @@
             updateFormats: (sha) => {
                 const c = window.Sync.commitMap.get(sha);
                 if (!c) return;
+                const suiteKey = Object.keys(c.data).find(k => k.includes('ubuntu-latest'));
                 const platforms = [{n:'JSON', p:'JSON Serialization Lodum complex'}, {n:'MsgPack', p:'MsgPack Serialization Lodum complex'}, {n:'CBOR', p:'CBOR Serialization Lodum complex'}, {n:'Pickle', p:'Pickle Serialization Lodum (Safe) complex'}];
                 const colors = ['#94a3b8', '#fbc929', '#3b82f6', '#10b981'];
                 const vals = platforms.map((f, i) => {
-                    const suiteKey = Object.keys(c.data).find(k => k.includes('ubuntu-latest'));
                     if (!suiteKey) return { value: 0, itemStyle: { color: colors[i] } };
                     const b = c.data[suiteKey].benches.find(x => x.name.includes(f.p));
                     return { value: b ? b.value : 0, itemStyle: { color: colors[i] } };
@@ -357,7 +357,9 @@
                     yAxis: { type: 'category', data: platforms.map(p => p.n), inverse: true },
                     grid: { top: 10, bottom: 10, left: 60, right: 40 },
                     series: [{ type: 'bar', data: vals, label: { show: true, position: 'right', formatter: (p) => {
-                        const raw = c.data[suiteKey].benches.find(x => x.name.includes(platforms[p.dataIndex].p)).raw_value;
+                        if (!suiteKey) return p.value.toFixed(2);
+                        const b = c.data[suiteKey].benches.find(x => x.name.includes(platforms[p.dataIndex].p));
+                        const raw = b ? b.raw_value : null;
                         return p.value.toFixed(2) + (raw ? ' pts' : ' µs');
                     } } }]
                 });
