@@ -431,7 +431,7 @@
                                 if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
                                 
                                 let res = `<b>${sha.substring(0,7)}</b><br/>`;
-                                params.filter(p => p.seriesName && !p.seriesName.includes('Range')).forEach(p => {
+                                params.filter(p => p.seriesName && !p.seriesName.includes('(Lower)') && !p.seriesName.includes('(Range)')).forEach(p => {
                                     if (p.value !== null) res += `${p.marker} ${p.seriesName}: ${p.value.toFixed(2)}<br/>`;
                                 });
                                 return res;
