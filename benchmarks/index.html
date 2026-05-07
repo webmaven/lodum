@@ -40,7 +40,7 @@
         <header>
             <h1>Lodum Performance Index</h1>
             <div style="text-align: right; font-size: 0.7rem; color: #666;">
-                <div style="font-weight: bold;">Dashboard Version: 2026-05-07 00:50:00 UTC</div>
+                <div style="font-weight: bold;">Dashboard Version: 2026-05-07 01:10:00 UTC</div>
                 <div id="last-updated"></div>
             </div>
         </header>
@@ -417,15 +417,20 @@
                                     const dateStr = ts ? new Date(ts).toLocaleDateString() : 'N/A';
                                     res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
                                     
-                                    const platforms = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
-                                    const entries = Object.entries(platforms).map(([name, pid]) => {
-                                        const benchName = `JSON Serialization Lodum ${scenario}`;
-                                        const val = window.Sync.getVal(sha, pid, benchName, 'value');
+                                    // Map results from the series data itself (params)
+                                    // Filter out 'Range' series and only keep the main lines
+                                    const entries = params.filter(p => p.seriesName && !p.seriesName.includes('Range')).map(p => {
+                                        const val = p.value;
                                         if (val === null || val === undefined) return null;
+                                        
+                                        // Try to find raw_value/stdev from Sync for extra info
+                                        const pid = p.seriesId.includes('windows') ? 'windows-latest' : (p.seriesId.includes('ubuntu') ? 'ubuntu-latest' : 'Pyodide');
+                                        const benchName = `JSON Serialization Lodum ${scenario}`;
                                         const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
                                         const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
+                                        
                                         const unit = rawVal ? 'pts' : 'µs/op';
-                                        return `${name}: ${val.toFixed(2)}${stdev ? ' ± ' + stdev.toFixed(2) : ''} ${unit}${rawVal ? ' (raw: ' + rawVal.toFixed(2) + ' µs/op)' : ''}`;
+                                        return `${p.seriesName}: ${val.toFixed(2)}${stdev ? ' ± ' + stdev.toFixed(2) : ''} ${unit}${rawVal ? ' (raw: ' + rawVal.toFixed(2) + ' µs/op)' : ''}`;
                                     }).filter(e => e !== null);
 
                                     if (entries.length === 0) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
