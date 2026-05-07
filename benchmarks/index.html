@@ -213,7 +213,9 @@
                     // Handle alias names (Lodum vs Pydantic)
                     const target = bLower.replace('lodum', '').replace('pydantic (v2)', '').replace(/\s+/g, ' ').trim();
                     if (!target) return false;
-                    return n.includes(target) && (n.includes('lodum') || n.includes('pydantic (v2)'));
+                    const words = target.split(' ');
+                    // Match if all words from the target (after removing project names) are present
+                    return words.every(w => n.includes(w)) && (n.includes('lodum') || n.includes('pydantic (v2)'));
                 });
                 return b ? b[field] : null;
             },
@@ -395,26 +397,26 @@
                             if (!params || params.length === 0) return '';
                             const sha = window.Sync.history[params[0].dataIndex];
                             const c = window.Sync.commitMap.get(sha);
-                            const firstSuite = c ? Object.values(c.data)[0] : null;
+                            if (!c) return `<b>${sha.substring(0,7)}</b><br/><i style="color:#f87171">Data Gap</i>`;
+                            const firstSuite = Object.values(c.data)[0];
                             const dateStr = firstSuite ? new Date(firstSuite.commit.timestamp).toLocaleDateString() : 'N/A';
                             let res = `<b>${sha.substring(0,7)}</b> (${dateStr})<br/>`;
-                            if (!c) res += `<i style="color:#f87171">Data Gap (Documentation/Archival Commit)</i><br/>`;
-                            const entries = params.filter(p => !p.seriesName.includes('(')).map(p => {
-                                const platformMap = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
-                                const pid = platformMap[p.seriesName] || p.seriesName;
+                            
+                            const platforms = {'Linux': 'ubuntu-latest', 'Windows': 'windows-latest', 'WASM': 'Pyodide'};
+                            const entries = Object.entries(platforms).map(([name, pid]) => {
                                 const benchName = `JSON Serialization Lodum ${scenario}`;
+                                const val = window.Sync.getVal(sha, pid, benchName, 'value');
+                                if (val === null || val === undefined) return null;
+                                
                                 const rawVal = window.Sync.getVal(sha, pid, benchName, 'raw_value');
                                 const stdev = window.Sync.getVal(sha, pid, benchName, 'stdev');
-                                const valStr = p.value !== undefined && p.value !== null ? p.value.toFixed(2) : null;
-                                if (!valStr) return null;
-                                
-                                const stdevStr = stdev ? ` ± ${stdev.toFixed(2)}` : '';
                                 const unit = rawVal ? 'pts' : 'µs/op';
+                                const stdevStr = stdev ? ` ± ${stdev.toFixed(2)}` : '';
                                 const rawStr = rawVal ? ` (raw: ${rawVal.toFixed(2)} µs/op)` : '';
-                                return `${p.seriesName}: ${valStr}${stdevStr} ${unit}${rawStr}`;
+                                return `${name}: ${val.toFixed(2)}${stdevStr} ${unit}${rawStr}`;
                             }).filter(e => e !== null);
-                            
-                            if (entries.length === 0 && c) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
+
+                            if (entries.length === 0) res += `<i style="color:#94a3b8">No benchmark data for this scenario</i><br/>`;
                             res += entries.join('<br/>');
                             return res;
                         }
