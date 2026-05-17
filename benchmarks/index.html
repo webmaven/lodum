@@ -414,15 +414,15 @@
                     const means = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`));
                     const stdevs = window.Sync.history.map(sha => window.Sync.getVal(sha, p.pid, `JSON Serialization Lodum ${scenario}`, 'stdev'));
 
-                    // Use Adaptive Amplification for visibility: (stdev * 10) + 1.0 minimum offset
+                    // Use 0.0 as safe numeric fallback for missing stdev
                     const lower = means.map((m, i) => {
-                        const s = stdevs[i];
-                        if (m === null || typeof s !== 'number') return null;
+                        const s = (typeof stdevs[i] === 'number') ? stdevs[i] : 0.0;
+                        if (m === null) return null;
                         return m - (s * 10 + 1.0);
                     });
                     const range = means.map((m, i) => {
-                        const s = stdevs[i];
-                        if (m === null || typeof s !== 'number') return null;
+                        const s = (typeof stdevs[i] === 'number') ? stdevs[i] : 0.0;
+                        if (m === null) return null;
                         return 2 * (s * 10 + 1.0);
                     });
 
