@@ -398,10 +398,14 @@ def run_group(
 
             results[scenario] = res
             if res and is_json:
+                # Use a reference for normalization if available, else 1.0
+                reference_us = calibration_baseline if calibration_baseline > 0 else 1.0
+                scale = 100.0
                 results_collector.append(
-                    {"name": full_name, "unit": "us", "value": res["mean"],
-                     "stdev": res["stdev"], "iterations": res["iterations"],
-                     "normalized": res["mean"] / reference_us}
+                    {"name": full_name, "unit": "pts", "value": (res["mean"] / reference_us) * scale,
+                     "stdev": (res["stdev"] / reference_us) * scale, "iterations": res["iterations"],
+                     "normalized": res["mean"] / reference_us,
+                     "raw_value": res["mean"], "raw_unit": "us"}
                 )
                 if "cold" in res:
                     results_collector.append(
