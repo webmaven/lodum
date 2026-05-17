@@ -404,8 +404,9 @@ def run_group(
 
             results[scenario] = res
             if res and is_json:
-                # Use a reference for normalization if available, else 1.0
-                reference_us = calibration_baseline if calibration_baseline > 0 else 1.0
+                # Use global calibration_baseline if it exists, else 1.0
+                ref = globals().get('calibration_baseline', 1.0)
+                reference_us = ref if ref > 0 else 1.0
                 results_collector.append(
                     {
                         "name": full_name, 
