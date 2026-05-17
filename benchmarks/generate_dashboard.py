@@ -135,10 +135,13 @@ def generate_dashboard(history_dir, output_file, repo_dir):
                         # Use normalized value as the primary display value (as a 'virtual' microsecond)
                         # We multiply by 100 to make it readable in the charts (e.g. 0.05 -> 5.0)
                         # This doesn't change the relative performance, just the scale.
-                        new_bench["value"] = bench["normalized"] * 100
+                        scale = 100.0
+                        new_bench["value"] = bench["normalized"] * scale
                         new_bench["unit"] = "pts" # Performance Points
                         new_bench["raw_value"] = bench["value"]
                         new_bench["raw_unit"] = bench["unit"]
+                        if "stdev" in bench:
+                            new_bench["stdev"] = bench["stdev"] * scale
                     final_benches.append(new_bench)
 
                 entry = {
