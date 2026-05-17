@@ -3,91 +3,92 @@ import sys
 import os
 
 # --- Robust Instrumentation & Shims ---
-print(f"DEBUG: sys.path = {sys.path}")
+print(f"DEBUG: sys.path = {sys.path}", file=sys.stderr)
 
 def get_lodum_decorator():
-    print("DEBUG: Resolving lodum decorator...")
+    print("DEBUG: Resolving lodum decorator...", file=sys.stderr)
     
     # 1. Try modern public API
     try:
         from lodum import lodum
-        print(f"DEBUG: Found 'lodum' in 'lodum' package: {lodum}")
+        print(f"DEBUG: Found 'lodum' in 'lodum' package: {lodum}", file=sys.stderr)
         raw_decorator = lodum
         def safe_decorator(cls):
             try:
                 return raw_decorator(cls)
             except Exception as e:
-                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
+                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
                 return cls
         return safe_decorator
     except Exception as e:
-        print(f"DEBUG: 'from lodum import lodum' failed: {e}")
+        print(f"DEBUG: 'from lodum import lodum' failed: {e}", file=sys.stderr)
 
     # 2. Try v0.2.0 internal location
     try:
         from lodum.core import lodum
-        print(f"DEBUG: Found 'lodum' in 'lodum.core': {lodum}")
+        print(f"DEBUG: Found 'lodum' in 'lodum.core': {lodum}", file=sys.stderr)
         raw_decorator = lodum
         def safe_decorator(cls):
             try:
                 return raw_decorator(cls)
             except Exception as e:
-                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
+                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
                 return cls
         return safe_decorator
     except Exception as e:
-        print(f"DEBUG: 'from lodum.core import lodum' failed: {e}")
+        print(f"DEBUG: 'from lodum.core import lodum' failed: {e}", file=sys.stderr)
 
     # 3. Try v0.1.0 'serializable'
     try:
         from lodum.core import serializable as lodum
-        print(f"DEBUG: Found 'serializable' in 'lodum.core': {lodum}")
+        print(f"DEBUG: Found 'serializable' in 'lodum.core': {lodum}", file=sys.stderr)
         raw_decorator = lodum
         def safe_decorator(cls):
             try:
                 return raw_decorator(cls)
             except Exception as e:
-                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
+                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
                 return cls
         return safe_decorator
     except Exception as e:
-        print(f"DEBUG: 'from lodum.core import serializable' failed: {e}")
+        print(f"DEBUG: 'from lodum.core import serializable' failed: {e}", file=sys.stderr)
 
     # 4. Last resort: manual attribute check
     try:
         import lodum.core
-        print(f"DEBUG: lodum.core.__file__ = {getattr(lodum.core, '__file__', 'unknown')}")
+        print(f"DEBUG: lodum.core.__file__ = {getattr(lodum.core, '__file__', 'unknown')}", file=sys.stderr)
         if hasattr(lodum.core, "lodum"):
-            print("DEBUG: Found 'lodum' via hasattr on lodum.core")
-            raw_decorator = lodum
-        def safe_decorator(cls):
-            try:
-                return raw_decorator(cls)
-            except Exception as e:
-                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
-                return cls
-        return safe_decorator.core.lodum
+            print("DEBUG: Found 'lodum' via hasattr on lodum.core", file=sys.stderr)
+            raw_decorator = lodum.core.lodum
+            def safe_decorator(cls):
+                try:
+                    return raw_decorator(cls)
+                except Exception as e:
+                    print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
+                    return cls
+            return safe_decorator
+        
         if hasattr(lodum.core, "serializable"):
-            print("DEBUG: Found 'serializable' via hasattr on lodum.core")
-            raw_decorator = lodum
-        def safe_decorator(cls):
-            try:
-                return raw_decorator(cls)
-            except Exception as e:
-                print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
-                return cls
-        return safe_decorator.core.serializable
+            print("DEBUG: Found 'serializable' via hasattr on lodum.core", file=sys.stderr)
+            raw_decorator = lodum.core.serializable
+            def safe_decorator(cls):
+                try:
+                    return raw_decorator(cls)
+                except Exception as e:
+                    print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
+                    return cls
+            return safe_decorator
     except Exception as e:
-        print(f"DEBUG: Manual attribute check failed: {e}")
+        print(f"DEBUG: Manual attribute check failed: {e}", file=sys.stderr)
 
-    print("WARNING: Could not find lodum or serializable decorator. Using dummy.")
+    print("WARNING: Could not find lodum or serializable decorator. Using dummy.", file=sys.stderr)
     raw_decorator = lambda x: x
     
     def safe_decorator(cls):
         try:
             return raw_decorator(cls)
         except Exception as e:
-            print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
+            print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
             return cls
     return safe_decorator
 

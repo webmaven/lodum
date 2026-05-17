@@ -79,7 +79,7 @@ def calibrate():
     return statistics.median(times)
 
 REFERENCE_BASELINE = calibrate()
-print(f"DEBUG: Hardware Calibration Baseline: {REFERENCE_BASELINE:.8f}s")
+print(f"DEBUG: Hardware Calibration Baseline: {REFERENCE_BASELINE:.8f}s", file=sys.stderr)
 
 
 # --- Lodum Imports with fallbacks for very old versions ---

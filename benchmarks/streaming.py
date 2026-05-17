@@ -8,21 +8,21 @@ from typing import List, Type, Any, Iterator, Union, Optional
 from pathlib import Path
 
 # --- Robust Instrumentation & Shims ---
-print(f"DEBUG: sys.path = {sys.path}")
+print(f"DEBUG: sys.path = {sys.path}", file=sys.stderr)
 
 try:
     from lodum import lodum
     from lodum import json as lodum_json
-    print(f"DEBUG: Found 'lodum' package: {lodum}")
-    print(f"DEBUG: Found 'lodum.json' module: {lodum_json}")
+    print(f"DEBUG: Found 'lodum' package: {lodum}", file=sys.stderr)
+    print(f"DEBUG: Found 'lodum.json' module: {lodum_json}", file=sys.stderr)
 except Exception as e:
-    print(f"DEBUG: Initial import failed: {e}")
+    print(f"DEBUG: Initial import failed: {e}", file=sys.stderr)
     try:
         from lodum.core import serializable as lodum
         import lodum.json as lodum_json  # type: ignore
-        print("DEBUG: Found legacy 'serializable' and 'lodum.json'")
+        print("DEBUG: Found legacy 'serializable' and 'lodum.json'", file=sys.stderr)
     except ImportError as e2:
-        print(f"DEBUG: Legacy import failed: {e2}")
+        print(f"DEBUG: Legacy import failed: {e2}", file=sys.stderr)
         lodum = None
         lodum_json = None
 
@@ -32,7 +32,7 @@ def safe_decorator(cls):
     try:
         return raw_decorator(cls)
     except Exception as e:
-        print(f"DEBUG: Decoration failed for {cls.__name__}: {e}")
+        print(f"DEBUG: Decoration failed for {cls.__name__}: {e}", file=sys.stderr)
         return cls
 decorator = safe_decorator
 
@@ -47,27 +47,27 @@ class LargeItem:
 def get_stream_func(lodum_json_module):
     """Dynamically resolves the streaming API for the current version."""
     if not lodum_json_module:
-        print("DEBUG: No lodum_json_module provided to get_stream_func")
+        print("DEBUG: No lodum_json_module provided to get_stream_func", file=sys.stderr)
         return None
         
     if hasattr(lodum_json_module, 'load_stream'):
-        print("DEBUG: Found 'load_stream' in lodum_json")
+        print("DEBUG: Found 'load_stream' in lodum_json", file=sys.stderr)
         return lodum_json_module.load_stream
     elif hasattr(lodum_json_module, 'stream'):
-        print("DEBUG: Found 'stream' in lodum_json")
+        print("DEBUG: Found 'stream' in lodum_json", file=sys.stderr)
         return lodum_json_module.stream
     elif hasattr(lodum_json_module, 'from_iter'):
-        print("DEBUG: Found 'from_iter' in lodum_json")
+        print("DEBUG: Found 'from_iter' in lodum_json", file=sys.stderr)
         return lodum_json_module.from_iter
     elif hasattr(lodum_json_module, 'from_json'):
-        print("DEBUG: Falling back to 'from_json' for streaming shim")
+        print("DEBUG: Falling back to 'from_json' for streaming shim", file=sys.stderr)
         def fallback(cls, source):
             if isinstance(source, io.IOBase):
                 source = source.read().decode('utf-8')
             return lodum_json_module.from_json(cls, source)
         return fallback
     
-    print("DEBUG: No streaming API found in lodum_json")
+    print("DEBUG: No streaming API found in lodum_json", file=sys.stderr)
     return None
 
 stream_func = get_stream_func(lodum_json)
@@ -75,7 +75,7 @@ stream_func = get_stream_func(lodum_json)
 def loads_shim(cls: Type[Any], data: str) -> Any:
     """Dynamically resolves the loading API."""
     if not lodum_json:
-        print("DEBUG: No lodum_json module for loads_shim")
+        print("DEBUG: No lodum_json module for loads_shim", file=sys.stderr)
         return None
         
     if hasattr(lodum_json, 'loads'):
@@ -83,7 +83,7 @@ def loads_shim(cls: Type[Any], data: str) -> Any:
     elif hasattr(lodum_json, 'from_json'):
         return lodum_json.from_json(cls, data)
     
-    print("DEBUG: No loading API found in lodum_json")
+    print("DEBUG: No loading API found in lodum_json", file=sys.stderr)
     return None
 
 # --- Rest of Benchmark Logic ---
@@ -119,7 +119,7 @@ def run_benchmark(count: int):
                     "memory_mb": peak / (1024 * 1024)
                 })
         except Exception as e:
-            print(f"DEBUG: Standard load failed: {e}")
+            print(f"DEBUG: Standard load failed: {e}", file=sys.stderr)
         finally:
             tracemalloc.stop()
 
@@ -142,7 +142,7 @@ def run_benchmark(count: int):
                     "memory_mb": peak / (1024 * 1024)
                 })
         except Exception as e:
-            print(f"DEBUG: Streaming load failed: {e}")
+            print(f"DEBUG: Streaming load failed: {e}", file=sys.stderr)
         finally:
             tracemalloc.stop()
 
