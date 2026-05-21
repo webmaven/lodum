@@ -1,0 +1,170 @@
+{
+  "commit": {
+    "id": "2e6a9b5d76ef1fdd986c413adb7c4eb279b47434",
+    "message": "Merge pull request #22 from webmaven/performance-improvements-9615187105587164917",
+    "timestamp": "2026-01-20T23:51:40-07:00",
+    "author": {
+      "name": "Michael R. Bernstein",
+      "email": "zopemaven@gmail.com"
+    },
+    "url": "https://github.com/webmaven/lodum/commit/2e6a9b5d76ef1fdd986c413adb7c4eb279b47434"
+  },
+  "results": [
+    {
+      "name": "JSON Serialization Pydantic (v2) simple",
+      "unit": "us",
+      "value": 2.088591437703664,
+      "stdev": 0.009894688620261828,
+      "iterations": 21276,
+      "normalized": 2.088591437703664
+    },
+    {
+      "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
+      "unit": "us",
+      "value": 88.00000000519503
+    },
+    {
+      "name": "JSON Serialization Pydantic (v2) complex",
+      "unit": "us",
+      "value": 2.65201335637346,
+      "stdev": 0.01001866778619153,
+      "iterations": 18518,
+      "normalized": 2.65201335637346
+    },
+    {
+      "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
+      "unit": "us",
+      "value": 49.800000169852865
+    },
+    {
+      "name": "JSON Serialization Pydantic (v2) nested",
+      "unit": "us",
+      "value": 5.059069837616368,
+      "stdev": 0.26406909655731914,
+      "iterations": 10416,
+      "normalized": 5.059069837616368
+    },
+    {
+      "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
+      "unit": "us",
+      "value": 46.8000000637403
+    },
+    {
+      "name": "JSON Serialization Marshmallow simple",
+      "unit": "us",
+      "value": 7.413663393719419,
+      "stdev": 0.7921521684238734,
+      "iterations": 8264,
+      "normalized": 7.413663393719419
+    },
+    {
+      "name": "JSON Serialization Marshmallow simple (Cold Start)",
+      "unit": "us",
+      "value": 65.20000010823424
+    },
+    {
+      "name": "JSON Serialization Marshmallow complex",
+      "unit": "us",
+      "value": 14.544291666671446,
+      "stdev": 0.1807862063571957,
+      "iterations": 2000,
+      "normalized": 14.544291666671446
+    },
+    {
+      "name": "JSON Serialization Marshmallow complex (Cold Start)",
+      "unit": "us",
+      "value": 70.00000005064066
+    },
+    {
+      "name": "JSON Serialization Marshmallow nested",
+      "unit": "us",
+      "value": 42.18756428575229,
+      "stdev": 3.6309504612768313,
+      "iterations": 2000,
+      "normalized": 42.18756428575229
+    },
+    {
+      "name": "JSON Serialization Marshmallow nested (Cold Start)",
+      "unit": "us",
+      "value": 101.99999996984843
+    },
+    {
+      "name": "JSON Deserialization Pydantic (v2) simple",
+      "unit": "us",
+      "value": 1.604151291513724,
+      "stdev": 0.0034953987635405275,
+      "iterations": 22222,
+      "normalized": 1.604151291513724
+    },
+    {
+      "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
+      "unit": "us",
+      "value": 213.00000003066089
+    },
+    {
+      "name": "JSON Deserialization Pydantic (v2) complex",
+      "unit": "us",
+      "value": 2.6762702420829405,
+      "stdev": 0.007557361234489564,
+      "iterations": 19999,
+      "normalized": 2.6762702420829405
+    },
+    {
+      "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
+      "unit": "us",
+      "value": 69.29999995008984
+    },
+    {
+      "name": "JSON Deserialization Pydantic (v2) nested",
+      "unit": "us",
+      "value": 6.640198136804866,
+      "stdev": 0.011645609078135097,
+      "iterations": 11363,
+      "normalized": 6.640198136804866
+    },
+    {
+      "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
+      "unit": "us",
+      "value": 69.29999995008984
+    },
+    {
+      "name": "JSON Deserialization Marshmallow simple",
+      "unit": "us",
+      "value": 16.13710833332031,
+      "stdev": 0.07438086732491722,
+      "iterations": 2000,
+      "normalized": 16.13710833332031
+    },
+    {
+      "name": "JSON Deserialization Marshmallow simple (Cold Start)",
+      "unit": "us",
+      "value": 133.9999998890562
+    },
+    {
+      "name": "JSON Deserialization Marshmallow complex",
+      "unit": "us",
+      "value": 36.087542857119715,
+      "stdev": 0.10862934468013746,
+      "iterations": 2000,
+      "normalized": 36.087542857119715
+    },
+    {
+      "name": "JSON Deserialization Marshmallow complex (Cold Start)",
+      "unit": "us",
+      "value": 93.09999995821272
+    },
+    {
+      "name": "JSON Deserialization Marshmallow nested",
+      "unit": "us",
+      "value": 113.75865000000626,
+      "stdev": 0.42087351725198474,
+      "iterations": 2000,
+      "normalized": 113.75865000000626
+    },
+    {
+      "name": "JSON Deserialization Marshmallow nested (Cold Start)",
+      "unit": "us",
+      "value": 186.29999999575375
+    }
+  ]
+}
