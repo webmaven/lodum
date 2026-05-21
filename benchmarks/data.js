@@ -38786,6 +38786,922 @@ window.BENCHMARK_DATA = {
       },
       {
         "commit": {
+          "id": "327a200054bcee916acae1fd2620bc1d3a47b256",
+          "message": "feat(plan): Create detailed plan for Protocol Buffers Support (#47)",
+          "timestamp": "2026-02-08T08:02:34+02:00",
+          "author": {
+            "name": "Michael R. Bernstein",
+            "email": "zopemaven@gmail.com"
+          },
+          "url": "https://github.com/webmaven/lodum/commit/327a200054bcee916acae1fd2620bc1d3a47b256"
+        },
+        "date": 1770530554000,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "JSON Serialization Lodum simple",
+            "unit": "pts",
+            "value": 375.97853399288954,
+            "stdev": 1.5850226756016808,
+            "iterations": 11321,
+            "normalized": 3.7597853399288956,
+            "raw_value": 3.7597853399288956,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 439.5419999951855
+          },
+          {
+            "name": "JSON Serialization Lodum complex",
+            "unit": "pts",
+            "value": 626.4667176243026,
+            "stdev": 1.8023234095229494,
+            "iterations": 8130,
+            "normalized": 6.264667176243027,
+            "raw_value": 6.264667176243027,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 720.874999998955
+          },
+          {
+            "name": "JSON Serialization Lodum nested",
+            "unit": "pts",
+            "value": 1721.3329071428316,
+            "stdev": 9.284369125777122,
+            "iterations": 2000,
+            "normalized": 17.213329071428316,
+            "raw_value": 17.213329071428316,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 450.55800000426416
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple",
+            "unit": "pts",
+            "value": 156.45745777650947,
+            "stdev": 0.3999432304631633,
+            "iterations": 29985,
+            "normalized": 1.5645745777650948,
+            "raw_value": 1.5645745777650948,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 45.61800000146832
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex",
+            "unit": "pts",
+            "value": 195.81591820368624,
+            "stdev": 0.8344081237833417,
+            "iterations": 34916,
+            "normalized": 1.9581591820368622,
+            "raw_value": 1.9581591820368622,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 10.977000002299064
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested",
+            "unit": "pts",
+            "value": 374.2170788853501,
+            "stdev": 0.5624577622080495,
+            "iterations": 21706,
+            "normalized": 3.7421707888535005,
+            "raw_value": 3.7421707888535005,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 15.873999998916588
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple",
+            "unit": "pts",
+            "value": 622.4479396557907,
+            "stdev": 1.5047403898234062,
+            "iterations": 10085,
+            "normalized": 6.224479396557907,
+            "raw_value": 6.224479396557907,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 54.421999998055526
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex",
+            "unit": "pts",
+            "value": 1316.974936061415,
+            "stdev": 1.2699507871939515,
+            "iterations": 6256,
+            "normalized": 13.169749360614151,
+            "raw_value": 13.169749360614151,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 44.71200000466524
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested",
+            "unit": "pts",
+            "value": 3567.1538166666273,
+            "stdev": 3.5199030906121185,
+            "iterations": 2000,
+            "normalized": 35.671538166666274,
+            "raw_value": 35.671538166666274,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 69.55700000332854
+          },
+          {
+            "name": "JSON Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 931.9502166666401,
+            "stdev": 2.7640596250831706,
+            "iterations": 2000,
+            "normalized": 9.319502166666402,
+            "raw_value": 9.319502166666402,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 1222.6070000025402
+          },
+          {
+            "name": "JSON Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 1724.7080499999408,
+            "stdev": 6.942846005067746,
+            "iterations": 2000,
+            "normalized": 17.24708049999941,
+            "raw_value": 17.24708049999941,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 1577.296999997202
+          },
+          {
+            "name": "JSON Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 5299.496235714228,
+            "stdev": 11.741822003920447,
+            "iterations": 2000,
+            "normalized": 52.99496235714228,
+            "raw_value": 52.99496235714228,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1205.6919999992033
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple",
+            "unit": "pts",
+            "value": 116.22357445434935,
+            "stdev": 1.617834409839632,
+            "iterations": 35410,
+            "normalized": 1.1622357445434934,
+            "raw_value": 1.1622357445434934,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 68.33200000500028
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex",
+            "unit": "pts",
+            "value": 187.10392041995792,
+            "stdev": 0.22112768623684387,
+            "iterations": 29019,
+            "normalized": 1.8710392041995791,
+            "raw_value": 1.8710392041995791,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 18.44800000583291
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested",
+            "unit": "pts",
+            "value": 463.0096234612752,
+            "stdev": 0.8205335192215243,
+            "iterations": 13810,
+            "normalized": 4.630096234612752,
+            "raw_value": 4.630096234612752,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 33.44999999654874
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple",
+            "unit": "pts",
+            "value": 1413.8424833333238,
+            "stdev": 12.60141962587142,
+            "iterations": 2000,
+            "normalized": 14.138424833333238,
+            "raw_value": 14.138424833333238,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 111.97700000309396
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex",
+            "unit": "pts",
+            "value": 3177.850900000071,
+            "stdev": 23.821369237934796,
+            "iterations": 2000,
+            "normalized": 31.77850900000071,
+            "raw_value": 31.77850900000071,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 78.33699999792998
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested",
+            "unit": "pts",
+            "value": 9803.46324285714,
+            "stdev": 45.96072643735145,
+            "iterations": 2000,
+            "normalized": 98.0346324285714,
+            "raw_value": 98.0346324285714,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 147.09899999587606
+          },
+          {
+            "name": "MsgPack Serialization Lodum simple",
+            "unit": "pts",
+            "value": 243.75819163521425,
+            "stdev": 0.32293888273556504,
+            "iterations": 20214,
+            "normalized": 2.4375819163521424,
+            "raw_value": 2.4375819163521424,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 66.54999999966549
+          },
+          {
+            "name": "MsgPack Serialization Lodum complex",
+            "unit": "pts",
+            "value": 406.76969567252337,
+            "stdev": 2.071466228135496,
+            "iterations": 18021,
+            "normalized": 4.067696956725234,
+            "raw_value": 4.067696956725234,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 15.693999998234176
+          },
+          {
+            "name": "MsgPack Serialization Lodum nested",
+            "unit": "pts",
+            "value": 1328.0904901774595,
+            "stdev": 2.777854174728544,
+            "iterations": 5277,
+            "normalized": 13.280904901774596,
+            "raw_value": 13.280904901774596,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 55.40299999040599
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) simple",
+            "unit": "pts",
+            "value": 46.098009714289184,
+            "stdev": 0.08695450827724996,
+            "iterations": 100000,
+            "normalized": 0.46098009714289184,
+            "raw_value": 0.46098009714289184,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 2.3640000108571257
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) complex",
+            "unit": "pts",
+            "value": 77.36470868483902,
+            "stdev": 0.34014128756285805,
+            "iterations": 86058,
+            "normalized": 0.7736470868483901,
+            "raw_value": 0.7736470868483901,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 5.4180000006454065
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) nested",
+            "unit": "pts",
+            "value": 132.46574787972708,
+            "stdev": 0.5799756864067735,
+            "iterations": 64850,
+            "normalized": 1.3246574787972707,
+            "raw_value": 1.3246574787972707,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 4.676999992625497
+          },
+          {
+            "name": "MsgPack Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 782.4744994490092,
+            "stdev": 1.379761802260927,
+            "iterations": 6871,
+            "normalized": 7.824744994490091,
+            "raw_value": 7.824744994490091,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 78.04599999872153
+          },
+          {
+            "name": "MsgPack Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 1555.5241166668545,
+            "stdev": 2.6117541781629607,
+            "iterations": 2000,
+            "normalized": 15.555241166668546,
+            "raw_value": 15.555241166668546,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 50.40599999972528
+          },
+          {
+            "name": "MsgPack Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 5099.635171428624,
+            "stdev": 8.69563012426829,
+            "iterations": 2000,
+            "normalized": 50.99635171428624,
+            "raw_value": 50.99635171428624,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 70.84599999984675
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) simple",
+            "unit": "pts",
+            "value": 36.097749999998186,
+            "stdev": 0.047291214444458336,
+            "iterations": 100000,
+            "normalized": 0.36097749999998185,
+            "raw_value": 0.36097749999998185,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 1.7920000061621977
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) complex",
+            "unit": "pts",
+            "value": 76.48853014200189,
+            "stdev": 0.09745863730153398,
+            "iterations": 78003,
+            "normalized": 0.764885301420019,
+            "raw_value": 0.764885301420019,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 6.931000001486609
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) nested",
+            "unit": "pts",
+            "value": 163.4095595574577,
+            "stdev": 0.2363790764639898,
+            "iterations": 47755,
+            "normalized": 1.6340955955745768,
+            "raw_value": 1.6340955955745768,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 6.820999999490596
+          },
+          {
+            "name": "CBOR Serialization Lodum simple",
+            "unit": "pts",
+            "value": 303.6731838160508,
+            "stdev": 0.583396403514983,
+            "iterations": 17367,
+            "normalized": 3.036731838160508,
+            "raw_value": 3.036731838160508,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 45.698999997512146
+          },
+          {
+            "name": "CBOR Serialization Lodum complex",
+            "unit": "pts",
+            "value": 564.1781258126936,
+            "stdev": 0.5599092352430983,
+            "iterations": 12818,
+            "normalized": 5.641781258126936,
+            "raw_value": 5.641781258126936,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 22.90400000504178
+          },
+          {
+            "name": "CBOR Serialization Lodum nested",
+            "unit": "pts",
+            "value": 1799.7373416668222,
+            "stdev": 1.36299680247848,
+            "iterations": 2000,
+            "normalized": 17.99737341666822,
+            "raw_value": 17.99737341666822,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 45.118000002730696
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) simple",
+            "unit": "pts",
+            "value": 112.67862937181783,
+            "stdev": 0.5238542773191815,
+            "iterations": 73964,
+            "normalized": 1.1267862937181783,
+            "raw_value": 1.1267862937181783,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 2.814000012563156
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) complex",
+            "unit": "pts",
+            "value": 245.63680593732352,
+            "stdev": 0.4549759720568383,
+            "iterations": 27285,
+            "normalized": 2.456368059373235,
+            "raw_value": 2.456368059373235,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 10.60600000357681
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) nested",
+            "unit": "pts",
+            "value": 555.1126550091184,
+            "stdev": 0.7490609678256633,
+            "iterations": 15506,
+            "normalized": 5.551126550091184,
+            "raw_value": 5.551126550091184,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 11.026999999330656
+          },
+          {
+            "name": "CBOR Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 833.852318009021,
+            "stdev": 1.6767307081527658,
+            "iterations": 5901,
+            "normalized": 8.33852318009021,
+            "raw_value": 8.33852318009021,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 68.44299998931547
+          },
+          {
+            "name": "CBOR Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 1606.4951571428714,
+            "stdev": 5.966787075116167,
+            "iterations": 2000,
+            "normalized": 16.064951571428715,
+            "raw_value": 16.064951571428715,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 51.2759999935497
+          },
+          {
+            "name": "CBOR Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 5314.500500000057,
+            "stdev": 11.753053482810415,
+            "iterations": 2000,
+            "normalized": 53.14500500000057,
+            "raw_value": 53.14500500000057,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 77.89699999705135
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) simple",
+            "unit": "pts",
+            "value": 64.88081181367104,
+            "stdev": 0.14177851552651743,
+            "iterations": 95057,
+            "normalized": 0.6488081181367105,
+            "raw_value": 0.6488081181367105,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 2.813999998352301
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) complex",
+            "unit": "pts",
+            "value": 142.7857986651792,
+            "stdev": 0.3254809919057194,
+            "iterations": 45599,
+            "normalized": 1.4278579866517918,
+            "raw_value": 1.4278579866517918,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 7.190999994577396
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) nested",
+            "unit": "pts",
+            "value": 315.92390923375524,
+            "stdev": 0.26769465295148703,
+            "iterations": 28368,
+            "normalized": 3.159239092337552,
+            "raw_value": 3.159239092337552,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 8.492999995723949
+          },
+          {
+            "name": "YAML Serialization Lodum simple",
+            "unit": "pts",
+            "value": 23092.26798571434,
+            "stdev": 149.72357308396462,
+            "iterations": 2000,
+            "normalized": 230.9226798571434,
+            "raw_value": 230.9226798571434,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 560.8799999947678
+          },
+          {
+            "name": "YAML Serialization Lodum complex",
+            "unit": "pts",
+            "value": 54246.20970714297,
+            "stdev": 86.0360232533172,
+            "iterations": 2000,
+            "normalized": 542.4620970714296,
+            "raw_value": 542.4620970714296,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 630.6429999938246
+          },
+          {
+            "name": "YAML Serialization Lodum nested",
+            "unit": "pts",
+            "value": 137006.16730833336,
+            "stdev": 60.19624216656876,
+            "iterations": 2000,
+            "normalized": 1370.0616730833335,
+            "raw_value": 1370.0616730833335,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1540.5670000063765
+          },
+          {
+            "name": "YAML Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 32804.64080714286,
+            "stdev": 347.4006531382999,
+            "iterations": 2000,
+            "normalized": 328.0464080714286,
+            "raw_value": 328.0464080714286,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 617.9229999929703
+          },
+          {
+            "name": "YAML Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 83982.6538083333,
+            "stdev": 142.07718322099322,
+            "iterations": 2000,
+            "normalized": 839.8265380833329,
+            "raw_value": 839.8265380833329,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 932.6340000086475
+          },
+          {
+            "name": "YAML Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 83243.52661666705,
+            "stdev": 128.82388827268508,
+            "iterations": 2000,
+            "normalized": 832.4352661666705,
+            "raw_value": 832.4352661666705,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 920.7469999950035
+          },
+          {
+            "name": "TOML Serialization Lodum simple",
+            "unit": "pts",
+            "value": 701.9575559297207,
+            "stdev": 1.5902764235081357,
+            "iterations": 8231,
+            "normalized": 7.0195755592972064,
+            "raw_value": 7.0195755592972064,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 42.65399999781039
+          },
+          {
+            "name": "TOML Serialization Lodum complex",
+            "unit": "pts",
+            "value": 2069.1653785710123,
+            "stdev": 4.930040577022974,
+            "iterations": 2000,
+            "normalized": 20.691653785710123,
+            "raw_value": 20.691653785710123,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 53.75000000640284
+          },
+          {
+            "name": "TOML Serialization Lodum nested",
+            "unit": "pts",
+            "value": 4668.800599999657,
+            "stdev": 17.55506345513322,
+            "iterations": 2000,
+            "normalized": 46.68800599999656,
+            "raw_value": 46.68800599999656,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 89.19399999740563
+          },
+          {
+            "name": "TOML Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 1948.5916142853303,
+            "stdev": 9.166933372693487,
+            "iterations": 2000,
+            "normalized": 19.485916142853302,
+            "raw_value": 19.485916142853302,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 110.69600000723767
+          },
+          {
+            "name": "TOML Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 5131.486907142297,
+            "stdev": 19.55229701997559,
+            "iterations": 2000,
+            "normalized": 51.31486907142297,
+            "raw_value": 51.31486907142297,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 104.90700000787001
+          },
+          {
+            "name": "TOML Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 14435.402341666522,
+            "stdev": 17.925129211523565,
+            "iterations": 2000,
+            "normalized": 144.35402341666523,
+            "raw_value": 144.35402341666523,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 220.86999999260115
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) simple",
+            "unit": "pts",
+            "value": 382.91337809791503,
+            "stdev": 1.299888747500517,
+            "iterations": 13329,
+            "normalized": 3.8291337809791504,
+            "raw_value": 3.8291337809791504,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) simple (Cold Start)",
+            "unit": "us",
+            "value": 60.50100000720704
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) complex",
+            "unit": "pts",
+            "value": 551.381272057111,
+            "stdev": 0.6706463082435131,
+            "iterations": 12751,
+            "normalized": 5.51381272057111,
+            "raw_value": 5.51381272057111,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) complex (Cold Start)",
+            "unit": "us",
+            "value": 22.422999990112658
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) nested",
+            "unit": "pts",
+            "value": 1833.4136071426801,
+            "stdev": 3.068336877867193,
+            "iterations": 2000,
+            "normalized": 18.3341360714268,
+            "raw_value": 18.3341360714268,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) nested (Cold Start)",
+            "unit": "us",
+            "value": 60.450000006539995
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) simple",
+            "unit": "pts",
+            "value": 284.3881553967218,
+            "stdev": 0.38899808981608763,
+            "iterations": 16504,
+            "normalized": 2.843881553967218,
+            "raw_value": 2.843881553967218,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) simple (Cold Start)",
+            "unit": "us",
+            "value": 33.00899999203466
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) complex",
+            "unit": "pts",
+            "value": 347.14881466776745,
+            "stdev": 0.7367664127019908,
+            "iterations": 17126,
+            "normalized": 3.4714881466776744,
+            "raw_value": 3.4714881466776744,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) complex (Cold Start)",
+            "unit": "us",
+            "value": 13.971000015544632
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) nested",
+            "unit": "pts",
+            "value": 602.4047783140503,
+            "stdev": 1.6181007727158776,
+            "iterations": 13349,
+            "normalized": 6.024047783140503,
+            "raw_value": 6.024047783140503,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) nested (Cold Start)",
+            "unit": "us",
+            "value": 30.315000003611203
+          }
+        ]
+      },
+      {
+        "commit": {
           "id": "2b0b54bffe65adaceb9f02b0c96647b5d51c922e",
           "message": "feat(plan): Create detailed plan for IDE Plugin (#48)",
           "timestamp": "2026-02-08T08:02:53+02:00",
@@ -84706,6 +85622,472 @@ window.BENCHMARK_DATA = {
             "name": "Pickle Deserialization Lodum (Safe) nested (Cold Start)",
             "unit": "us",
             "value": 22.833999992144527
+          }
+        ]
+      },
+      {
+        "commit": {
+          "id": "327a200054bcee916acae1fd2620bc1d3a47b256",
+          "message": "feat(plan): Create detailed plan for Protocol Buffers Support (#47)",
+          "timestamp": "2026-02-08T08:02:34+02:00",
+          "author": {
+            "name": "Michael R. Bernstein",
+            "email": "zopemaven@gmail.com"
+          },
+          "url": "https://github.com/webmaven/lodum/commit/327a200054bcee916acae1fd2620bc1d3a47b256"
+        },
+        "date": 1770530554000,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "JSON Serialization Lodum simple",
+            "unit": "pts",
+            "value": 488.26697705963954,
+            "stdev": 2.788873812976696,
+            "iterations": 8355,
+            "normalized": 4.8826697705963955,
+            "raw_value": 4.8826697705963955,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 580.1929999904587
+          },
+          {
+            "name": "JSON Serialization Lodum complex",
+            "unit": "pts",
+            "value": 795.0394631846269,
+            "stdev": 3.1780605468480534,
+            "iterations": 6433,
+            "normalized": 7.950394631846269,
+            "raw_value": 7.950394631846269,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 917.0200000028217
+          },
+          {
+            "name": "JSON Serialization Lodum nested",
+            "unit": "pts",
+            "value": 2159.4918384616008,
+            "stdev": 5.203928122875981,
+            "iterations": 2000,
+            "normalized": 21.594918384616008,
+            "raw_value": 21.594918384616008,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 559.472000006167
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple",
+            "unit": "pts",
+            "value": 199.04579673697768,
+            "stdev": 1.0043562032707103,
+            "iterations": 21473,
+            "normalized": 1.9904579673697769,
+            "raw_value": 1.9904579673697769,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 51.80800000914587
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex",
+            "unit": "pts",
+            "value": 253.30339070210982,
+            "stdev": 0.9922745687572967,
+            "iterations": 24113,
+            "normalized": 2.5330339070210983,
+            "raw_value": 2.5330339070210983,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 26.14000000278338
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested",
+            "unit": "pts",
+            "value": 490.89249284838087,
+            "stdev": 1.1572266663626256,
+            "iterations": 14682,
+            "normalized": 4.908924928483809,
+            "raw_value": 4.908924928483809,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 17.65600001135681
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple",
+            "unit": "pts",
+            "value": 766.1830411617868,
+            "stdev": 1.8089598099082191,
+            "iterations": 7758,
+            "normalized": 7.661830411617868,
+            "raw_value": 7.661830411617868,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 59.430999996834544
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex",
+            "unit": "pts",
+            "value": 1671.2562133334075,
+            "stdev": 3.9656796055315717,
+            "iterations": 2000,
+            "normalized": 16.712562133334075,
+            "raw_value": 16.712562133334075,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 55.03299999531919
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested",
+            "unit": "pts",
+            "value": 4507.481043333333,
+            "stdev": 9.059858397500138,
+            "iterations": 2000,
+            "normalized": 45.07481043333333,
+            "raw_value": 45.07481043333333,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 92.23000000702086
+          },
+          {
+            "name": "JSON Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 1182.1699038460583,
+            "stdev": 2.658105505281853,
+            "iterations": 2000,
+            "normalized": 11.821699038460583,
+            "raw_value": 11.821699038460583,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 1585.55399998761
+          },
+          {
+            "name": "JSON Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 2236.2690625000664,
+            "stdev": 1.7215748643418263,
+            "iterations": 2000,
+            "normalized": 22.362690625000663,
+            "raw_value": 22.362690625000663,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 2010.2880000081313
+          },
+          {
+            "name": "JSON Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 6805.234556666685,
+            "stdev": 9.705150662559948,
+            "iterations": 2000,
+            "normalized": 68.05234556666686,
+            "raw_value": 68.05234556666686,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1500.2250000009099
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple",
+            "unit": "pts",
+            "value": 148.9864246993841,
+            "stdev": 0.31881692565224407,
+            "iterations": 27056,
+            "normalized": 1.4898642469938408,
+            "raw_value": 1.4898642469938408,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 78.52899999249985
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex",
+            "unit": "pts",
+            "value": 242.056001124705,
+            "stdev": 0.5256566231987143,
+            "iterations": 24348,
+            "normalized": 2.42056001124705,
+            "raw_value": 2.42056001124705,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 18.638000000237298
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested",
+            "unit": "pts",
+            "value": 557.654748042916,
+            "stdev": 0.6890293417937223,
+            "iterations": 14222,
+            "normalized": 5.57654748042916,
+            "raw_value": 5.57654748042916,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 36.81600000504659
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple",
+            "unit": "pts",
+            "value": 1793.9265249998875,
+            "stdev": 4.243305285986839,
+            "iterations": 2000,
+            "normalized": 17.939265249998876,
+            "raw_value": 17.939265249998876,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 121.21399998932247
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex",
+            "unit": "pts",
+            "value": 4034.092749999839,
+            "stdev": 15.718160158131662,
+            "iterations": 2000,
+            "normalized": 40.34092749999839,
+            "raw_value": 40.34092749999839,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 89.13599998550126
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested",
+            "unit": "pts",
+            "value": 12620.398773333269,
+            "stdev": 81.85951000205853,
+            "iterations": 2000,
+            "normalized": 126.20398773333268,
+            "raw_value": 126.20398773333268,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 179.0000000028158
+          },
+          {
+            "name": "YAML Serialization Lodum simple",
+            "unit": "pts",
+            "value": 29817.980359999863,
+            "stdev": 151.8448168978548,
+            "iterations": 2000,
+            "normalized": 298.17980359999865,
+            "raw_value": 298.17980359999865,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 662.7159999936794
+          },
+          {
+            "name": "YAML Serialization Lodum complex",
+            "unit": "pts",
+            "value": 70546.7790384617,
+            "stdev": 196.12532682525284,
+            "iterations": 2000,
+            "normalized": 705.4677903846169,
+            "raw_value": 705.4677903846169,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 876.5699999742083
+          },
+          {
+            "name": "YAML Serialization Lodum nested",
+            "unit": "pts",
+            "value": 178495.853033333,
+            "stdev": 667.6293759814546,
+            "iterations": 2000,
+            "normalized": 1784.95853033333,
+            "raw_value": 1784.95853033333,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1862.9209999971863
+          },
+          {
+            "name": "YAML Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 41760.60954999983,
+            "stdev": 152.98707728291427,
+            "iterations": 2000,
+            "normalized": 417.6060954999983,
+            "raw_value": 417.6060954999983,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 742.1110000223052
+          },
+          {
+            "name": "YAML Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 108276.11961333302,
+            "stdev": 943.147406756642,
+            "iterations": 2000,
+            "normalized": 1082.7611961333303,
+            "raw_value": 1082.7611961333303,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 1201.4429999851473
+          },
+          {
+            "name": "YAML Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 108324.05086333324,
+            "stdev": 433.4679955815713,
+            "iterations": 2000,
+            "normalized": 1083.2405086333324,
+            "raw_value": 1083.2405086333324,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1163.733999987926
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) simple",
+            "unit": "pts",
+            "value": 465.35127991091724,
+            "stdev": 0.7602501744605066,
+            "iterations": 10782,
+            "normalized": 4.653512799109173,
+            "raw_value": 4.653512799109173,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) simple (Cold Start)",
+            "unit": "us",
+            "value": 62.01299999020193
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) complex",
+            "unit": "pts",
+            "value": 688.5014642891111,
+            "stdev": 1.6061712730344277,
+            "iterations": 10599,
+            "normalized": 6.885014642891112,
+            "raw_value": 6.885014642891112,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) complex (Cold Start)",
+            "unit": "us",
+            "value": 24.316000008184346
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) nested",
+            "unit": "pts",
+            "value": 2297.984293333381,
+            "stdev": 5.705927055298274,
+            "iterations": 2000,
+            "normalized": 22.97984293333381,
+            "raw_value": 22.97984293333381,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) nested (Cold Start)",
+            "unit": "us",
+            "value": 55.022000026383466
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) simple",
+            "unit": "pts",
+            "value": 366.5733805367871,
+            "stdev": 1.1951264982784215,
+            "iterations": 12146,
+            "normalized": 3.6657338053678714,
+            "raw_value": 3.6657338053678714,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) simple (Cold Start)",
+            "unit": "us",
+            "value": 35.96499999503067
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) complex",
+            "unit": "pts",
+            "value": 446.4738280397602,
+            "stdev": 2.2240173709924838,
+            "iterations": 14042,
+            "normalized": 4.464738280397602,
+            "raw_value": 4.464738280397602,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) complex (Cold Start)",
+            "unit": "us",
+            "value": 15.893000011146796
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) nested",
+            "unit": "pts",
+            "value": 761.1344678831352,
+            "stdev": 0.7342651427948194,
+            "iterations": 10378,
+            "normalized": 7.611344678831353,
+            "raw_value": 7.611344678831353,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) nested (Cold Start)",
+            "unit": "us",
+            "value": 23.474999977679545
           }
         ]
       },
@@ -137326,6 +138708,922 @@ window.BENCHMARK_DATA = {
       },
       {
         "commit": {
+          "id": "327a200054bcee916acae1fd2620bc1d3a47b256",
+          "message": "feat(plan): Create detailed plan for Protocol Buffers Support (#47)",
+          "timestamp": "2026-02-08T08:02:34+02:00",
+          "author": {
+            "name": "Michael R. Bernstein",
+            "email": "zopemaven@gmail.com"
+          },
+          "url": "https://github.com/webmaven/lodum/commit/327a200054bcee916acae1fd2620bc1d3a47b256"
+        },
+        "date": 1770530554000,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "JSON Serialization Lodum simple",
+            "unit": "pts",
+            "value": 444.1966426856993,
+            "stdev": 1.737791221663277,
+            "iterations": 9174,
+            "normalized": 4.441966426856993,
+            "raw_value": 4.441966426856993,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 565.8000000039465
+          },
+          {
+            "name": "JSON Serialization Lodum complex",
+            "unit": "pts",
+            "value": 731.6481988958848,
+            "stdev": 2.643556919304675,
+            "iterations": 7194,
+            "normalized": 7.316481988958848,
+            "raw_value": 7.316481988958848,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 877.1000000251661
+          },
+          {
+            "name": "JSON Serialization Lodum nested",
+            "unit": "pts",
+            "value": 2034.7683333331663,
+            "stdev": 4.946885553128637,
+            "iterations": 2000,
+            "normalized": 20.347683333331663,
+            "raw_value": 20.347683333331663,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 525.2000000268708
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple",
+            "unit": "pts",
+            "value": 204.16024069534168,
+            "stdev": 1.475208625028317,
+            "iterations": 19230,
+            "normalized": 2.041602406953417,
+            "raw_value": 2.041602406953417,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 112.89999997643463
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex",
+            "unit": "pts",
+            "value": 267.94373729496505,
+            "stdev": 0.6123237374135715,
+            "iterations": 19607,
+            "normalized": 2.6794373729496503,
+            "raw_value": 2.6794373729496503,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 49.99999998744897
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested",
+            "unit": "pts",
+            "value": 481.4795918367409,
+            "stdev": 1.0704985640038753,
+            "iterations": 10416,
+            "normalized": 4.814795918367409,
+            "raw_value": 4.814795918367409,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 39.100000037706195
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple",
+            "unit": "pts",
+            "value": 671.6889017791378,
+            "stdev": 4.231067192375339,
+            "iterations": 8620,
+            "normalized": 6.716889017791378,
+            "raw_value": 6.716889017791378,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 60.00000001904482
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex",
+            "unit": "pts",
+            "value": 1434.772285714254,
+            "stdev": 7.293665510125667,
+            "iterations": 5000,
+            "normalized": 14.34772285714254,
+            "raw_value": 14.34772285714254,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 54.40000001044609
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested",
+            "unit": "pts",
+            "value": 3944.10333333326,
+            "stdev": 7.487239589662972,
+            "iterations": 2000,
+            "normalized": 39.4410333333326,
+            "raw_value": 39.4410333333326,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Serialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 84.50000001403168
+          },
+          {
+            "name": "JSON Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 1085.8907142867176,
+            "stdev": 19.0275040899616,
+            "iterations": 2000,
+            "normalized": 10.858907142867176,
+            "raw_value": 10.858907142867176,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 1440.6999999891923
+          },
+          {
+            "name": "JSON Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 2008.444999999272,
+            "stdev": 15.194597724636482,
+            "iterations": 2000,
+            "normalized": 20.08444999999272,
+            "raw_value": 20.08444999999272,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 1867.1999999924083
+          },
+          {
+            "name": "JSON Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 6217.099166667122,
+            "stdev": 11.861373621408445,
+            "iterations": 2000,
+            "normalized": 62.17099166667121,
+            "raw_value": 62.17099166667121,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1400.999999987107
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple",
+            "unit": "pts",
+            "value": 153.77063597618593,
+            "stdev": 1.092896708098574,
+            "iterations": 26315,
+            "normalized": 1.5377063597618592,
+            "raw_value": 1.5377063597618592,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) simple (Cold Start)",
+            "unit": "us",
+            "value": 138.2000000376138
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex",
+            "unit": "pts",
+            "value": 264.90780926248027,
+            "stdev": 1.5987759273592317,
+            "iterations": 20408,
+            "normalized": 2.6490780926248028,
+            "raw_value": 2.6490780926248028,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) complex (Cold Start)",
+            "unit": "us",
+            "value": 66.5000000026339
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested",
+            "unit": "pts",
+            "value": 794.7109853841953,
+            "stdev": 3.8445720545854254,
+            "iterations": 9090,
+            "normalized": 7.947109853841953,
+            "raw_value": 7.947109853841953,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Pydantic (v2) nested (Cold Start)",
+            "unit": "us",
+            "value": 73.10000000870787
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple",
+            "unit": "pts",
+            "value": 1590.5683333334273,
+            "stdev": 6.090949569513865,
+            "iterations": 2000,
+            "normalized": 15.905683333334272,
+            "raw_value": 15.905683333334272,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow simple (Cold Start)",
+            "unit": "us",
+            "value": 117.19999997694686
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex",
+            "unit": "pts",
+            "value": 3557.687857143118,
+            "stdev": 19.440240665885014,
+            "iterations": 2000,
+            "normalized": 35.57687857143118,
+            "raw_value": 35.57687857143118,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow complex (Cold Start)",
+            "unit": "us",
+            "value": 94.19999997817285
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested",
+            "unit": "pts",
+            "value": 11222.580714285104,
+            "stdev": 35.92972578885974,
+            "iterations": 2000,
+            "normalized": 112.22580714285105,
+            "raw_value": 112.22580714285105,
+            "raw_unit": "us"
+          },
+          {
+            "name": "JSON Deserialization Marshmallow nested (Cold Start)",
+            "unit": "us",
+            "value": 171.09999998865533
+          },
+          {
+            "name": "MsgPack Serialization Lodum simple",
+            "unit": "pts",
+            "value": 323.3360277591202,
+            "stdev": 1.270500845196744,
+            "iterations": 14492,
+            "normalized": 3.2333602775912023,
+            "raw_value": 3.2333602775912023,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 71.90000002310626
+          },
+          {
+            "name": "MsgPack Serialization Lodum complex",
+            "unit": "pts",
+            "value": 540.7337032251037,
+            "stdev": 1.2535536510217444,
+            "iterations": 13157,
+            "normalized": 5.407337032251037,
+            "raw_value": 5.407337032251037,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 20.500000005085894
+          },
+          {
+            "name": "MsgPack Serialization Lodum nested",
+            "unit": "pts",
+            "value": 1651.8821782178386,
+            "stdev": 22.750154135613844,
+            "iterations": 5050,
+            "normalized": 16.518821782178385,
+            "raw_value": 16.518821782178385,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 48.300000003109744
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) simple",
+            "unit": "pts",
+            "value": 79.26501420291049,
+            "stdev": 0.3657796544474544,
+            "iterations": 83333,
+            "normalized": 0.792650142029105,
+            "raw_value": 0.792650142029105,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 2.999999992425728
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) complex",
+            "unit": "pts",
+            "value": 136.65526654125807,
+            "stdev": 0.4411194466491457,
+            "iterations": 52631,
+            "normalized": 1.3665526654125808,
+            "raw_value": 1.3665526654125808,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 6.700000028558861
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) nested",
+            "unit": "pts",
+            "value": 231.88082188079883,
+            "stdev": 3.0694612223560456,
+            "iterations": 37037,
+            "normalized": 2.3188082188079884,
+            "raw_value": 2.3188082188079884,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Serialization Native msgpack (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 5.7000000310836185
+          },
+          {
+            "name": "MsgPack Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 899.4591666663609,
+            "stdev": 9.44029364824557,
+            "iterations": 2000,
+            "normalized": 8.99459166666361,
+            "raw_value": 8.99459166666361,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 113.10000002140441
+          },
+          {
+            "name": "MsgPack Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 1829.7242857142596,
+            "stdev": 17.39470595388865,
+            "iterations": 2000,
+            "normalized": 18.297242857142596,
+            "raw_value": 18.297242857142596,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 61.30000002713132
+          },
+          {
+            "name": "MsgPack Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 6047.6942857141985,
+            "stdev": 69.40936874997199,
+            "iterations": 2000,
+            "normalized": 60.476942857141985,
+            "raw_value": 60.476942857141985,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 99.79999998677158
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) simple",
+            "unit": "pts",
+            "value": 44.138942857135326,
+            "stdev": 0.11991895676059104,
+            "iterations": 100000,
+            "normalized": 0.44138942857135327,
+            "raw_value": 0.44138942857135327,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 2.1000000174353772
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) complex",
+            "unit": "pts",
+            "value": 96.90006690005389,
+            "stdev": 0.3564744720345711,
+            "iterations": 47619,
+            "normalized": 0.9690006690005388,
+            "raw_value": 0.9690006690005388,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 6.700000028558861
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) nested",
+            "unit": "pts",
+            "value": 214.74463795710318,
+            "stdev": 1.5487743934453941,
+            "iterations": 35714,
+            "normalized": 2.147446379571032,
+            "raw_value": 2.147446379571032,
+            "raw_unit": "us"
+          },
+          {
+            "name": "MsgPack Deserialization Native msgpack (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 7.799999991675577
+          },
+          {
+            "name": "CBOR Serialization Lodum simple",
+            "unit": "pts",
+            "value": 411.31883781550266,
+            "stdev": 2.659118103205256,
+            "iterations": 11235,
+            "normalized": 4.1131883781550265,
+            "raw_value": 4.1131883781550265,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 57.40000000287182
+          },
+          {
+            "name": "CBOR Serialization Lodum complex",
+            "unit": "pts",
+            "value": 786.1771217710466,
+            "stdev": 5.512886771085322,
+            "iterations": 8130,
+            "normalized": 7.861771217710466,
+            "raw_value": 7.861771217710466,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 43.899999980112625
+          },
+          {
+            "name": "CBOR Serialization Lodum nested",
+            "unit": "pts",
+            "value": 2325.2099999999537,
+            "stdev": 6.038869237134894,
+            "iterations": 2000,
+            "normalized": 23.252099999999537,
+            "raw_value": 23.252099999999537,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 59.70000000843356
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) simple",
+            "unit": "pts",
+            "value": 174.66498892551166,
+            "stdev": 1.199700716346182,
+            "iterations": 41666,
+            "normalized": 1.7466498892551166,
+            "raw_value": 1.7466498892551166,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 4.900000021734741
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) complex",
+            "unit": "pts",
+            "value": 389.8782504790489,
+            "stdev": 1.7033737034202985,
+            "iterations": 19607,
+            "normalized": 3.898782504790489,
+            "raw_value": 3.898782504790489,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 14.09999998713829
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) nested",
+            "unit": "pts",
+            "value": 901.5947142858392,
+            "stdev": 6.129351834129286,
+            "iterations": 10000,
+            "normalized": 9.015947142858392,
+            "raw_value": 9.015947142858392,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Serialization Native cbor2 (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 17.000000013922545
+          },
+          {
+            "name": "CBOR Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 968.3771428565738,
+            "stdev": 13.41923335370185,
+            "iterations": 2000,
+            "normalized": 9.683771428565738,
+            "raw_value": 9.683771428565738,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 169.80000003741225
+          },
+          {
+            "name": "CBOR Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 1917.9157142860145,
+            "stdev": 5.260340949475642,
+            "iterations": 2000,
+            "normalized": 19.179157142860145,
+            "raw_value": 19.179157142860145,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 71.30000000188375
+          },
+          {
+            "name": "CBOR Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 6281.049285714094,
+            "stdev": 26.186874801867262,
+            "iterations": 2000,
+            "normalized": 62.81049285714094,
+            "raw_value": 62.81049285714094,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 94.30000000065775
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) simple",
+            "unit": "pts",
+            "value": 102.33595868767192,
+            "stdev": 0.25419551315660666,
+            "iterations": 71428,
+            "normalized": 1.0233595868767191,
+            "raw_value": 1.0233595868767191,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) simple (Cold Start)",
+            "unit": "us",
+            "value": 3.199999980552093
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) complex",
+            "unit": "pts",
+            "value": 231.68474285713665,
+            "stdev": 1.200766786787618,
+            "iterations": 25000,
+            "normalized": 2.3168474285713665,
+            "raw_value": 2.3168474285713665,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) complex (Cold Start)",
+            "unit": "us",
+            "value": 9.500000032858225
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) nested",
+            "unit": "pts",
+            "value": 516.3198813667544,
+            "stdev": 0.5356754623944733,
+            "iterations": 16666,
+            "normalized": 5.163198813667544,
+            "raw_value": 5.163198813667544,
+            "raw_unit": "us"
+          },
+          {
+            "name": "CBOR Deserialization Native cbor2 (dict) nested (Cold Start)",
+            "unit": "us",
+            "value": 12.299999980314169
+          },
+          {
+            "name": "YAML Serialization Lodum simple",
+            "unit": "pts",
+            "value": 27854.25285714293,
+            "stdev": 165.74922073362262,
+            "iterations": 2000,
+            "normalized": 278.5425285714293,
+            "raw_value": 278.5425285714293,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 644.5999999868945
+          },
+          {
+            "name": "YAML Serialization Lodum complex",
+            "unit": "pts",
+            "value": 66052.71142857175,
+            "stdev": 241.6543372726999,
+            "iterations": 2000,
+            "normalized": 660.5271142857175,
+            "raw_value": 660.5271142857175,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 781.7000000045482
+          },
+          {
+            "name": "YAML Serialization Lodum nested",
+            "unit": "pts",
+            "value": 169464.92999999967,
+            "stdev": 528.9479006560935,
+            "iterations": 2000,
+            "normalized": 1694.6492999999966,
+            "raw_value": 1694.6492999999966,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1778.3999999778644
+          },
+          {
+            "name": "YAML Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 38835.08142857092,
+            "stdev": 348.365390929508,
+            "iterations": 2000,
+            "normalized": 388.3508142857092,
+            "raw_value": 388.3508142857092,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 697.3000000130014
+          },
+          {
+            "name": "YAML Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 100037.34916666645,
+            "stdev": 110.34234420314739,
+            "iterations": 2000,
+            "normalized": 1000.3734916666644,
+            "raw_value": 1000.3734916666644,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 1120.0999999800842
+          },
+          {
+            "name": "YAML Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 101007.6591666665,
+            "stdev": 195.09077762571738,
+            "iterations": 2000,
+            "normalized": 1010.0765916666651,
+            "raw_value": 1010.0765916666651,
+            "raw_unit": "us"
+          },
+          {
+            "name": "YAML Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 1102.5000000017826
+          },
+          {
+            "name": "TOML Serialization Lodum simple",
+            "unit": "pts",
+            "value": 830.0548020276503,
+            "stdev": 4.261565085382603,
+            "iterations": 7299,
+            "normalized": 8.300548020276503,
+            "raw_value": 8.300548020276503,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Serialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 49.99999998744897
+          },
+          {
+            "name": "TOML Serialization Lodum complex",
+            "unit": "pts",
+            "value": 2429.517857142725,
+            "stdev": 7.867753203229298,
+            "iterations": 2000,
+            "normalized": 24.29517857142725,
+            "raw_value": 24.29517857142725,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Serialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 63.800000020819425
+          },
+          {
+            "name": "TOML Serialization Lodum nested",
+            "unit": "pts",
+            "value": 5395.541428571197,
+            "stdev": 31.532863770690174,
+            "iterations": 2000,
+            "normalized": 53.95541428571197,
+            "raw_value": 53.95541428571197,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Serialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 103.89999999915744
+          },
+          {
+            "name": "TOML Deserialization Lodum simple",
+            "unit": "pts",
+            "value": 2288.2149999998906,
+            "stdev": 12.225434553059255,
+            "iterations": 2000,
+            "normalized": 22.882149999998905,
+            "raw_value": 22.882149999998905,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Deserialization Lodum simple (Cold Start)",
+            "unit": "us",
+            "value": 130.00000001284207
+          },
+          {
+            "name": "TOML Deserialization Lodum complex",
+            "unit": "pts",
+            "value": 6135.880833332881,
+            "stdev": 21.291156243094814,
+            "iterations": 2000,
+            "normalized": 61.35880833332881,
+            "raw_value": 61.35880833332881,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Deserialization Lodum complex (Cold Start)",
+            "unit": "us",
+            "value": 145.7000000186781
+          },
+          {
+            "name": "TOML Deserialization Lodum nested",
+            "unit": "pts",
+            "value": 16768.526428571055,
+            "stdev": 61.62488632271887,
+            "iterations": 2000,
+            "normalized": 167.68526428571053,
+            "raw_value": 167.68526428571053,
+            "raw_unit": "us"
+          },
+          {
+            "name": "TOML Deserialization Lodum nested (Cold Start)",
+            "unit": "us",
+            "value": 226.69999998470303
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) simple",
+            "unit": "pts",
+            "value": 452.3917604425323,
+            "stdev": 3.2429245596769136,
+            "iterations": 11235,
+            "normalized": 4.523917604425323,
+            "raw_value": 4.523917604425323,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) simple (Cold Start)",
+            "unit": "us",
+            "value": 60.700000005908805
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) complex",
+            "unit": "pts",
+            "value": 660.7903318903715,
+            "stdev": 4.1875747581307445,
+            "iterations": 9900,
+            "normalized": 6.607903318903715,
+            "raw_value": 6.607903318903715,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) complex (Cold Start)",
+            "unit": "us",
+            "value": 26.39999996745246
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) nested",
+            "unit": "pts",
+            "value": 2154.7578571422882,
+            "stdev": 14.057908467220031,
+            "iterations": 2000,
+            "normalized": 21.547578571422882,
+            "raw_value": 21.547578571422882,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Serialization Lodum (Safe) nested (Cold Start)",
+            "unit": "us",
+            "value": 98.5000000355285
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) simple",
+            "unit": "pts",
+            "value": 329.2770822702253,
+            "stdev": 0.8255106543405957,
+            "iterations": 13157,
+            "normalized": 3.292770822702253,
+            "raw_value": 3.292770822702253,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) simple (Cold Start)",
+            "unit": "us",
+            "value": 54.20000002231973
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) complex",
+            "unit": "pts",
+            "value": 407.8079177356907,
+            "stdev": 1.9737450655844053,
+            "iterations": 13698,
+            "normalized": 4.078079177356907,
+            "raw_value": 4.078079177356907,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) complex (Cold Start)",
+            "unit": "us",
+            "value": 18.09999997703926
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) nested",
+            "unit": "pts",
+            "value": 713.8025290759591,
+            "stdev": 3.407995398572482,
+            "iterations": 10416,
+            "normalized": 7.138025290759591,
+            "raw_value": 7.138025290759591,
+            "raw_unit": "us"
+          },
+          {
+            "name": "Pickle Deserialization Lodum (Safe) nested (Cold Start)",
+            "unit": "us",
+            "value": 22.10000002378365
+          }
+        ]
+      },
+      {
+        "commit": {
           "id": "2b0b54bffe65adaceb9f02b0c96647b5d51c922e",
           "message": "feat(plan): Create detailed plan for IDE Plugin (#48)",
           "timestamp": "2026-02-08T08:02:53+02:00",
@@ -164700,5 +166998,5 @@ window.BENCHMARK_DATA = {
     "f20be747e4c40c1bd1389a09954242a01353a5b6": "v0.2.0",
     "159df1cc05981de0d3f091cde9bfd4fc076d5b9e": "v0.3.0"
   },
-  "lastUpdate": 1779400118559
+  "lastUpdate": 1779400139122
 };
