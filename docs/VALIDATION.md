@@ -63,7 +63,7 @@ When validation fails, `lodum` raises a `DeserializationError` that includes the
 
 ```python
 try:
-    json.loads(Product, '{"name": "A", ...}')
+    json.load(Product, '{"name": "A", ...}')
 except DeserializationError as e:
     print(f"Error at {e.path}: {e}")
 ```

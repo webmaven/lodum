@@ -35,13 +35,13 @@ class Point:
 
 ### 2. Serialize to JSON
 
-The `lodum.json` module provides `dumps` and `loads` functions similar to the standard library's `json` module, but optimized for `@lodum` classes.
+The `lodum.json` module provides `dump` and `load` functions similar to the standard library's `json` module, but optimized for `@lodum` classes.
 
 ```python
 from lodum import json
 
 p = Point(x=1.5, y=2.0)
-json_data = json.dumps(p)
+json_data = json.dump(p)
 print(json_data)  # {"x": 1.5, "y": 2.0}
 ```
 
@@ -50,7 +50,7 @@ print(json_data)  # {"x": 1.5, "y": 2.0}
 When loading, you must specify the target class.
 
 ```python
-p2 = json.loads(Point, '{"x": 10.0, "y": 20.0}')
+p2 = json.load(Point, '{"x": 10.0, "y": 20.0}')
 print(p2)  # Point(x=10.0, y=20.0)
 ```
 

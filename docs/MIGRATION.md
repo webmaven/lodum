@@ -32,7 +32,7 @@ In versions prior to v0.2.0, the YAML and Pickle loaders raised `TypeError` when
 **Before:**
 ```python
 try:
-    lodum.yaml.loads(MyClass, bad_data)
+    lodum.yaml.load(MyClass, bad_data)
 except TypeError:
     # handle error
 ```
@@ -42,7 +42,7 @@ except TypeError:
 from lodum.exception import DeserializationError
 
 try:
-    lodum.yaml.loads(MyClass, bad_data)
+    lodum.yaml.load(MyClass, bad_data)
 except DeserializationError:
     # handle error
 ```
@@ -119,7 +119,7 @@ user_json = user.model_dump_json()
 from lodum import json
 
 # lodum doesn't have a generic 'model_dump', but you can dump to any format
-user_json = json.dumps(user)
+user_json = json.dump(user)
 # If you just want a dict:
 from lodum.internal import dump
 from lodum.core import BaseDumper
@@ -138,7 +138,7 @@ user = User.model_validate_json(data_json)
 ```python
 from lodum import json
 
-user = json.loads(User, data_json)
+user = json.load(User, data_json)
 # From a dict:
 from lodum.internal import load
 from lodum.json import JSONLoader # or any other loader
@@ -210,7 +210,7 @@ class User:
         self.id = id
         self.name = name
 
-user = json.loads(User, '{"user_id": 1, "name": "Alice"}')
+user = json.load(User, '{"user_id": 1, "name": "Alice"}')
 ```
 `lodum` eliminates the need for a separate Schema class and the `@post_load` boilerplate.
 
@@ -243,8 +243,8 @@ class Point:
     y: int
 
 # Usage
-json_str = json.dumps(Point(1, 2))
-p = json.loads(Point, json_str)
+json_str = json.dump(Point(1, 2))
+p = json.load(Point, json_str)
 ```
 
 `lodum` offers a similar performance profile to `mashumaro` through bytecode generation, but provides a more unified interface for multiple binary and text formats out of the box.
@@ -278,6 +278,6 @@ class User:
         self.id = id
         self.name = name
 
-user = json.loads(User, '{"id": 1, "name": "Alice"}')
+user = json.load(User, '{"id": 1, "name": "Alice"}')
 ```
 While `cattrs` is very flexible, `lodum` provides a more integrated experience with direct support for various wire formats.

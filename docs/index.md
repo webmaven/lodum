@@ -64,7 +64,7 @@ class User:
 
 ### 2. Encode to JSON
 
-Use the `json.dumps` function to convert an instance of your class into a JSON string.
+Use the `json.dump` function to convert an instance of your class into a JSON string.
 
 ```python
 from lodum import json
@@ -72,7 +72,7 @@ from lodum import json
 user = User(name="Alex", age=30, is_active=True)
 
 # Encode the object to a JSON string
-json_string = json.dumps(user)
+json_string = json.dump(user)
 
 print(json_string)
 # Output: {"name": "Alex", "age": 30, "is_active": true}
@@ -86,7 +86,7 @@ You can easily switch between formats. For example, you can decode from JSON and
 from lodum import json, yaml
 
 # You can also encode to YAML
-yaml_string = yaml.dumps(user)
+yaml_string = yaml.dump(user)
 print(yaml_string)
 # -> name: Alex
 # -> age: 30
@@ -95,7 +95,7 @@ print(yaml_string)
 json_data = '{"name": "Barbara", "age": 25, "is_active": false}'
 
 # Decode the JSON string back to a User object
-barbara = json.loads(User, json_data)
+barbara = json.load(User, json_data)
 
 print(f"Name: {barbara.name}, Age: {barbara.age}, Active: {barbara.is_active}")
 # Output: Name: Barbara, Age: 25, Active: False
@@ -122,16 +122,16 @@ class ServerConfig:
 original_json = '{"host": "127.0.0.1", "port": 8080, "services": ["users", "products", "inventory"]}'
 
 # 2. Decode the JSON to a Python object
-config_from_json = json.loads(ServerConfig, original_json)
+config_from_json = json.load(ServerConfig, original_json)
 
 # 3. Encode the object to YAML
-yaml_output = yaml.dumps(config_from_json)
+yaml_output = yaml.dump(config_from_json)
 
 # 4. Decode the YAML back to a Python object
-config_from_yaml = yaml.loads(ServerConfig, yaml_output)
+config_from_yaml = yaml.load(ServerConfig, yaml_output)
 
 # 5. Encode the final object back to JSON
-final_json = json.dumps(config_from_yaml)
+final_json = json.dump(config_from_yaml)
 
 # 6. Verify that the final JSON matches the original
 # We load them into dictionaries to ignore any formatting differences
@@ -157,7 +157,7 @@ class User:
 json_data = '{"name": "Alex", "age": "not_an_int"}'
 
 try:
-    json.loads(User, json_data)
+    json.load(User, json_data)
 except DeserializationError as e:
     print(e)
     # Output: Error at age: Expected int, got str
@@ -199,12 +199,12 @@ class User:
 
 # Encode a user
 user = User(email="name@example.com", user_id=123, password_hash="secret")
-print(json.dumps(user))
+print(json.dump(user))
 # -> {"id": 123, "email": "name@example.com", "prefs": {}}
 
 # Decode a user
 user_data = '{"id": 456, "email": "test@example.com"}'
-user = json.loads(User, user_data)
+user = json.load(User, user_data)
 # user.user_id -> 456
 # user.prefs -> {}
 ```
@@ -243,7 +243,7 @@ class Product:
 
 # This will raise a DeserializationError
 try:
-    json.loads(Product, '{"name": "A", "price": -10, "category": "food", "code": "abc"}')
+    json.load(Product, '{"name": "A", "price": -10, "category": "food", "code": "abc"}')
 except Exception as e:
     print(e)
 ```
@@ -297,7 +297,7 @@ data = LargeData(items=list(range(1000000)))
 json.dump_stream(data, sys.stdout)
 ```
 
-For loading, `lodum.json.load_stream` provides lazy, iterator-based deserialization of JSON arrays.
+For loading, `lodum.json.stream` provides lazy, iterator-based deserialization of JSON arrays.
 
 ## Converting to/from Dictionaries
 
@@ -365,11 +365,11 @@ See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmark results and comparis
   *   Standard Python `builtins` (like `int`, `str`, `list`, etc.)
   *   Custom classes decorated with `@lodum`
   *   Explicitly forbids modules known to be dangerous (like `os`, `sys`, `subprocess`)
-  Additionally, `lodum.pickle.dumps` performs structural validation to ensure only `lodum`-enabled data is serialized.
+  Additionally, `lodum.pickle.dump` performs structural validation to ensure only `lodum`-enabled data is serialized.
 * **TOML**: `lodum.toml`
 * **MessagePack**: `lodum.msgpack`
-* **CBOR**: `lodum.cbor` (e.g., `cbor.dumps(obj)`)
-* **BSON**: `lodum.bson` (e.g., `bson.dumps(obj)`)
+* **CBOR**: `lodum.cbor` (e.g., `cbor.dump(obj)`)
+* **BSON**: `lodum.bson` (e.g., `bson.dump(obj)`)
 
 ## Supported Types
 

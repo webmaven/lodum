@@ -20,11 +20,11 @@ class Point:
 p = Point(name="Origin", coords=np.array([0.0, 0.0, 0.0]))
 
 # Serialize to JSON (NumPy handled natively!)
-json_data = json.dumps(p)
+json_data = json.dump(p)
 print(f"JSON Output:\n{json_data}\n")
 
 # Deserialize back
-new_point = json.loads(Point, json_data)
+new_point = json.load(Point, json_data)
 print(f"Deserialized Coords: {new_point.coords}")
 print(f"Type: {type(new_point.coords)}")
         </textarea>
