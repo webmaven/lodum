@@ -22,7 +22,7 @@ T = TypeVar("T")
 
 
 def dump(
-    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs
+    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs: Any
 ) -> Optional[str]:
     """
     Encodes a Python object to JSON.
@@ -51,7 +51,7 @@ def dump(
         return None
 
 
-def dumps(obj: Any, **kwargs) -> str:
+def dumps(obj: Any, **kwargs: Any) -> str:
     """Legacy alias for dump(obj)."""
     return dump(obj, **kwargs)  # type: ignore
 
@@ -91,7 +91,7 @@ def load(
     return load_internal(cls, loader)
 
 
-def loads(cls: Type[T], json_string: str, **kwargs) -> T:
+def loads(cls: Type[T], json_string: str, **kwargs: Any) -> T:
     """Legacy alias for load(cls, source)."""
     return load(cls, json_string, **kwargs)
 

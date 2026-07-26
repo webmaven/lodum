@@ -55,6 +55,7 @@ nav:
     - Interactive Demo: demo.md
     - Field Customization: FIELD_CUSTOMIZATION.md
     - Validation: VALIDATION.md
+    - Streaming: STREAMING.md
     - Performance:
       - Overview: PERFORMANCE.md
       - Performance Evolution: PERFORMANCE_EVOLUTION.md
@@ -76,6 +77,7 @@ nav:
       - Compiler Enhancements: plans/compiler_enhancements_cython_mypyc.md
       - Protocol Buffers: plans/protocol_buffers_support.md
       - IDE Plugin: plans/ide_plugin.md
+    - Security: SECURITY.md
     - Contributing: CONTRIBUTING.md
 
 plugins:

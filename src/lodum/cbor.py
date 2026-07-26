@@ -26,7 +26,7 @@ T = TypeVar("T")
 
 
 def dump(
-    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs
+    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs: Any
 ) -> Optional[bytes]:
     """
     Encodes a Python object to CBOR.
@@ -53,7 +53,7 @@ def dump(
         return None
 
 
-def dumps(obj: Any, **kwargs) -> bytes:
+def dumps(obj: Any, **kwargs: Any) -> bytes:
     """Legacy alias for dump(obj)."""
     return dump(obj, **kwargs)  # type: ignore
 
@@ -100,7 +100,7 @@ def load(
     return load_internal(cls, loader)
 
 
-def loads(cls: Type[T], cbor_bytes: bytes, **kwargs) -> T:
+def loads(cls: Type[T], cbor_bytes: bytes, **kwargs: Any) -> T:
     """Legacy alias for load(cls, source)."""
     return load(cls, cbor_bytes, **kwargs)
 
