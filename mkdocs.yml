@@ -49,7 +49,7 @@ repo_name: webmaven/lodum
 
 nav:
   - Home: index.md
-  - News: NEWS.md
+  - Changelog: NEWS.md
   - User Guide:
     - Getting Started: GETTING_STARTED.md
     - Interactive Demo: demo.md
@@ -66,8 +66,8 @@ nav:
     - Architecture: ARCHITECTURE.md
     - Implementing Formats: IMPLEMENTING_FORMATS.md
   - Project:
-    - Roadmap: ROADMAP.md
-    - Implementation Plans:
+    - Roadmap & Plans:
+      - Roadmap: ROADMAP.md
       - Streaming Support: plans/streaming_support.md
       - Partial Serialization: plans/partial_serialization.md
       - FastAPI Integration: plans/fastapi_integration.md
