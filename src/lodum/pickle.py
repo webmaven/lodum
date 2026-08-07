@@ -45,6 +45,11 @@ class ValidationDumper(Dumper):
     ) -> Any:
         pass
 
+    def dump_buffer(
+        self, value: Any, depth: int = 0, seen: set | None = None
+    ) -> Any:
+        pass
+
     def dump_list(
         self, value: list[Any], depth: int = 0, seen: set | None = None
     ) -> Any:

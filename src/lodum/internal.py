@@ -280,7 +280,7 @@ def _get_dump_handler(
     if inspect.isclass(t) and (
         getattr(t, "_lodum_enabled", False) or dataclasses.is_dataclass(t)
     ):
-        t._lodum_enabled = True
+        setattr(t, "_lodum_enabled", True)
         handler = _compile_dump_handler(t)
         with ctx.cache_lock:
             ctx.dump_cache[t] = handler
@@ -492,7 +492,7 @@ def _get_load_handler(
     if inspect.isclass(origin) and (
         getattr(origin, "_lodum_enabled", False) or dataclasses.is_dataclass(origin)
     ):
-        origin._lodum_enabled = True
+        setattr(origin, "_lodum_enabled", True)
         handler = _compile_load_handler(origin)
         with ctx.cache_lock:
             ctx.load_cache[origin] = handler

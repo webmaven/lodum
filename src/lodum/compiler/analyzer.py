@@ -27,8 +27,7 @@ def _analyze_class(cls: type[Any]) -> None:
         return
 
     if dataclasses.is_dataclass(cls):
-        cls._lodum_enabled = True
-        fields: dict[str, Field] = {}
+        dc_fields: dict[str, Field] = {}
         for f in dataclasses.fields(cls):
             if not f.init:
                 continue
@@ -50,9 +49,10 @@ def _analyze_class(cls: type[Any]) -> None:
 
             field_info.name = f.name
             field_info.type = f.type
-            fields[f.name] = field_info
+            dc_fields[f.name] = field_info
 
-        cls._lodum_fields = fields
+        cls._lodum_enabled = True  # type: ignore[attr-defined]
+        cls._lodum_fields = dc_fields  # type: ignore[attr-defined]
         return
 
     try:
