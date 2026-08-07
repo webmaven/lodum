@@ -22,8 +22,9 @@
 | :--- | :--- |
 | **🚀 Fast** | **~64% faster** dumps than standard introspection using AST bytecode generation. |
 | **🛡️ Safe** | Secure-by-default design. Blocks arbitrary code execution in `pickle`. |
-| **📦 Universal** | One API for **JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle**. |
-| **🧩 Extensible** | Native support for `numpy`, `pandas`, and `polars` without extra glue code. |
+| **📦 Universal** | One API for **JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle**. Native support for Python `@dataclass` without extra decorators. |
+| **⚡ Zero-Copy** | `dump_buffer` and fast-path O(1) buffer reconstitution for NumPy arrays and binary buffers. |
+| **🧩 Extensible** | Native support for `numpy`, `pandas`, `polars`, and custom `dict`/`list` collection subclasses. |
 | **✅ Validated** | Built-in validators (`Range`, `Length`) and schema generation. |
 
 ## Installation

@@ -202,6 +202,11 @@ class BaseDumper:
     def dump_buffer(
         self, value: Any, depth: int = 0, seen: Optional[set] = None
     ) -> Any:
+        """
+        Extracts a zero-copy memoryview or buffer view for binary buffers or arrays.
+        Dumpers supporting buffer transfer (e.g. BaseDumper for in-memory transfer or WASM FFI)
+        use this method to avoid intermediate object allocations.
+        """
         if isinstance(value, (bytes, bytearray)):
             return memoryview(value)
         return value
