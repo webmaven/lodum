@@ -407,7 +407,8 @@ def _get_load_handler(
         return _load_union
 
     # Registry lookup for origin (e.g., list, dict) or concrete type
-    if origin in (list, array.array):
+    is_list_subclass = inspect.isclass(origin) and issubclass(origin, (list, collections.UserList)) and origin not in (list, array.array, collections.deque)
+    if origin in (list, array.array) or is_list_subclass:
         args = get_args(t)
         item_type = args[0] if args else Any
         item_loader_fn = _get_load_handler(item_type, excluding=excluding)
@@ -430,17 +431,23 @@ def _get_load_handler(
                     return array.array(typecode, data)
                 except (TypeError, ValueError) as e:
                     raise DeserializationError(f"Failed to create array: {e}", path)
+            if is_list_subclass:
+                return origin(data)
             return data
 
         with ctx.cache_lock:
             ctx.load_cache[t] = load_list
         return load_list
 
-    if origin in (
-        dict,
-        collections.defaultdict,
-        collections.OrderedDict,
-        collections.Counter,
+    is_dict_subclass = inspect.isclass(origin) and issubclass(origin, (dict, collections.UserDict)) and origin not in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter)
+    if (
+        origin in (
+            dict,
+            collections.defaultdict,
+            collections.OrderedDict,
+            collections.Counter,
+        )
+        or is_dict_subclass
     ):
         args = get_args(t)
         k_type: Type[Any]
@@ -468,6 +475,8 @@ def _get_load_handler(
                 return collections.OrderedDict(data)
             if origin is collections.Counter:
                 return collections.Counter(data)
+            if is_dict_subclass:
+                return origin(data)
             return data
 
         with ctx.cache_lock:
