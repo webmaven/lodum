@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 __version__ = "0.4.0"
 
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 from . import bson, cbor, concurrency, json, msgpack, pickle, toml, yaml
 from .core import lodum

@@ -586,7 +586,7 @@ def _register_builtin_handlers(target: Any) -> None:
 
 
 # Initialize global registry and default context with built-in handlers
-from .registry import registry as global_registry
+from .registry import registry as global_registry  # noqa: E402
 
 _register_builtin_handlers(global_registry)
 _register_builtin_handlers(get_context())
