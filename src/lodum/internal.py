@@ -5,6 +5,7 @@ import collections
 import inspect
 import array
 import ast
+import dataclasses
 import datetime
 import enum
 import uuid
@@ -280,7 +281,10 @@ def _get_dump_handler(
             ctx.dump_cache[t] = dump_mapping
         return dump_mapping
 
-    if inspect.isclass(t) and getattr(t, "_lodum_enabled", False):
+    if inspect.isclass(t) and (
+        getattr(t, "_lodum_enabled", False) or dataclasses.is_dataclass(t)
+    ):
+        setattr(t, "_lodum_enabled", True)
         handler = _compile_dump_handler(t)
         with ctx.cache_lock:
             ctx.dump_cache[t] = handler
@@ -489,7 +493,10 @@ def _get_load_handler(
             ctx.load_cache[origin] = handler
         return handler
 
-    if inspect.isclass(origin) and getattr(origin, "_lodum_enabled", False):
+    if inspect.isclass(origin) and (
+        getattr(origin, "_lodum_enabled", False) or dataclasses.is_dataclass(origin)
+    ):
+        setattr(origin, "_lodum_enabled", True)
         handler = _compile_load_handler(origin)
         with ctx.cache_lock:
             ctx.load_cache[origin] = handler

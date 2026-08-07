@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import dataclasses
 import inspect
 from typing import (
     Any,
@@ -28,8 +29,35 @@ def _analyze_class(cls: Type[Any]) -> None:
     if hasattr(cls, "_lodum_fields"):
         return
 
-    # To handle circular imports, we might need a lock or more care here,
-    # but for now we do standard signature analysis.
+    if dataclasses.is_dataclass(cls):
+        setattr(cls, "_lodum_enabled", True)
+        fields: Dict[str, Field] = {}
+        for f in dataclasses.fields(cls):
+            if not f.init:
+                continue
+
+            if isinstance(f.default, Field):
+                field_info = f.default
+            else:
+                default = _MISSING
+                default_factory = None
+                if f.default is not dataclasses.MISSING:
+                    default = f.default
+                elif f.default_factory is not dataclasses.MISSING:
+                    default_factory = f.default_factory
+
+                field_info = Field(
+                    default=default,
+                    default_factory=default_factory,
+                )
+
+            field_info.name = f.name
+            field_info.type = f.type
+            fields[f.name] = field_info
+
+        setattr(cls, "_lodum_fields", fields)
+        return
+
     try:
         init_sig = inspect.signature(cls.__init__)
     except (ValueError, TypeError):
