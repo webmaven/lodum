@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-from lodum import lodum, field, json
-from lodum.validators import Range, Length, Match, OneOf
+
+from lodum import field, json, lodum
 from lodum.exception import DeserializationError
+from lodum.validators import Length, Match, OneOf, Range
 
 
 @lodum

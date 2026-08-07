@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import re
-from typing import Any, Container, Optional
+from collections.abc import Container
+from typing import Any
 
 from .exception import DeserializationError
 
@@ -13,7 +14,7 @@ class Validator:
 
 
 class Range(Validator):
-    def __init__(self, min: Optional[Any] = None, max: Optional[Any] = None) -> None:
+    def __init__(self, min: Any | None = None, max: Any | None = None) -> None:
         self.min = min
         self.max = max
 
@@ -27,7 +28,7 @@ class Range(Validator):
 
 
 class Length(Validator):
-    def __init__(self, min: Optional[int] = None, max: Optional[int] = None) -> None:
+    def __init__(self, min: int | None = None, max: int | None = None) -> None:
         self.min = min
         self.max = max
 

@@ -1,28 +1,24 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import collections
 import array
+import collections
 import inspect
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Type,
     TypeVar,
-    get_origin,
-    get_args,
     cast,
+    get_args,
+    get_origin,
 )
 
-from ..core import Loader, Dumper
+from ..core import Dumper, Loader
 from ..exception import DeserializationError
 
 T = TypeVar("T")
 
 
-def _dump_sequence(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
+def _dump_sequence(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> Any:
     from ..internal import dump
 
     dumper.begin_list()
@@ -32,7 +28,7 @@ def _dump_sequence(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) ->
 
 
 def _dump_dict(
-    obj: Dict[Any, Any], dumper: Dumper, depth: int, seen: Optional[set]
+    obj: dict[Any, Any], dumper: Dumper, depth: int, seen: set | None
 ) -> Any:
     from ..internal import dump
 
@@ -42,7 +38,7 @@ def _dump_dict(
     return dumper.end_struct()
 
 
-def _dump_array(obj: array.array, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+def _dump_array(obj: array.array, d: Dumper, depth: int, seen: set | None) -> Any:
     from ..internal import dump
 
     d.begin_list()
@@ -52,12 +48,12 @@ def _dump_array(obj: array.array, d: Dumper, depth: int, seen: Optional[set]) ->
 
 
 def _load_list(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     from ..internal import load
 
     args = get_args(cls)
-    item_type: Type[Any] = args[0] if args else Any
+    item_type: type[Any] = args[0] if args else Any
     return cast(
         T,
         [
@@ -68,13 +64,13 @@ def _load_list(
 
 
 def _load_dict(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     from ..internal import load
 
     args = get_args(cls)
-    key_type: Type[Any]
-    value_type: Type[Any]
+    key_type: type[Any]
+    value_type: type[Any]
     key_type, value_type = (args[0], args[1]) if len(args) == 2 else (Any, Any)
     if key_type is not str and key_type is not Any:
         raise DeserializationError("JSON/YAML object keys must be strings", path)
@@ -91,11 +87,11 @@ def _load_dict(
 
 
 def _load_defaultdict(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         args = get_args(cls)
-        val_type: Type[Any] = args[1] if len(args) == 2 else Any
+        val_type: type[Any] = args[1] if len(args) == 2 else Any
         data = _load_dict(dict, loader, path, depth)
         factory = val_type if val_type is not Any and callable(val_type) else None
         return cast(T, collections.defaultdict(factory, data))
@@ -109,7 +105,7 @@ def _load_defaultdict(
 
 
 def _load_ordered_dict(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         data = _load_dict(dict, loader, path, depth)
@@ -124,12 +120,12 @@ def _load_ordered_dict(
 
 
 def _load_counter(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         # Counter is basically Dict[Any, int]
         # But we need to make sure we load it correctly
-        data = _load_dict(Dict[Any, int], loader, path, depth)
+        data = _load_dict(dict[Any, int], loader, path, depth)
         return cast(T, collections.Counter(data))
     except (TypeError, DeserializationError) as e:
         msg = (
@@ -141,12 +137,12 @@ def _load_counter(
 
 
 def _load_tuple(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     from ..internal import load
 
     try:
-        item_types: tuple[Type[Any], ...] = get_args(cls)
+        item_types: tuple[type[Any], ...] = get_args(cls)
         raw_items = list(loader.load_list())
         if len(raw_items) != len(item_types):
             raise DeserializationError(f"Tuple length mismatch for {cls}")
@@ -172,12 +168,12 @@ def _load_tuple(
 
 
 def _load_set(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     from ..internal import load
 
     try:
-        item_type: Type[Any] = get_args(cls)[0]
+        item_type: type[Any] = get_args(cls)[0]
         return cast(
             T,
             {
@@ -195,12 +191,13 @@ def _load_set(
 
 
 def _load_union(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
-    from ..internal import load
-    import inspect
-    import enum
     import datetime
+    import enum
+    import inspect
+
+    from ..internal import load
 
     marker = loader.mark()
     data = loader.load_any()
@@ -220,7 +217,7 @@ def _load_union(
                     new_loader = type(loader)(data)  # type: ignore[operator, call-arg]
                     return load(inner_type, new_loader, path, depth + 1)
 
-    def get_priority(t: Type[Any]) -> int:
+    def get_priority(t: type[Any]) -> int:
         origin = get_origin(t) or t
         if origin is Any:
             return 0
@@ -273,7 +270,7 @@ def _load_union(
             return -1
         return 10
 
-    types: List[Type[Any]] = sorted(get_args(cls), key=get_priority, reverse=True)
+    types: list[type[Any]] = sorted(get_args(cls), key=get_priority, reverse=True)
     errors = []
     for inner_type in types:
         if get_priority(inner_type) < 0:
@@ -299,7 +296,7 @@ def _load_union(
 
 
 def _load_array(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         data = _load_list(list, loader, path, depth)

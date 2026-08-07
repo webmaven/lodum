@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-from lodum import lodum, json
+
+from lodum import json, lodum
 
 
 def test_odd_class_name():
@@ -14,7 +15,7 @@ def test_odd_class_name():
     f = Field()
     f.name = "a"
     f.type = int
-    setattr(OddName, "_lodum_fields", {"a": f})
+    OddName._lodum_fields = {"a": f}
 
     # We need a way to instantiate it since we didn't give it an __init__
     obj = OddName()
@@ -72,11 +73,11 @@ def test_many_fields():
         f.type = int
         lodum_fields[name] = f
 
-    setattr(ManyFields, "_lodum_fields", lodum_fields)
+    ManyFields._lodum_fields = lodum_fields
 
     data = {name: i for i, name in enumerate(field_names)}
     obj = ManyFields(**data)
 
     json_str = json.dumps(obj)
     res = json.loads(ManyFields, json_str)
-    assert getattr(res, "field_199") == 199
+    assert res.field_199 == 199

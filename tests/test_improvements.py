@@ -4,8 +4,10 @@
 import uuid
 from decimal import Decimal
 from pathlib import Path
+
 import pytest
-from lodum import lodum, json
+
+from lodum import json, lodum
 from lodum.exception import DeserializationError
 
 

@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import io
-from lodum import lodum, json, msgpack, yaml, toml, pickle, cbor, bson
+
+from lodum import bson, cbor, json, lodum, msgpack, pickle, toml, yaml
 
 
 @lodum

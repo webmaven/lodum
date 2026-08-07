@@ -1,20 +1,17 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import inspect
 import collections
+import inspect
 from typing import (
     Any,
-    Dict,
-    Optional,
-    Type,
-    get_origin,
     get_args,
+    get_origin,
 )
 
-from .field import Field
-from .core import DEFAULT_MAX_DEPTH, get_context
 from .compiler.analyzer import _analyze_class
+from .core import DEFAULT_MAX_DEPTH, get_context
+from .field import Field
 
 
 def _sanitize_name(name: str) -> str:
@@ -25,8 +22,8 @@ def _sanitize_name(name: str) -> str:
 
 
 def generate_schema(
-    t: Type[Any], depth: int = 0, visited: Optional[set] = None
-) -> Dict[str, Any]:
+    t: type[Any], depth: int = 0, visited: set | None = None
+) -> dict[str, Any]:
     """Generates a JSON Schema for a given type."""
     if depth > DEFAULT_MAX_DEPTH:
         raise ValueError(
@@ -66,7 +63,7 @@ def generate_schema(
             return {"$ref": f"#/definitions/{_sanitize_name(t.__name__)}"}
 
         visited.add(t)
-        fields: Dict[str, Field] = getattr(t, "_lodum_fields", {})
+        fields: dict[str, Field] = getattr(t, "_lodum_fields", {})
         properties = {}
         required = []
         for field_name, field_info in fields.items():
@@ -93,53 +90,53 @@ def generate_schema(
     return {}
 
 
-def _schema_int(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_int(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "integer"}
 
 
-def _schema_str(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_str(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "string"}
 
 
-def _schema_float(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_float(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "number"}
 
 
-def _schema_bool(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_bool(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "boolean"}
 
 
-def _schema_none(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_none(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "null"}
 
 
-def _schema_any(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_any(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {}
 
 
-def _schema_uuid(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_uuid(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "string", "format": "uuid"}
 
 
-def _schema_decimal(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_decimal(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "string"}
 
 
-def _schema_path(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_path(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "string"}
 
 
-def _schema_bytes(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_bytes(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "string", "contentEncoding": "base64"}
 
 
-def _schema_list(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_list(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     args = get_args(t)
     item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
     return {"type": "array", "items": item_schema}
 
 
-def _schema_dict(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_dict(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     args = get_args(t)
     origin = get_origin(t) or t
     if origin is collections.Counter:
@@ -151,9 +148,9 @@ def _schema_dict(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, 
     return {"type": "object", "additionalProperties": val_schema}
 
 
-def _schema_union(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_union(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     args = get_args(t)
-    schema: Dict[str, Any] = {
+    schema: dict[str, Any] = {
         "anyOf": [generate_schema(arg, depth + 1, visited) for arg in args]
     }
 
@@ -171,7 +168,7 @@ def _schema_union(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str,
     return schema
 
 
-def _schema_tuple(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_tuple(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     args = get_args(t)
     return {
         "type": "array",
@@ -179,17 +176,17 @@ def _schema_tuple(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str,
     }
 
 
-def _schema_set(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_set(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     args = get_args(t)
     item_schema = generate_schema(args[0], depth + 1, visited) if args else {}
     return {"type": "array", "items": item_schema, "uniqueItems": True}
 
 
 def _schema_datetime(
-    t: Type[Any], depth: int, visited: Optional[set]
-) -> Dict[str, Any]:
+    t: type[Any], depth: int, visited: set | None
+) -> dict[str, Any]:
     return {"type": "string", "format": "date-time"}
 
 
-def _schema_enum(t: Type[Any], depth: int, visited: Optional[set]) -> Dict[str, Any]:
+def _schema_enum(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"enum": [m.value for m in t]}

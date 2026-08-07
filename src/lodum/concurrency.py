@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import typing
 import warnings
 
@@ -143,7 +143,10 @@ class DummyLocal:
 # --- API Selection ---
 
 if _USE_NATIVE:
-    from threading import Thread as Thread, Lock as Lock, RLock as RLock, local as local
+    from threading import Lock as Lock
+    from threading import RLock as RLock
+    from threading import Thread as Thread
+    from threading import local as local
 
     # In native environments, WorkerThread is just an alias for native Thread
 

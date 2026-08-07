@@ -1,28 +1,24 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from .concurrency import Lock, local
+from collections.abc import Callable, Iterator
 from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Type,
-    TypeVar,
-    Protocol,
-    TYPE_CHECKING,
-    Union as TypingUnion,
     IO,
+    TYPE_CHECKING,
+    Any,
+    Optional,
+    Protocol,
+    TypeVar,
 )
 
+from .concurrency import Lock, local
+
 if TYPE_CHECKING:
-    from .registry import TypeRegistry, DumpHandler, LoadHandler
+    from .registry import DumpHandler, LoadHandler, TypeRegistry
 
 from .exception import DeserializationError
 
-T = TypeVar("T", bound=Type[Any])
+T = TypeVar("T", bound=type[Any])
 
 # --- Security Limits ---
 
@@ -39,13 +35,13 @@ class Context:
     def __init__(self, registry: Optional["TypeRegistry"] = None) -> None:
         from .registry import registry as global_registry
 
-        self.registry: "TypeRegistry" = (
+        self.registry: TypeRegistry = (
             registry.copy() if registry else global_registry.copy()
         )
-        self.dump_cache: Dict[Type[Any], "DumpHandler"] = {}
-        self.load_cache: Dict[Type[Any], "LoadHandler"] = {}
+        self.dump_cache: dict[type[Any], DumpHandler] = {}
+        self.load_cache: dict[type[Any], LoadHandler] = {}
         self.cache_lock = Lock()
-        self.name_to_type_cache: Dict[str, Type[Any]] = {}
+        self.name_to_type_cache: dict[str, type[Any]] = {}
 
 
 _active_context = local()
@@ -73,16 +69,16 @@ def reset_context() -> Context:
     return ctx
 
 
-def register_type(cls: Type[Any]) -> None:
+def register_type(cls: type[Any]) -> None:
     """Registers a class in the name-to-type cache of the active context."""
     ctx = get_context()
     ctx.name_to_type_cache[cls.__name__] = cls
 
 
 def lodum(
-    cls: Optional[T] = None,
-    tag: Optional[str] = None,
-    tag_value: Optional[str] = None,
+    cls: T | None = None,
+    tag: str | None = None,
+    tag_value: str | None = None,
 ) -> Any:
     """
     A class decorator that marks a class as lodum-enabled.
@@ -91,9 +87,9 @@ def lodum(
     """
 
     def decorator(c: T) -> T:
-        setattr(c, "_lodum_enabled", True)
-        setattr(c, "_lodum_tag", tag)
-        setattr(c, "_lodum_tag_value", tag_value or c.__name__)
+        c._lodum_enabled = True
+        c._lodum_tag = tag
+        c._lodum_tag_value = tag_value or c.__name__
 
         register_type(c)
 
@@ -115,39 +111,39 @@ class Dumper(Protocol):
     """
 
     def dump_int(
-        self, value: int, depth: int = 0, seen: Optional[set] = None
+        self, value: int, depth: int = 0, seen: set | None = None
     ) -> Any: ...
     def dump_str(
-        self, value: str, depth: int = 0, seen: Optional[set] = None
+        self, value: str, depth: int = 0, seen: set | None = None
     ) -> Any: ...
     def dump_float(
-        self, value: float, depth: int = 0, seen: Optional[set] = None
+        self, value: float, depth: int = 0, seen: set | None = None
     ) -> Any: ...
     def dump_bool(
-        self, value: bool, depth: int = 0, seen: Optional[set] = None
+        self, value: bool, depth: int = 0, seen: set | None = None
     ) -> Any: ...
     def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+        self, value: bytes, depth: int = 0, seen: set | None = None
     ) -> Any: ...
     def dump_buffer(
-        self, value: Any, depth: int = 0, seen: Optional[set] = None
+        self, value: Any, depth: int = 0, seen: set | None = None
     ) -> Any: ...
-    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any: ...
+    def dump_none(self, depth: int = 0, seen: set | None = None) -> Any: ...
     def dump_list(
-        self, value: List[Any], depth: int = 0, seen: Optional[set] = None
+        self, value: list[Any], depth: int = 0, seen: set | None = None
     ) -> Any: ...
     def dump_dict(
-        self, value: Dict[str, Any], depth: int = 0, seen: Optional[set] = None
+        self, value: dict[str, Any], depth: int = 0, seen: set | None = None
     ) -> Any: ...
-    def begin_struct(self, cls: Type) -> Any: ...
+    def begin_struct(self, cls: type) -> Any: ...
     def end_struct(self) -> Any: ...
     def field(
         self,
         name: str,
         value: Any,
-        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        handler: Callable[[Any, "Dumper", int, set | None], Any],
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         """Processes a single struct field."""
         ...
@@ -163,9 +159,9 @@ class Dumper(Protocol):
     def list_item(
         self,
         value: Any,
-        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        handler: Callable[[Any, "Dumper", int, set | None], Any],
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         """Processes a single list item."""
         ...
@@ -177,30 +173,30 @@ class BaseDumper:
     """
 
     def __init__(self) -> None:
-        self._struct_stack: List[Dict[str, Any]] = []
-        self._list_stack: List[List[Any]] = []
+        self._struct_stack: list[dict[str, Any]] = []
+        self._list_stack: list[list[Any]] = []
 
-    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_int(self, value: int, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
-    def dump_str(self, value: str, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
     def dump_float(
-        self, value: float, depth: int = 0, seen: Optional[set] = None
+        self, value: float, depth: int = 0, seen: set | None = None
     ) -> Any:
         return value
 
-    def dump_bool(self, value: bool, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_bool(self, value: bool, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
     def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+        self, value: bytes, depth: int = 0, seen: set | None = None
     ) -> Any:
         return value
 
     def dump_buffer(
-        self, value: Any, depth: int = 0, seen: Optional[set] = None
+        self, value: Any, depth: int = 0, seen: set | None = None
     ) -> Any:
         """
         Extracts a zero-copy memoryview or buffer view for binary buffers or arrays.
@@ -211,20 +207,20 @@ class BaseDumper:
             return memoryview(value)
         return value
 
-    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_none(self, depth: int = 0, seen: set | None = None) -> Any:
         return None
 
     def dump_list(
-        self, value: List[Any], depth: int = 0, seen: Optional[set] = None
+        self, value: list[Any], depth: int = 0, seen: set | None = None
     ) -> Any:
         return value
 
     def dump_dict(
-        self, value: Dict[str, Any], depth: int = 0, seen: Optional[set] = None
+        self, value: dict[str, Any], depth: int = 0, seen: set | None = None
     ) -> Any:
         return value
 
-    def begin_struct(self, cls: Type) -> Any:
+    def begin_struct(self, cls: type) -> Any:
         self._struct_stack.append({})
         return self._struct_stack[-1]
 
@@ -235,9 +231,9 @@ class BaseDumper:
         self,
         name: str,
         value: Any,
-        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        handler: Callable[[Any, "Dumper", int, set | None], Any],
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         res = handler(value, self, depth, seen)
         self._struct_stack[-1][name] = res
@@ -251,9 +247,9 @@ class BaseDumper:
     def list_item(
         self,
         value: Any,
-        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        handler: Callable[[Any, "Dumper", int, set | None], Any],
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         res = handler(value, self, depth, seen)
         self._list_stack[-1].append(res)
@@ -267,13 +263,13 @@ class StreamingDumper(Dumper):
     def __init__(self, target: IO[Any]) -> None:
         self._target = target
         self._depth = 0
-        self._first_item_stack: List[bool] = [True]
+        self._first_item_stack: list[bool] = [True]
 
     def write_raw(self, chunk: Any) -> None:
         """Writes pre-encoded data directly to the stream."""
         self._target.write(chunk)
 
-    def begin_struct(self, cls: Type) -> Any:
+    def begin_struct(self, cls: type) -> Any:
         self._depth += 1
         self._first_item_stack.append(True)
         return None
@@ -287,9 +283,9 @@ class StreamingDumper(Dumper):
         self,
         name: str,
         value: Any,
-        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        handler: Callable[[Any, "Dumper", int, set | None], Any],
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         handler(value, self, depth, seen)
 
@@ -305,9 +301,9 @@ class StreamingDumper(Dumper):
     def list_item(
         self,
         value: Any,
-        handler: Callable[[Any, "Dumper", int, Optional[set]], Any],
+        handler: Callable[[Any, "Dumper", int, set | None], Any],
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         handler(value, self, depth, seen)
 
@@ -327,7 +323,7 @@ class Loader(Protocol):
     def load_any(self) -> Any: ...
     def mark(self) -> Any: ...
     def rewind(self, marker: Any) -> None: ...
-    def get_dict(self) -> Optional[TypingUnion[Dict[str, Any], List[Any]]]: ...
+    def get_dict(self) -> dict[str, Any] | list[Any] | None: ...
     def load_bytes_value(self, value: Any) -> bytes: ...
 
 
@@ -384,7 +380,7 @@ class BaseLoader:
             raise DeserializationError(f"Expected dict, got {type(val).__name__}")
         return ((str(k), type(self)(v)) for k, v in val.items())
 
-    def get_dict(self) -> Optional[TypingUnion[Dict[str, Any], List[Any]]]:
+    def get_dict(self) -> dict[str, Any] | list[Any] | None:
         if isinstance(self._data, (dict, list)):
             return self._data
         return None

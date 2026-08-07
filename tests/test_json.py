@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Generic, List, Optional, Set, Tuple, TypeVar, Union
-import pytest
 from datetime import datetime
 from enum import Enum
+from typing import Any, Generic, TypeVar
 
-from lodum import lodum, field, json
+import pytest
+
+from lodum import field, json, lodum
 from lodum.exception import DeserializationError
 
 # --- Test Data Structures ---
@@ -34,7 +35,7 @@ class UserRole(Enum):
 
 @lodum
 class ComplexObject:
-    def __init__(self, created_at: datetime, role: UserRole, permissions: Set[str]):
+    def __init__(self, created_at: datetime, role: UserRole, permissions: set[str]):
         self.created_at = created_at
         self.role = role
         self.permissions = permissions
@@ -44,8 +45,8 @@ class ComplexObject:
 class TypingObject:
     def __init__(
         self,
-        optional_field: Optional[int],
-        union_field: Union[str, bool, UserRole],
+        optional_field: int | None,
+        union_field: str | bool | UserRole,
         any_field: Any,
     ):
         self.optional_field = optional_field
@@ -145,7 +146,7 @@ def test_deserialize_list_of_objects():
     """Tests decoding of a list containing user-defined objects."""
     json_string = '[{"a": 1, "b": "one"}, {"a": 2, "b": "two"}]'
     # Note: The type hint List[Simple] is crucial here.
-    obj_list = json.loads(List[Simple], json_string)
+    obj_list = json.loads(list[Simple], json_string)
     assert isinstance(obj_list, list)
     assert len(obj_list) == 2
     assert isinstance(obj_list[0], Simple)
@@ -195,7 +196,7 @@ def test_tuple_serialization():
 
 def test_tuple_deserialization():
     """Tests decoding of tuples."""
-    result = json.loads(Tuple[int, str, bool], '[1, "a", true]')
+    result = json.loads(tuple[int, str, bool], '[1, "a", true]')
     assert isinstance(result, tuple)
     assert result == (1, "a", True)
 
@@ -212,7 +213,7 @@ def test_set_serialization():
 
 def test_set_deserialization():
     """Tests decoding of sets."""
-    result = json.loads(Set[str], '["a", "b", "c"]')
+    result = json.loads(set[str], '["a", "b", "c"]')
     assert isinstance(result, set)
     assert result == {"a", "b", "c"}
 
@@ -422,7 +423,7 @@ def test_deserialize_wrong_main_type():
 
 @lodum
 class UserWithList:
-    def __init__(self, name: str, posts: List[str]):
+    def __init__(self, name: str, posts: list[str]):
         self.name = name
         self.posts = posts
 

@@ -1,14 +1,16 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Dict, List, Optional, Type
+from typing import Any
+
 import polars as pl  # type: ignore[import-not-found]
+
 from ..core import Dumper, Loader
 from ..registry import TypeHandler
 
 
 def _dump_polars_dataframe(
-    obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+    obj: Any, dumper: Dumper, depth: int, seen: set | None
 ) -> Any:
     from ..internal import dump
 
@@ -16,7 +18,7 @@ def _dump_polars_dataframe(
 
 
 def _dump_polars_series(
-    obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+    obj: Any, dumper: Dumper, depth: int, seen: set | None
 ) -> Any:
     from ..internal import dump
 
@@ -24,7 +26,7 @@ def _dump_polars_series(
 
 
 def _load_polars_dataframe(
-    cls: Type[Any], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[Any], loader: Loader, path: str | None = None, depth: int = 0
 ) -> Any:
     from ..internal import load
 
@@ -32,22 +34,22 @@ def _load_polars_dataframe(
 
 
 def _load_polars_series(
-    cls: Type[Any], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[Any], loader: Loader, path: str | None = None, depth: int = 0
 ) -> Any:
     from ..internal import load
 
-    return pl.Series(load(List[Any], loader, path, depth + 1))
+    return pl.Series(load(list[Any], loader, path, depth + 1))
 
 
 def _schema_polars_dataframe(
-    t: Type[Any], depth: int, visited: Optional[set]
-) -> Dict[str, Any]:
+    t: type[Any], depth: int, visited: set | None
+) -> dict[str, Any]:
     return {"type": "object"}
 
 
 def _schema_polars_series(
-    t: Type[Any], depth: int, visited: Optional[set]
-) -> Dict[str, Any]:
+    t: type[Any], depth: int, visited: set | None
+) -> dict[str, Any]:
     return {"type": "array"}
 
 

@@ -4,7 +4,7 @@
 import array
 import collections
 import datetime
-from typing import Any, Dict, ForwardRef, List, Set, Tuple, Union
+from typing import Any, ForwardRef, Union
 
 import pytest
 
@@ -18,7 +18,6 @@ from lodum.internal import (
     dump,
     load,
 )
-
 
 # --- Format Handlers ---
 
@@ -188,22 +187,22 @@ def test_bson_primitive_wrapper():
 
 def test_toml_loads_error_wrap():
     with pytest.raises(DeserializationError, match="Failed to parse TOML"):
-        toml.loads(Dict, "a=[")
+        toml.loads(dict, "a=[")
 
 
 def test_bson_loads_error_wrap():
     with pytest.raises(DeserializationError, match="Failed to parse BSON"):
-        bson.loads(Dict, b"\x00")
+        bson.loads(dict, b"\x00")
 
 
 def test_cbor_loads_error_wrap():
     with pytest.raises(DeserializationError, match="Failed to parse CBOR"):
-        cbor.loads(Dict, b"\xbf")
+        cbor.loads(dict, b"\xbf")
 
 
 def test_msgpack_loads_error_wrap():
     with pytest.raises(DeserializationError, match="Failed to parse MsgPack"):
-        msgpack.loads(Dict, b"\xc1")
+        msgpack.loads(dict, b"\xc1")
 
 
 def test_format_loads_max_size():
@@ -224,7 +223,7 @@ def test_format_loads_max_size():
 
         data = b"x" * 100 if mod != toml and mod != yaml else "a=1" * 50
         with pytest.raises(DeserializationError, match="exceeds maximum"):
-            mod.loads(Dict, data, max_size=10)
+            mod.loads(dict, data, max_size=10)
 
 
 # --- Collections ---
@@ -234,7 +233,7 @@ def test_load_dict_key_type_error():
     from lodum.handlers.collections import _load_dict
 
     with pytest.raises(DeserializationError, match="keys must be strings"):
-        _load_dict(Dict[int, str], BaseLoader({"1": "a"}))
+        _load_dict(dict[int, str], BaseLoader({"1": "a"}))
 
 
 def test_load_defaultdict_error():
@@ -262,7 +261,7 @@ def test_load_set_unhashable():
     from lodum.handlers.collections import _load_set
 
     with pytest.raises(DeserializationError, match="elements must be hashable"):
-        _load_set(Set[List[int]], BaseLoader([[1]]))
+        _load_set(set[list[int]], BaseLoader([[1]]))
 
 
 def test_load_union_tagged_match():
@@ -288,7 +287,7 @@ def test_load_union_priority_numbers():
 
 def test_load_union_no_match():
     with pytest.raises(DeserializationError, match="Could not decode data"):
-        fromdict(Union[int, List[int]], {"a": 1})
+        fromdict(Union[int, list[int]], {"a": 1})
 
 
 def test_load_array_float():
@@ -318,7 +317,7 @@ def test_internal_load_string_type():
 
 def test_internal_get_load_handler_dict_key_error():
     with pytest.raises(DeserializationError, match="keys must be strings"):
-        _get_load_handler(Dict[int, str])
+        _get_load_handler(dict[int, str])
 
 
 def test_internal_get_load_handler_unknown_forward_ref():
@@ -409,7 +408,7 @@ def test_resolve_forward_ref_context_cache_hit():
 
     assert _resolve_forward_ref(ForwardRef("CT"), {CT: True}, {}, {}) == CT
     assert (
-        _resolve_forward_ref(ForwardRef("CT"), {List[int]: True, CT: True}, {}, {})
+        _resolve_forward_ref(ForwardRef("CT"), {list[int]: True, CT: True}, {}, {})
         == CT
     )
 
@@ -503,13 +502,13 @@ def test_schema_counter():
 def test_schema_tuple():
     from lodum.schema import generate_schema
 
-    assert "prefixItems" in generate_schema(Tuple[int, str])
+    assert "prefixItems" in generate_schema(tuple[int, str])
 
 
 def test_schema_set():
     from lodum.schema import generate_schema
 
-    assert generate_schema(Set[int])["uniqueItems"] is True
+    assert generate_schema(set[int])["uniqueItems"] is True
 
 
 def test_schema_union_discriminator():
@@ -648,6 +647,7 @@ def test_base_loader_successful_ops():
 def test_pickle_security_vulnerability():
     """Verify that dangerous builtins are blocked by SafeUnpickler."""
     import pickle
+
     from lodum import pickle as lodum_pickle
 
     # Payload that attempts to call eval
@@ -673,21 +673,19 @@ def test_mock_missing_deps_full():
             toml.dumps({})
     with patch("lodum.toml.tomllib", None):
         with pytest.raises(ImportError, match="tomllib"):
-            toml.loads(Dict, "")
+            toml.loads(dict, "")
     with patch("lodum.yaml.yaml_available", False):
         with pytest.raises(ImportError, match="ruamel.yaml"):
             yaml.dumps({})
         with pytest.raises(ImportError, match="ruamel.yaml"):
-            yaml.loads(Dict, "")
-    with patch("lodum.bson.bson", None):
-        with pytest.raises(ImportError, match="bson"):
-            bson.dumps({})
-            bson.loads(Dict, b"")
-    with patch("lodum.cbor.cbor2", None):
-        with pytest.raises(ImportError, match="cbor2"):
-            cbor.dumps({})
-            cbor.loads(Dict, b"")
+            yaml.loads(dict, "")
+    with patch("lodum.bson.bson", None), pytest.raises(ImportError, match="bson"):
+        bson.dumps({})
+        bson.loads(dict, b"")
+    with patch("lodum.cbor.cbor2", None), pytest.raises(ImportError, match="cbor2"):
+        cbor.dumps({})
+        cbor.loads(dict, b"")
     with patch("lodum.msgpack.msgpack", None):
         with pytest.raises(ImportError, match="msgpack"):
             msgpack.dumps({})
-            msgpack.loads(Dict, b"")
+            msgpack.loads(dict, b"")

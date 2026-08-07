@@ -1,11 +1,11 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional, Any
-import pytest
+from typing import Any
+
+from lodum import lodum
 from lodum.core import BaseDumper
 from lodum.internal import dump
-from lodum import lodum, asdict
 
 
 class MockCustomDumper(BaseDumper):
@@ -13,7 +13,7 @@ class MockCustomDumper(BaseDumper):
         super().__init__()
         self.recorded_depths = []
 
-    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_int(self, value: int, depth: int = 0, seen: set | None = None) -> Any:
         self.recorded_depths.append(depth)
         return value
 

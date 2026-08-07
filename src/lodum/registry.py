@@ -1,15 +1,17 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Callable, Dict, Optional, Type, NamedTuple, TypeVar
-from .core import Loader, Dumper
+from collections.abc import Callable
+from typing import Any, NamedTuple, TypeVar
+
+from .core import Dumper, Loader
 
 T = TypeVar("T")
 
 # Define function signatures
-DumpHandler = Callable[[Any, Dumper, int, Optional[set]], Any]
-LoadHandler = Callable[[Type[Any], Loader, Optional[str], int], Any]
-SchemaHandler = Callable[[Type[Any], int, Optional[set]], Dict[str, Any]]
+DumpHandler = Callable[[Any, Dumper, int, set | None], Any]
+LoadHandler = Callable[[type[Any], Loader, str | None, int], Any]
+SchemaHandler = Callable[[type[Any], int, set | None], dict[str, Any]]
 
 
 class TypeHandler(NamedTuple):
@@ -20,9 +22,9 @@ class TypeHandler(NamedTuple):
 
 class TypeRegistry:
     def __init__(self) -> None:
-        self._handlers: Dict[Type[Any], TypeHandler] = {}
+        self._handlers: dict[type[Any], TypeHandler] = {}
 
-    def register(self, t: Type[Any], handler: TypeHandler) -> None:
+    def register(self, t: type[Any], handler: TypeHandler) -> None:
         self._handlers[t] = handler
         # Ensure that if something is registered via the global instance,
         # it is reflected in the current context if it has already been created.
@@ -36,10 +38,10 @@ class TypeRegistry:
             # Happens during initial bootstrap or if core/registry are not fully set up
             pass
 
-    def get(self, t: Type[Any]) -> Optional[TypeHandler]:
+    def get(self, t: type[Any]) -> TypeHandler | None:
         return self._handlers.get(t)
 
-    def get_all(self) -> Dict[Type[Any], TypeHandler]:
+    def get_all(self) -> dict[type[Any], TypeHandler]:
         return self._handlers.copy()
 
     def copy(self) -> "TypeRegistry":

@@ -13,18 +13,23 @@ try:
     import tomli_w
 except ImportError:
     tomli_w = None  # type: ignore
-from typing import Any, Dict, Iterator, Optional, Type, TypeVar, Union, IO
+from collections.abc import Iterator
 from pathlib import Path
+from typing import IO, Any, TypeVar
 
-from .core import Loader, BaseDumper, BaseLoader
+from .core import BaseDumper, BaseLoader, Loader
 from .exception import DeserializationError
 from .internal import (
-    dump as dump_internal,
-    load as load_internal,
     DEFAULT_MAX_SIZE,
-    generate_schema,
     _resolve_source,
     _resolve_target,
+    generate_schema,
+)
+from .internal import (
+    dump as dump_internal,
+)
+from .internal import (
+    load as load_internal,
 )
 
 T = TypeVar("T")
@@ -33,8 +38,8 @@ T = TypeVar("T")
 
 
 def dump(
-    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs: Any
-) -> Optional[str]:
+    obj: Any, target: IO[str] | Path | None = None, **kwargs: Any
+) -> str | None:
     """
     Encodes a Python object to TOML.
 
@@ -69,7 +74,7 @@ def dumps(obj: Any, **kwargs: Any) -> str:
 
 
 def load(
-    cls: Type[T], source: Union[str, IO[Any], Path], max_size: int = DEFAULT_MAX_SIZE
+    cls: type[T], source: str | IO[Any] | Path, max_size: int = DEFAULT_MAX_SIZE
 ) -> T:
     """
     Decodes TOML from a string, stream, or file into a Python object.
@@ -112,12 +117,12 @@ def load(
     return load_internal(cls, loader)
 
 
-def loads(cls: Type[T], toml_string: str, **kwargs: Any) -> T:
+def loads(cls: type[T], toml_string: str, **kwargs: Any) -> T:
     """Legacy alias for load(cls, source)."""
     return load(cls, toml_string, **kwargs)
 
 
-def schema(cls: Type[Any]) -> Dict[str, Any]:
+def schema(cls: type[Any]) -> dict[str, Any]:
     """Generates a JSON Schema for a given lodum-enabled class."""
     return generate_schema(cls)
 
@@ -127,7 +132,7 @@ def schema(cls: Type[Any]) -> Dict[str, Any]:
 
 class TomlDumper(BaseDumper):
     def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+        self, value: bytes, depth: int = 0, seen: set | None = None
     ) -> Any:
         import base64
 

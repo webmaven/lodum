@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import collections
-from typing import Dict, List, Generic, TypeVar
-import pytest
+from typing import Generic, TypeVar
+
 import lodum
 
 

@@ -5,17 +5,22 @@ try:
     import msgpack  # type: ignore[import-untyped]
 except ImportError:
     msgpack = None  # type: ignore
-from typing import Any, Iterator, Optional, Type, TypeVar, Union, IO
+from collections.abc import Iterator
 from pathlib import Path
+from typing import IO, Any, TypeVar
 
-from .core import Loader, BaseDumper, BaseLoader
+from .core import BaseDumper, BaseLoader, Loader
 from .exception import DeserializationError
 from .internal import (
-    dump as dump_internal,
-    load as load_internal,
     DEFAULT_MAX_SIZE,
     _resolve_source,
     _resolve_target,
+)
+from .internal import (
+    dump as dump_internal,
+)
+from .internal import (
+    load as load_internal,
 )
 
 T = TypeVar("T")
@@ -24,8 +29,8 @@ T = TypeVar("T")
 
 
 def dump(
-    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs: Any
-) -> Optional[bytes]:
+    obj: Any, target: IO[bytes] | Path | None = None, **kwargs: Any
+) -> bytes | None:
     """
     Encodes a Python object to MsgPack.
 
@@ -59,8 +64,8 @@ def dumps(obj: Any, **kwargs: Any) -> bytes:
 
 
 def load(
-    cls: Type[T],
-    source: Union[bytes, IO[bytes], Path],
+    cls: type[T],
+    source: bytes | IO[bytes] | Path,
     max_size: int = DEFAULT_MAX_SIZE,
 ) -> T:
     """
@@ -98,12 +103,12 @@ def load(
     return load_internal(cls, loader)
 
 
-def loads(cls: Type[T], packed_bytes: bytes, **kwargs: Any) -> T:
+def loads(cls: type[T], packed_bytes: bytes, **kwargs: Any) -> T:
     """Legacy alias for load(cls, source)."""
     return load(cls, packed_bytes, **kwargs)
 
 
-def stream(cls: Type[T], source: Union[IO[bytes], Path]) -> Iterator[T]:
+def stream(cls: type[T], source: IO[bytes] | Path) -> Iterator[T]:
     """
     Lazily decodes a stream of MsgPack objects.
     Supports concatenated MsgPack objects (ND-MsgPack style).

@@ -2,18 +2,23 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import json
-from typing import Any, Dict, Iterator, Optional, Type, TypeVar, IO, Union
+from collections.abc import Iterator
 from pathlib import Path
+from typing import IO, Any, TypeVar
 
-from .core import Loader, BaseDumper, BaseLoader, StreamingDumper
+from .core import BaseDumper, BaseLoader, Loader, StreamingDumper
 from .exception import DeserializationError
 from .internal import (
-    dump as dump_internal,
-    load as load_internal,
-    generate_schema,
     DEFAULT_MAX_SIZE,
     _resolve_source,
     _resolve_target,
+    generate_schema,
+)
+from .internal import (
+    dump as dump_internal,
+)
+from .internal import (
+    load as load_internal,
 )
 
 T = TypeVar("T")
@@ -22,8 +27,8 @@ T = TypeVar("T")
 
 
 def dump(
-    obj: Any, target: Optional[Union[IO[str], Path]] = None, **kwargs: Any
-) -> Optional[str]:
+    obj: Any, target: IO[str] | Path | None = None, **kwargs: Any
+) -> str | None:
     """
     Encodes a Python object to JSON.
 
@@ -57,7 +62,7 @@ def dumps(obj: Any, **kwargs: Any) -> str:
 
 
 def load(
-    cls: Type[T], source: Union[str, IO[Any], Path], max_size: int = DEFAULT_MAX_SIZE
+    cls: type[T], source: str | IO[Any] | Path, max_size: int = DEFAULT_MAX_SIZE
 ) -> T:
     """
     Decodes JSON from a string, stream, or file into a Python object.
@@ -91,12 +96,12 @@ def load(
     return load_internal(cls, loader)
 
 
-def loads(cls: Type[T], json_string: str, **kwargs: Any) -> T:
+def loads(cls: type[T], json_string: str, **kwargs: Any) -> T:
     """Legacy alias for load(cls, source)."""
     return load(cls, json_string, **kwargs)
 
 
-def stream(cls: Type[T], source: Union[IO[bytes], Path]) -> Iterator[T]:
+def stream(cls: type[T], source: IO[bytes] | Path) -> Iterator[T]:
     """
     Lazily decodes a stream of JSON objects into instances of `cls`.
     Intended for sources containing a top-level array of objects.
@@ -124,12 +129,12 @@ def stream(cls: Type[T], source: Union[IO[bytes], Path]) -> Iterator[T]:
             raise DeserializationError(f"Streaming JSON error: {e}")
 
 
-def load_stream(cls: Type[T], stream_io: IO[bytes]) -> Iterator[T]:
+def load_stream(cls: type[T], stream_io: IO[bytes]) -> Iterator[T]:
     """Legacy alias for stream(cls, source)."""
     return stream(cls, stream_io)
 
 
-def schema(cls: Type[Any]) -> Dict[str, Any]:
+def schema(cls: type[Any]) -> dict[str, Any]:
     """Generates a JSON Schema for a given lodum-enabled class."""
     return generate_schema(cls)
 
@@ -139,14 +144,14 @@ def schema(cls: Type[Any]) -> Dict[str, Any]:
 
 class JsonDumper(BaseDumper):
     def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+        self, value: bytes, depth: int = 0, seen: set | None = None
     ) -> Any:
         import base64
 
         return base64.b64encode(value).decode("ascii")
 
     def dump_buffer(
-        self, value: Any, depth: int = 0, seen: Optional[set] = None
+        self, value: Any, depth: int = 0, seen: set | None = None
     ) -> Any:
         if hasattr(value, "tolist"):
             return value.tolist()
@@ -160,25 +165,25 @@ class JsonStreamingDumper(StreamingDumper):
     Writes JSON tokens directly to a stream.
     """
 
-    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_int(self, value: int, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw(str(value))
 
-    def dump_str(self, value: str, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw(json.dumps(value))
 
     def dump_float(
-        self, value: float, depth: int = 0, seen: Optional[set] = None
+        self, value: float, depth: int = 0, seen: set | None = None
     ) -> Any:
         self.write_raw(str(value))
 
-    def dump_bool(self, value: bool, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_bool(self, value: bool, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw("true" if value else "false")
 
-    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_none(self, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw("null")
 
     def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+        self, value: bytes, depth: int = 0, seen: set | None = None
     ) -> Any:
         import base64
 
@@ -186,7 +191,7 @@ class JsonStreamingDumper(StreamingDumper):
         self.write_raw(json.dumps(encoded))
 
     def dump_buffer(
-        self, value: Any, depth: int = 0, seen: Optional[set] = None
+        self, value: Any, depth: int = 0, seen: set | None = None
     ) -> Any:
         if hasattr(value, "tolist"):
             from .internal import dump as _dump
@@ -196,7 +201,7 @@ class JsonStreamingDumper(StreamingDumper):
         return value
 
     def dump_list(
-        self, value: list[Any], depth: int = 0, seen: Optional[set] = None
+        self, value: list[Any], depth: int = 0, seen: set | None = None
     ) -> Any:
         # Should normally not be called directly if orchestration is used
         from .internal import dump as _dump
@@ -207,7 +212,7 @@ class JsonStreamingDumper(StreamingDumper):
         return self.end_list()
 
     def dump_dict(
-        self, value: dict[str, Any], depth: int = 0, seen: Optional[set] = None
+        self, value: dict[str, Any], depth: int = 0, seen: set | None = None
     ) -> Any:
         # Should normally not be called directly if orchestration is used
         from .internal import dump as _dump
@@ -217,7 +222,7 @@ class JsonStreamingDumper(StreamingDumper):
             self.field(str(k), v, _dump, depth + 1, seen)
         return self.end_struct()
 
-    def begin_struct(self, cls: Type) -> Any:
+    def begin_struct(self, cls: type) -> Any:
         super().begin_struct(cls)
         self.write_raw("{")
         return None
@@ -232,7 +237,7 @@ class JsonStreamingDumper(StreamingDumper):
         value: Any,
         handler: Any,
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         if not self._first_item_stack[-1]:
             self.write_raw(",")
@@ -255,7 +260,7 @@ class JsonStreamingDumper(StreamingDumper):
         value: Any,
         handler: Any,
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         if not self._first_item_stack[-1]:
             self.write_raw(",")

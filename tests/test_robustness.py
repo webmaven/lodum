@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+from typing import Any, Optional
+
 import pytest
+
+from lodum import json, lodum
 from lodum.concurrency import WorkerThread as Thread
-from typing import Optional, List, Any
-from lodum import lodum, json
-from lodum.exception import SerializationError, DeserializationError
+from lodum.exception import DeserializationError, SerializationError
 
 
 @lodum
@@ -54,7 +56,7 @@ def test_very_large_input():
     )
     # Default limit is 10MB, this string is ~30MB
     with pytest.raises(DeserializationError) as excinfo:
-        json.loads(List[RobustNode], large_json)
+        json.loads(list[RobustNode], large_json)
     assert "exceeds maximum allowed" in str(excinfo.value)
 
 
@@ -97,11 +99,11 @@ def test_invalid_type_annotations():
 def test_recursive_schema():
     @lodum
     class RecursiveNode:
-        def __init__(self, children: List[Any]):
+        def __init__(self, children: list[Any]):
             self.children = children
 
     # Force a recursive type
-    RecursiveNode._lodum_fields["children"].type = List[RecursiveNode]
+    RecursiveNode._lodum_fields["children"].type = list[RecursiveNode]
 
     s = json.schema(RecursiveNode)
     assert s["type"] == "object"

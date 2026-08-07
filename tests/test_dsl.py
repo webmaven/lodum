@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import ast
 import sys
+
 from lodum.compiler.dsl import b
 
 

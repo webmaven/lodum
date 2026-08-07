@@ -3,36 +3,34 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import (
     Any,
-    Optional,
-    Type,
     TypeVar,
-    get_args,
     cast,
+    get_args,
 )
 
-from ..core import Loader, Dumper
+from ..core import Dumper, Loader
 from ..exception import DeserializationError, SerializationError
 
 T = TypeVar("T")
 
 
-def _dump_int(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> int:
+def _dump_int(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> int:
     return dumper.dump_int(obj, depth, seen)
 
 
-def _dump_str(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> str:
+def _dump_str(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> str:
     return dumper.dump_str(obj, depth, seen)
 
 
-def _dump_float(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> float:
+def _dump_float(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> float:
     return dumper.dump_float(obj, depth, seen)
 
 
-def _dump_bool(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> bool:
+def _dump_bool(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> bool:
     return dumper.dump_bool(obj, depth, seen)
 
 
-def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -> Any:
+def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> Any:
     if isinstance(obj, bool):
         return dumper.dump_bool(obj, depth, seen)
     if isinstance(obj, int):
@@ -47,7 +45,7 @@ def _dump_primitive(obj: Any, dumper: Dumper, depth: int, seen: Optional[set]) -
 
 
 def _load_primitive(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         if cls is int:
@@ -66,17 +64,17 @@ def _load_primitive(
 
 
 def _load_any(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     return cast(T, loader.load_any())
 
 
 def _load_optional(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     from ..internal import load
 
     if loader.load_any() is None:
         return cast(T, None)
-    inner_type: Type[Any] = get_args(cls)[0]
+    inner_type: type[Any] = get_args(cls)[0]
     return load(inner_type, loader, path, depth + 1)

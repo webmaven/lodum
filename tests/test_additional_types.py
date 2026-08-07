@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import collections
 import array
-from lodum import lodum, json, yaml, msgpack, cbor, bson, pickle
+import collections
+
+from lodum import bson, cbor, json, lodum, msgpack, pickle, yaml
 
 
 @lodum

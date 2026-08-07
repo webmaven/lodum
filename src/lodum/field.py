@@ -1,16 +1,17 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from .concurrency import RLock
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from collections.abc import Callable
+from typing import Any
 
+from .concurrency import RLock
 
 # Global registry for lodum-enabled classes to support ForwardRef resolution
-_NAME_TO_TYPE_CACHE: Dict[str, Type[Any]] = {}
+_NAME_TO_TYPE_CACHE: dict[str, type[Any]] = {}
 _REGISTRY_LOCK = RLock()
 
 
-def register_type(cls: Type[Any]) -> None:
+def register_type(cls: type[Any]) -> None:
     """Registers a class in the global name-to-type cache."""
     with _REGISTRY_LOCK:
         _NAME_TO_TYPE_CACHE[cls.__name__] = cls
@@ -34,15 +35,13 @@ class Field:
 
     def __init__(
         self,
-        rename: Optional[str] = None,
+        rename: str | None = None,
         skip_serializing: bool = False,
         default: Any = _MISSING,
-        default_factory: Optional[Callable[[], Any]] = None,
-        serializer: Optional[Callable[[Any], Any]] = None,
-        deserializer: Optional[Callable[[Any], Any]] = None,
-        validate: Optional[
-            Union[Callable[[Any], None], List[Callable[[Any], None]]]
-        ] = None,
+        default_factory: Callable[[], Any] | None = None,
+        serializer: Callable[[Any], Any] | None = None,
+        deserializer: Callable[[Any], Any] | None = None,
+        validate: Callable[[Any], None] | list[Callable[[Any], None]] | None = None,
     ) -> None:
         if default is not _MISSING and default_factory is not None:
             raise ValueError("cannot specify both default and default_factory")
@@ -88,7 +87,7 @@ class Field:
             parts.append(f"validate={self.validate!r}")
         return f"Field({', '.join(parts)})"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Field):
             return NotImplemented
         return (
@@ -106,15 +105,13 @@ class Field:
 
 def field(
     *,
-    rename: Optional[str] = None,
+    rename: str | None = None,
     skip_serializing: bool = False,
     default: Any = _MISSING,
-    default_factory: Optional[Callable[[], Any]] = None,
-    serializer: Optional[Callable[[Any], Any]] = None,
-    deserializer: Optional[Callable[[Any], Any]] = None,
-    validate: Optional[
-        Union[Callable[[Any], None], List[Callable[[Any], None]]]
-    ] = None,
+    default_factory: Callable[[], Any] | None = None,
+    serializer: Callable[[Any], Any] | None = None,
+    deserializer: Callable[[Any], Any] | None = None,
+    validate: Callable[[Any], None] | list[Callable[[Any], None]] | None = None,
 ) -> Any:
     """
     Provides metadata to the `@lodum` decorator for a single field.

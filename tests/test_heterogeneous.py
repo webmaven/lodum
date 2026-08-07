@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from lodum import lodum, json
 import pytest
+
+from lodum import json, lodum
 
 
 @lodum

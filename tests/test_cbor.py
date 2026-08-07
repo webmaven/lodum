@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-from lodum import lodum, cbor
+
+from lodum import cbor, lodum
 from lodum.exception import DeserializationError
 
 

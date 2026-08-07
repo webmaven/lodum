@@ -5,13 +5,10 @@ import dataclasses
 import inspect
 from typing import (
     Any,
-    Dict,
-    Type,
     ForwardRef,
-    Optional,
 )
 
-from ..field import Field, _MISSING
+from ..field import _MISSING, Field
 
 
 def _sanitize_name(name: str) -> str:
@@ -21,7 +18,7 @@ def _sanitize_name(name: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in name)
 
 
-def _analyze_class(cls: Type[Any]) -> None:
+def _analyze_class(cls: type[Any]) -> None:
     """
     Analyzes a class signature to extract lodum fields.
     Populates _lodum_fields on the class.
@@ -30,8 +27,8 @@ def _analyze_class(cls: Type[Any]) -> None:
         return
 
     if dataclasses.is_dataclass(cls):
-        setattr(cls, "_lodum_enabled", True)
-        fields: Dict[str, Field] = {}
+        cls._lodum_enabled = True
+        fields: dict[str, Field] = {}
         for f in dataclasses.fields(cls):
             if not f.init:
                 continue
@@ -55,17 +52,17 @@ def _analyze_class(cls: Type[Any]) -> None:
             field_info.type = f.type
             fields[f.name] = field_info
 
-        setattr(cls, "_lodum_fields", fields)
+        cls._lodum_fields = fields
         return
 
     try:
         init_sig = inspect.signature(cls.__init__)
     except (ValueError, TypeError):
         # Fallback for classes without a clear __init__
-        setattr(cls, "_lodum_fields", {})
+        cls._lodum_fields = {}
         return
 
-    fields: Dict[str, Field] = {}
+    fields: dict[str, Field] = {}
 
     for param in init_sig.parameters.values():
         if param.name == "self":
@@ -86,15 +83,15 @@ def _analyze_class(cls: Type[Any]) -> None:
         )
         fields[param.name] = field_info
 
-    setattr(cls, "_lodum_fields", fields)
+    cls._lodum_fields = fields
 
 
 def _resolve_forward_ref(
     t: ForwardRef,
-    context_cache: dict[Type[Any], Any],
-    registry_handlers: dict[Type[Any], Any],
-    name_to_type_cache: dict[str, Type[Any]],
-) -> Optional[Type[Any]]:
+    context_cache: dict[type[Any], Any],
+    registry_handlers: dict[type[Any], Any],
+    name_to_type_cache: dict[str, type[Any]],
+) -> type[Any] | None:
     ref_name = t.__forward_arg__
     # Try registry first
     for cls_reg in registry_handlers:

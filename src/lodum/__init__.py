@@ -1,13 +1,14 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-__version__ = "0.4.0.dev0"
+__version__ = "0.4.0"
 
+from typing import Any, Type, TypeVar
+
+from . import bson, cbor, concurrency, json, msgpack, pickle, toml, yaml
 from .core import lodum
 from .field import field
 from .internal import generate_schema as schema
-from . import json, yaml, pickle, toml, msgpack, cbor, bson, concurrency
-from typing import Any, Type, TypeVar
 
 T = TypeVar("T")
 
@@ -17,19 +18,19 @@ def asdict(obj: Any) -> Any:
     Recursively converts a lodum-enabled object into plain Python primitives (dict, list, etc.).
     This handles renaming, skipping fields, and converting enums/datetimes to values.
     """
-    from .internal import dump
     from .core import BaseDumper
+    from .internal import dump
 
     return dump(obj, BaseDumper())
 
 
-def fromdict(cls: Type[T], data: Any) -> T:
+def fromdict(cls: type[T], data: Any) -> T:
     """
     Hydrates a lodum-enabled class from a dictionary or other plain Python primitives.
     This performs full type validation and nested object instantiation.
     """
-    from .internal import load
     from .core import BaseLoader
+    from .internal import load
 
     return load(cls, BaseLoader(data))
 
@@ -57,17 +58,17 @@ except ImportError:
     pass
 
 __all__ = [
-    "lodum",
-    "field",
-    "schema",
     "asdict",
+    "bson",
+    "cbor",
+    "concurrency",
+    "field",
     "fromdict",
     "json",
-    "yaml",
-    "pickle",
-    "toml",
+    "lodum",
     "msgpack",
-    "cbor",
-    "bson",
-    "concurrency",
+    "pickle",
+    "schema",
+    "toml",
+    "yaml",
 ]

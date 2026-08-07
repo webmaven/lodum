@@ -4,22 +4,19 @@
 import ast
 from typing import (
     Any,
-    Dict,
-    Type,
-    Tuple,
 )
 
-from ..field import Field
 from ..exception import DeserializationError, SerializationError
+from ..field import Field
 from .analyzer import _sanitize_name
 from .dsl import b
 
 
 def _build_load_expr(
-    ftype: Type[Any],
+    ftype: type[Any],
     loader_node: ast.expr,
-    context: Dict[str, Any],
-    cls: Type[Any],
+    context: dict[str, Any],
+    cls: type[Any],
     i: int,
     path_node: ast.expr,
     get_load_handler_fn: Any,
@@ -59,17 +56,17 @@ def _build_load_expr(
 
 
 def _build_load_function_ast(
-    cls: Type[Any], get_load_handler_fn: Any
-) -> Tuple[ast.FunctionDef, Dict[str, Any]]:
+    cls: type[Any], get_load_handler_fn: Any
+) -> tuple[ast.FunctionDef, dict[str, Any]]:
     """
     Builds the AST for the optimized load handler of a lodum-enabled class.
     Returns the FunctionDef node and the context dictionary.
     """
-    fields: Dict[str, Field] = getattr(cls, "_lodum_fields", {})
+    fields: dict[str, Field] = getattr(cls, "_lodum_fields", {})
     safe_name = _sanitize_name(cls.__name__)
     func_name = f"load_{safe_name}"
 
-    context: Dict[str, Any] = {
+    context: dict[str, Any] = {
         "cls": cls,
         "_cls": cls,
         "DeserializationError": DeserializationError,

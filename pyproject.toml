@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lodum"
-version = "0.4.0.dev0"
+version = "0.4.0"
 description = "A Python serialization/deserialization library (AKA LOad/DUMp) inspired by Rust's serde."
 readme = "README.md"
 license = "Apache-2.0"

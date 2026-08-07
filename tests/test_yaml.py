@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Jules <jules@example.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Set, Union
+from typing import Any
 
-from lodum import lodum, field, yaml
+import pytest
+
+from lodum import field, lodum, yaml
 from lodum.exception import DeserializationError
 
 # --- Test Data ---
@@ -67,7 +68,7 @@ def test_yaml_load_type_mismatch():
 
 @lodum
 class Complex:
-    def __init__(self, dt: datetime, role: UserRole, items: List[Simple]):
+    def __init__(self, dt: datetime, role: UserRole, items: list[Simple]):
         self.dt = dt
         self.role = role
         self.items = items
@@ -99,7 +100,7 @@ class Customized:
         self,
         user_id: int = field(rename="id"),
         is_active: bool = field(skip_serializing=True, default=True),
-        tags: Set[str] = field(default_factory=set),
+        tags: set[str] = field(default_factory=set),
     ):
         self.user_id = user_id
         self.is_active = is_active
@@ -136,8 +137,8 @@ def test_yaml_field_customization():
 class TypingObject:
     def __init__(
         self,
-        optional_field: Optional[int],
-        union_field: Union[str, bool],
+        optional_field: int | None,
+        union_field: str | bool,
         any_field: Any,
     ):
         self.optional_field = optional_field

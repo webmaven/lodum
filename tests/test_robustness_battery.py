@@ -1,15 +1,17 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import enum
-import pytest
-import datetime
-import uuid
 import array
 import collections
+import datetime
+import enum
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Tuple, Set, Union, Optional, Any
+from typing import Any, Optional, Union
+
+import pytest
+
 from lodum import json, lodum
 from lodum.exception import DeserializationError
 
@@ -57,16 +59,16 @@ def test_error_enum_invalid_value():
 
 def test_error_path_invalid():
     # Path loader expects string
-    from lodum.handlers.stdlib import _load_path
     from lodum.core import BaseLoader
+    from lodum.handlers.stdlib import _load_path
 
     with pytest.raises(DeserializationError, match="Expected str, got int"):
         _load_path(Path, BaseLoader(123))
 
 
 def test_error_bytes_invalid():
-    from lodum.handlers.stdlib import _load_bytes
     from lodum.core import BaseLoader
+    from lodum.handlers.stdlib import _load_bytes
 
     with pytest.raises(
         DeserializationError, match="Expected bytes or base64 string: Expected bytes"
@@ -75,8 +77,8 @@ def test_error_bytes_invalid():
 
 
 def test_error_bytearray_invalid():
-    from lodum.handlers.stdlib import _load_bytearray
     from lodum.core import BaseLoader
+    from lodum.handlers.stdlib import _load_bytearray
 
     with pytest.raises(
         DeserializationError, match="Invalid bytearray data: Expected bytes"
@@ -103,13 +105,13 @@ def test_error_counter_invalid():
 
 def test_error_tuple_mismatch():
     with pytest.raises(DeserializationError, match="Tuple length mismatch"):
-        json.loads(Tuple[int, int], "[1]")  # Too short
+        json.loads(tuple[int, int], "[1]")  # Too short
 
 
 def test_error_set_unhashable():
     with pytest.raises(DeserializationError, match="elements must be hashable"):
         # JSON list of lists into a Set[List[int]]
-        json.loads(Set[List[int]], "[[1], [2]]")
+        json.loads(set[list[int]], "[[1], [2]]")
 
 
 def test_error_array_invalid():
@@ -139,10 +141,10 @@ def test_union_priority_matrix():
     assert json.loads(Union[str, Color], '"red"') == Color.RED
 
     # 7. list -> list/tuple/set
-    assert json.loads(Union[int, List[int]], "[1, 2]") == [1, 2]
+    assert json.loads(Union[int, list[int]], "[1, 2]") == [1, 2]
 
     # 8. dict -> dict
-    assert json.loads(Union[int, Dict[str, int]], '{"a": 1}') == {"a": 1}
+    assert json.loads(Union[int, dict[str, int]], '{"a": 1}') == {"a": 1}
 
     # 9. dict -> lodum_enabled
     @lodum

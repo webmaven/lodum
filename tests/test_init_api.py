@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from lodum import lodum, asdict, fromdict, schema
+from lodum import asdict, fromdict, lodum, schema
 
 
 @lodum

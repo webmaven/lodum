@@ -1,20 +1,22 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pickle
 import builtins
 import io
-from typing import Any, Optional, Type, TypeVar, Union, IO
+import pickle
 from pathlib import Path
+from typing import IO, Any, TypeVar
 
 from .core import Dumper
+from .exception import DeserializationError
 from .internal import (
-    dump as validate_lodum_structure,
     DEFAULT_MAX_SIZE,
     _resolve_source,
     _resolve_target,
 )
-from .exception import DeserializationError
+from .internal import (
+    dump as validate_lodum_structure,
+)
 
 T = TypeVar("T")
 
@@ -24,36 +26,36 @@ T = TypeVar("T")
 class ValidationDumper(Dumper):
     """A no-op dumper used only for validation."""
 
-    def dump_int(self, value: int, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_int(self, value: int, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
-    def dump_str(self, value: str, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
     def dump_float(
-        self, value: float, depth: int = 0, seen: Optional[set] = None
+        self, value: float, depth: int = 0, seen: set | None = None
     ) -> Any:
         pass
 
-    def dump_bool(self, value: bool, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_bool(self, value: bool, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
     def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: Optional[set] = None
+        self, value: bytes, depth: int = 0, seen: set | None = None
     ) -> Any:
         pass
 
     def dump_list(
-        self, value: list[Any], depth: int = 0, seen: Optional[set] = None
+        self, value: list[Any], depth: int = 0, seen: set | None = None
     ) -> Any:
         pass
 
     def dump_dict(
-        self, value: dict[str, Any], depth: int = 0, seen: Optional[set] = None
+        self, value: dict[str, Any], depth: int = 0, seen: set | None = None
     ) -> Any:
         pass
 
-    def begin_struct(self, cls: Type[Any]) -> Any:
+    def begin_struct(self, cls: type[Any]) -> Any:
         return {}  # Return a dummy dict
 
     def end_struct(self) -> Any:
@@ -65,7 +67,7 @@ class ValidationDumper(Dumper):
         value: Any,
         handler: Any,
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         handler(value, self, depth, seen)
 
@@ -80,17 +82,17 @@ class ValidationDumper(Dumper):
         value: Any,
         handler: Any,
         depth: int = 0,
-        seen: Optional[set] = None,
+        seen: set | None = None,
     ) -> None:
         handler(value, self, depth, seen)
 
-    def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:
+    def dump_none(self, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
 
 def dump(
-    obj: Any, target: Optional[Union[IO[bytes], Path]] = None, **kwargs: Any
-) -> Optional[bytes]:
+    obj: Any, target: IO[bytes] | Path | None = None, **kwargs: Any
+) -> bytes | None:
     """
     Encodes a Python object to a pickle byte string, ensuring it is safe.
 
@@ -125,7 +127,7 @@ class SafeUnpickler(pickle.Unpickler):
     A custom unpickler that only allows safe, lodum-enabled classes to be loaded.
     """
 
-    def find_class(self, module_name: str, class_name: str) -> Type:
+    def find_class(self, module_name: str, class_name: str) -> type:
         if "os" in module_name or "sys" in module_name or "subprocess" in module_name:
             raise pickle.UnpicklingError(f"Unsafe module '{module_name}' is forbidden.")
 
@@ -176,8 +178,8 @@ class SafeUnpickler(pickle.Unpickler):
 
 
 def load(
-    cls: Type[T],
-    source: Union[bytes, IO[bytes], Path],
+    cls: type[T],
+    source: bytes | IO[bytes] | Path,
     max_size: int = DEFAULT_MAX_SIZE,
 ) -> T:
     """
@@ -225,6 +227,6 @@ def load(
     return obj
 
 
-def loads(cls: Type[T], data: bytes, **kwargs: Any) -> T:
+def loads(cls: type[T], data: bytes, **kwargs: Any) -> T:
     """Legacy alias for load(cls, source)."""
     return load(cls, data, **kwargs)

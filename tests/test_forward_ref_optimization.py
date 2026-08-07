@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from lodum import lodum, json
-from lodum.core import reset_context
 from typing import Optional
+
+from lodum import json, lodum
+from lodum.core import reset_context
 
 
 @lodum

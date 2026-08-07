@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import ast
 import sys
-from typing import Any, List, Optional, Union
+from typing import Any
 
 
 class ASTBuilder:
@@ -16,7 +16,7 @@ class ASTBuilder:
         return ast.Name(id=name, ctx=ast.Store())
 
     def attr(
-        self, value: Union[ast.expr, str], attr: str, load: bool = True
+        self, value: ast.expr | str, attr: str, load: bool = True
     ) -> ast.Attribute:
         if isinstance(value, str):
             value = self.load(value)
@@ -26,9 +26,9 @@ class ASTBuilder:
 
     def call(
         self,
-        func: Union[ast.expr, str],
-        args: Optional[List[ast.expr]] = None,
-        keywords: Optional[List[ast.keyword]] = None,
+        func: ast.expr | str,
+        args: list[ast.expr] | None = None,
+        keywords: list[ast.keyword] | None = None,
     ) -> ast.Call:
         if isinstance(func, str):
             func = self.load(func)
@@ -40,7 +40,7 @@ class ASTBuilder:
     def arg(self, name: str) -> ast.arg:
         return ast.arg(arg=name, annotation=None)
 
-    def arguments(self, names: List[str]) -> ast.arguments:
+    def arguments(self, names: list[str]) -> ast.arguments:
         return ast.arguments(
             args=[self.arg(name) for name in names],
             posonlyargs=[],
@@ -51,7 +51,7 @@ class ASTBuilder:
             kwarg=None,
         )
 
-    def assign(self, target: Union[ast.expr, str], value: ast.expr) -> ast.Assign:
+    def assign(self, target: ast.expr | str, value: ast.expr) -> ast.Assign:
         if isinstance(target, str):
             target = self.store(target)
         return ast.Assign(targets=[target], value=value)
@@ -59,7 +59,7 @@ class ASTBuilder:
     def if_exp(self, test: ast.expr, body: ast.expr, orelse: ast.expr) -> ast.IfExp:
         return ast.IfExp(test=test, body=body, orelse=orelse)
 
-    def isinstance(self, obj: Union[ast.expr, str], type_node: ast.expr) -> ast.Call:
+    def isinstance(self, obj: ast.expr | str, type_node: ast.expr) -> ast.Call:
         if isinstance(obj, str):
             obj = self.load(obj)
         return self.call("isinstance", [obj, type_node])
@@ -71,7 +71,7 @@ class ASTBuilder:
         return ast.BinOp(left=left, op=ast.Sub(), right=right)
 
     def subscript(
-        self, value: Union[ast.expr, str], slice_val: ast.expr, load: bool = True
+        self, value: ast.expr | str, slice_val: ast.expr, load: bool = True
     ) -> ast.Subscript:
         if isinstance(value, str):
             value = self.load(value)
@@ -92,7 +92,7 @@ class ASTBuilder:
         )
 
     def dict_comp(
-        self, key: ast.expr, value: ast.expr, targets: List[str], iter_node: ast.expr
+        self, key: ast.expr, value: ast.expr, targets: list[str], iter_node: ast.expr
     ) -> ast.DictComp:
         target_node: ast.expr
         if len(targets) == 1:
@@ -116,8 +116,8 @@ class ASTBuilder:
         self,
         name: str,
         args: ast.arguments,
-        body: List[ast.stmt],
-        returns: Optional[ast.expr] = None,
+        body: list[ast.stmt],
+        returns: ast.expr | None = None,
     ) -> ast.FunctionDef:
         kwargs: dict[str, Any] = {
             "name": name,
@@ -132,10 +132,10 @@ class ASTBuilder:
 
     def try_except(
         self,
-        body: List[ast.stmt],
-        handlers: List[ast.ExceptHandler],
-        orelse: Optional[List[ast.stmt]] = None,
-        finalbody: Optional[List[ast.stmt]] = None,
+        body: list[ast.stmt],
+        handlers: list[ast.ExceptHandler],
+        orelse: list[ast.stmt] | None = None,
+        finalbody: list[ast.stmt] | None = None,
     ) -> ast.Try:
         return ast.Try(
             body=body,
@@ -145,15 +145,15 @@ class ASTBuilder:
         )
 
     def except_handler(
-        self, type_node: Optional[ast.expr], name: Optional[str], body: List[ast.stmt]
+        self, type_node: ast.expr | None, name: str | None, body: list[ast.stmt]
     ) -> ast.ExceptHandler:
         return ast.ExceptHandler(type=type_node, name=name, body=body)
 
     def if_stmt(
         self,
         test: ast.expr,
-        body: List[ast.stmt],
-        orelse: Optional[List[ast.stmt]] = None,
+        body: list[ast.stmt],
+        orelse: list[ast.stmt] | None = None,
     ) -> ast.If:
         return ast.If(test=test, body=body, orelse=orelse or [])
 
@@ -163,13 +163,13 @@ class ASTBuilder:
     def gt(self, left: ast.expr, right: ast.expr) -> ast.Compare:
         return self.compare(left, ast.Gt(), right)
 
-    def return_stmt(self, value: Optional[ast.expr]) -> ast.Return:
+    def return_stmt(self, value: ast.expr | None) -> ast.Return:
         return ast.Return(value=value)
 
-    def raise_stmt(self, exc: Optional[ast.expr]) -> ast.Raise:
+    def raise_stmt(self, exc: ast.expr | None) -> ast.Raise:
         return ast.Raise(exc=exc)
 
-    def joined_str(self, values: List[ast.expr]) -> ast.JoinedStr:
+    def joined_str(self, values: list[ast.expr]) -> ast.JoinedStr:
         return ast.JoinedStr(values=values)
 
     def formatted_value(self, value: ast.expr) -> ast.FormattedValue:

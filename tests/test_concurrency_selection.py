@@ -1,5 +1,6 @@
 import sys
-import lodum.concurrency as concurrency
+
+from lodum import concurrency
 
 
 def test_concurrency_selection_logic():

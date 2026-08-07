@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import pickle
+from typing import Any
+
 import pytest
 
-from typing import Any, Optional, Union
-from lodum import lodum, pickle as lodum_pickle
-from lodum.exception import SerializationError, DeserializationError
+from lodum import lodum
+from lodum import pickle as lodum_pickle
+from lodum.exception import DeserializationError, SerializationError
 
 # --- Test Data ---
 
@@ -48,8 +50,8 @@ MALICIOUS_PAYLOAD = b"c" + b"os\nsystem\n(S'echo malicious'\ntR."
 class TypingObject:
     def __init__(
         self,
-        optional_field: Optional[int],
-        union_field: Union[str, bool],
+        optional_field: int | None,
+        union_field: str | bool,
         any_field: Any,
     ):
         self.optional_field = optional_field

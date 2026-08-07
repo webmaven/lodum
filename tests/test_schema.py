@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import List, Dict, Optional, Union
-from enum import Enum
 from datetime import datetime
-from lodum import lodum, field, json
+from enum import Enum
+
+from lodum import field, json, lodum
 
 
 class Color(Enum):
@@ -23,11 +23,11 @@ class MainModel:
     def __init__(
         self,
         id: int,
-        tags: List[str],
-        metadata: Dict[str, int],
+        tags: list[str],
+        metadata: dict[str, int],
         sub: SubModel,
         color: Color,
-        optional_note: Optional[str] = None,
+        optional_note: str | None = None,
         created: datetime = field(default_factory=datetime.now),
     ):
         self.id = id
@@ -69,7 +69,7 @@ def test_basic_schema():
 def test_union_schema():
     @lodum
     class UnionModel:
-        def __init__(self, val: Union[int, str]):
+        def __init__(self, val: int | str):
             self.val = val
 
     schema = json.schema(UnionModel)
@@ -93,7 +93,7 @@ def test_rename_schema():
 def test_complex_nesting_schema():
     @lodum
     class Nested:
-        def __init__(self, data: Dict[str, List[Optional[int]]]):
+        def __init__(self, data: dict[str, list[int | None]]):
             self.data = data
 
     schema = json.schema(Nested)

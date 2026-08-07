@@ -4,7 +4,8 @@
 import io
 import json as std_json
 from typing import Optional
-from lodum import lodum, json
+
+from lodum import json, lodum
 from lodum.core import reset_context
 
 
@@ -96,8 +97,9 @@ def test_json_streaming_dump_circular():
     b.next = a
 
     stream = io.StringIO()
-    from lodum.exception import SerializationError
     import pytest
+
+    from lodum.exception import SerializationError
 
     with pytest.raises(SerializationError, match="Circular reference detected"):
         json.dump(a, stream)
@@ -118,8 +120,9 @@ def test_json_streaming_dump_max_depth():
         curr = curr.child
 
     stream = io.StringIO()
-    from lodum.exception import SerializationError
     import pytest
+
+    from lodum.exception import SerializationError
 
     with pytest.raises(SerializationError, match="Max recursion depth .* exceeded"):
         json.dump(root, stream)
@@ -127,8 +130,9 @@ def test_json_streaming_dump_max_depth():
 
 def test_json_streaming_dumper_direct_calls():
     # Test methods that are usually called via orchestration but can be called directly
-    from lodum.json import JsonStreamingDumper
     import io
+
+    from lodum.json import JsonStreamingDumper
 
     stream = io.StringIO()
     dumper = JsonStreamingDumper(stream)

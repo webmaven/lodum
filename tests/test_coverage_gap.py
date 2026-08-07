@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 from typing import Optional
-from lodum import lodum, json
-from lodum.internal import load, dump, DEFAULT_MAX_DEPTH
+
+import pytest
+
+from lodum import json, lodum
 from lodum.exception import DeserializationError, SerializationError
+from lodum.internal import DEFAULT_MAX_DEPTH, dump, load
 
 
 def test_resolve_forward_ref_gap():
@@ -18,8 +20,9 @@ def test_resolve_forward_ref_gap():
 
     # The AST compiler usually handles this, but we can force it
     # by calling _get_load_handler with a ForwardRef string.
-    from lodum.internal import _get_load_handler
     from typing import ForwardRef
+
+    from lodum.internal import _get_load_handler
 
     handler = _get_load_handler(ForwardRef("Node"))
     assert handler is not None
@@ -77,8 +80,8 @@ def test_max_depth_errors():
 
 def test_union_priority_logic():
     """Target the complex priority-based scoring in _load_union."""
-    from typing import Union
     import datetime
+    from typing import Union
 
     # Union[datetime, str] -> datetime should have higher priority for an ISO string
     T = Union[datetime.datetime, str]

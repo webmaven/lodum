@@ -1,11 +1,12 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 import json as std_json
-from lodum import lodum, json
+
+import pytest
+
+from lodum import json, lodum
 from lodum.exception import DeserializationError
-from typing import Union
 
 
 @lodum
@@ -24,7 +25,7 @@ class VariantB:
 
 @lodum
 class Container:
-    def __init__(self, item: Union[VariantA, VariantB]):
+    def __init__(self, item: VariantA | VariantB):
         self.item = item
 
 
@@ -51,7 +52,7 @@ def test_tagged_union_resolution():
 
     @lodum
     class TaggedContainer:
-        def __init__(self, item: Union[TaggedA, TaggedB]):
+        def __init__(self, item: TaggedA | TaggedB):
             self.item = item
 
     data_a = {"type": "TaggedA", "name": "Alice"}
@@ -121,7 +122,7 @@ def test_tagged_union_schema():
 
     @lodum
     class TaggedContainer:
-        def __init__(self, item: Union[TaggedA, TaggedB]):
+        def __init__(self, item: TaggedA | TaggedB):
             self.item = item
 
     schema = json.schema(TaggedContainer)

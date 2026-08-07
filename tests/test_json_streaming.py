@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import io
+
 import pytest
-from lodum import lodum, json
+
+from lodum import json, lodum
 from lodum.exception import DeserializationError
 
 
@@ -95,9 +97,10 @@ def test_load_stream_no_ijson(monkeypatch):
 
 
 def test_json_loader_error_cases():
-    from lodum.json import JsonLoader
-    from lodum.exception import DeserializationError
     import pytest
+
+    from lodum.exception import DeserializationError
+    from lodum.json import JsonLoader
 
     loader = JsonLoader(None)
     with pytest.raises(DeserializationError, match="Expected list"):

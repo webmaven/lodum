@@ -2,11 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import numpy as np
-import pytest
-from lodum.core import BaseDumper, Dumper, BaseLoader
-from lodum.internal import dump
+
+from lodum.core import BaseDumper, BaseLoader
+from lodum.extensions.numpy import _dump_numpy_array, _load_numpy_array
 from lodum.handlers.stdlib import _dump_bytearray
-from lodum.extensions.numpy import _dump_numpy_array, _load_numpy_array, register as register_numpy
 
 
 class MockCustomDumper(BaseDumper):

@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 from dataclasses import dataclass, field
-from typing import List, Optional
-import pytest
+
 import lodum
 
 
@@ -17,7 +16,7 @@ class SimpleData:
 class ConfigData:
     host: str = "localhost"
     port: int = 8080
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass

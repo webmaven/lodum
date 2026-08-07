@@ -8,54 +8,52 @@ from decimal import Decimal
 from pathlib import Path
 from typing import (
     Any,
-    Optional,
-    Type,
     TypeVar,
     cast,
 )
 
-from ..core import Loader, Dumper
+from ..core import Dumper, Loader
 from ..exception import DeserializationError
 
 T = TypeVar("T")
 
 
-def _dump_bytes(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+def _dump_bytes(obj: Any, d: Dumper, depth: int, seen: set | None) -> Any:
     return d.dump_bytes(obj, depth, seen)
 
 
-def _dump_bytearray(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+def _dump_bytearray(obj: Any, d: Dumper, depth: int, seen: set | None) -> Any:
     if hasattr(d, "dump_buffer"):
         return d.dump_buffer(obj, depth, seen)
     return d.dump_bytes(bytes(obj), depth, seen)
 
 
 def _dump_datetime(
-    obj: datetime.datetime, d: Dumper, depth: int, seen: Optional[set]
+    obj: datetime.datetime, d: Dumper, depth: int, seen: set | None
 ) -> str:
     return d.dump_str(obj.isoformat(), depth, seen)
 
 
-def _dump_enum(obj: enum.Enum, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+def _dump_enum(obj: enum.Enum, d: Dumper, depth: int, seen: set | None) -> Any:
     from ..internal import dump
 
     return dump(obj.value, d, depth + 1, seen)
 
 
-def _dump_uuid(obj: uuid.UUID, d: Dumper, depth: int, seen: Optional[set]) -> str:
+def _dump_uuid(obj: uuid.UUID, d: Dumper, depth: int, seen: set | None) -> str:
     return d.dump_str(str(obj), depth, seen)
 
 
-def _dump_decimal(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
+def _dump_decimal(obj: Any, d: Dumper, depth: int, seen: set | None) -> str:
     return d.dump_str(str(obj), depth, seen)
 
 
-def _dump_path(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> str:
+def _dump_path(obj: Any, d: Dumper, depth: int, seen: set | None) -> str:
     return d.dump_str(str(obj), depth, seen)
 
 
 def _load_datetime(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     val = loader.load_str()
     try:
@@ -70,7 +68,7 @@ def _load_datetime(
 
 
 def _load_enum(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     from ..internal import load
 
@@ -89,7 +87,7 @@ def _load_enum(
 
 
 def _load_uuid(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     val = loader.load_str()
     try:
@@ -104,7 +102,7 @@ def _load_uuid(
 
 
 def _load_decimal(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         # Load as string or float/int or direct Decimal (BSON might provide it)
@@ -124,7 +122,7 @@ def _load_decimal(
 
 
 def _load_path(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         return cast(T, Path(loader.load_str()))
@@ -134,7 +132,7 @@ def _load_path(
 
 
 def _load_bytes(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         return cast(T, loader.load_bytes())
@@ -148,7 +146,7 @@ def _load_bytes(
 
 
 def _load_bytearray(
-    cls: Type[T], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[T], loader: Loader, path: str | None = None, depth: int = 0
 ) -> T:
     try:
         return cast(T, bytearray(loader.load_bytes()))

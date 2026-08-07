@@ -1,14 +1,16 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Dict, List, Optional, Type
+from typing import Any
+
 import pandas as pd
+
 from ..core import Dumper, Loader
 from ..registry import TypeHandler
 
 
 def _dump_pandas_dataframe(
-    obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+    obj: Any, dumper: Dumper, depth: int, seen: set | None
 ) -> Any:
     from ..internal import dump
 
@@ -16,7 +18,7 @@ def _dump_pandas_dataframe(
 
 
 def _dump_pandas_series(
-    obj: Any, dumper: Dumper, depth: int, seen: Optional[set]
+    obj: Any, dumper: Dumper, depth: int, seen: set | None
 ) -> Any:
     from ..internal import dump
 
@@ -24,16 +26,16 @@ def _dump_pandas_series(
 
 
 def _load_pandas_dataframe(
-    cls: Type[Any], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[Any], loader: Loader, path: str | None = None, depth: int = 0
 ) -> Any:
     from ..internal import load
 
-    data = load(List[Dict[str, Any]], loader, path, depth + 1)
+    data = load(list[dict[str, Any]], loader, path, depth + 1)
     return pd.DataFrame.from_records(data)
 
 
 def _load_pandas_series(
-    cls: Type[Any], loader: Loader, path: Optional[str] = None, depth: int = 0
+    cls: type[Any], loader: Loader, path: str | None = None, depth: int = 0
 ) -> Any:
     from ..internal import load
 
@@ -41,14 +43,14 @@ def _load_pandas_series(
 
 
 def _schema_pandas_dataframe(
-    t: Type[Any], depth: int, visited: Optional[set]
-) -> Dict[str, Any]:
+    t: type[Any], depth: int, visited: set | None
+) -> dict[str, Any]:
     return {"type": "array", "items": {"type": "object"}}
 
 
 def _schema_pandas_series(
-    t: Type[Any], depth: int, visited: Optional[set]
-) -> Dict[str, Any]:
+    t: type[Any], depth: int, visited: set | None
+) -> dict[str, Any]:
     return {"type": "object"}
 
 

@@ -1,41 +1,42 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+import array
+import collections
 import datetime
 import enum
 import uuid
-import array
-import collections
-from decimal import Decimal
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
-from typing import List, Dict, Tuple, Set, Union, Optional, Any
+from typing import Any, Optional, Union
 
 import pytest
+
 from lodum import json, lodum
 from lodum.exception import DeserializationError
 
 
 def test_top_level_list():
-    assert json.loads(List[int], "[1, 2, 3]") == [1, 2, 3]
+    assert json.loads(list[int], "[1, 2, 3]") == [1, 2, 3]
 
 
 def test_top_level_dict():
-    assert json.loads(Dict[str, int], '{"a": 1, "b": 2}') == {"a": 1, "b": 2}
+    assert json.loads(dict[str, int], '{"a": 1, "b": 2}') == {"a": 1, "b": 2}
 
 
 def test_dict_key_error():
     with pytest.raises(DeserializationError, match="keys must be strings"):
         # This bypasses the normal Loader structure which usually provides strings
         # but the handler itself should be robust.
-        from lodum.handlers.collections import _load_dict
         from lodum.core import BaseLoader
+        from lodum.handlers.collections import _load_dict
 
         class BadLoader(BaseLoader):
             def load_dict(self):
                 yield (1, self)  # non-string key
 
-        _load_dict(Dict[int, int], BadLoader({}))
+        _load_dict(dict[int, int], BadLoader({}))
 
 
 def test_defaultdict():
@@ -58,11 +59,11 @@ def test_counter():
 
 
 def test_tuple():
-    assert json.loads(Tuple[int, str], '[1, "s"]') == (1, "s")
+    assert json.loads(tuple[int, str], '[1, "s"]') == (1, "s")
 
 
 def test_set():
-    assert json.loads(Set[int], "[1, 2, 2, 3]") == {1, 2, 3}
+    assert json.loads(set[int], "[1, 2, 2, 3]") == {1, 2, 3}
 
 
 def test_array():
@@ -114,8 +115,8 @@ def test_decimal():
     assert json.loads(Decimal, "1.23") == Decimal("1.23")
 
     # Test direct Decimal (internal fallback)
-    from lodum.handlers.stdlib import _load_decimal
     from lodum.core import BaseLoader
+    from lodum.handlers.stdlib import _load_decimal
 
     class DirectLoader(BaseLoader):
         pass
@@ -177,7 +178,7 @@ def test_format_parity_schema():
 
 
 def test_format_parity_bytes():
-    from lodum import yaml, msgpack, cbor, bson, toml
+    from lodum import bson, cbor, msgpack, toml, yaml
 
     b_data = b"hello world"
 
@@ -199,7 +200,7 @@ def test_format_parity_bytes():
 
     # TOML
     t_enc = toml.dumps({"data": b_data})
-    assert toml.loads(Dict[str, bytes], t_enc)["data"] == b_data
+    assert toml.loads(dict[str, bytes], t_enc)["data"] == b_data
 
 
 def test_tagged_union_direct():
@@ -231,27 +232,27 @@ def test_generic_load_list_primitive():
 
     loader = JsonLoader([1, "a"])
     with pytest.raises(DeserializationError) as excinfo:
-        load(List[int], loader)
+        load(list[int], loader)
     assert "Expected int, got str" in str(excinfo.value)
     assert "[1]" in str(excinfo.value)
 
     loader = JsonLoader([1, 2.2])
     with pytest.raises(DeserializationError) as excinfo:
-        load(List[int], loader)
+        load(list[int], loader)
     assert "Expected int, got float" in str(excinfo.value)
 
     loader = JsonLoader([1.1, "a"])
     with pytest.raises(DeserializationError) as excinfo:
-        load(List[float], loader)
+        load(list[float], loader)
     assert "Expected float, got str" in str(excinfo.value)
 
     # Test other primitives in generic load_list_primitive
-    assert load(List[str], JsonLoader(["a", "b"])) == ["a", "b"]
+    assert load(list[str], JsonLoader(["a", "b"])) == ["a", "b"]
     with pytest.raises(DeserializationError):
-        load(List[str], JsonLoader(["a", 1]))
+        load(list[str], JsonLoader(["a", 1]))
 
-    assert load(List[bool], JsonLoader([True, False])) == [True, False]
+    assert load(list[bool], JsonLoader([True, False])) == [True, False]
     with pytest.raises(DeserializationError):
-        load(List[bool], JsonLoader([True, 1]))
+        load(list[bool], JsonLoader([True, 1]))
 
-    assert load(List[float], JsonLoader([1.1, 2])) == [1.1, 2.0]
+    assert load(list[float], JsonLoader([1.1, 2])) == [1.1, 2.0]

@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 import collections
-from typing import List
+
+import pytest
+
 import lodum
 
 
@@ -18,7 +19,7 @@ class Parent:
     def __init__(
         self,
         id: int = lodum.field(rename="pk"),
-        children: List[Child] = lodum.field(default_factory=list),
+        children: list[Child] = lodum.field(default_factory=list),
     ):
         self.id = id
         self.children = children

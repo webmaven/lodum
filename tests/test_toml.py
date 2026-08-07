@@ -1,8 +1,10 @@
 # SPDX-FileCopyrightText: 2025-present Michael R. Bernstein <zopemaven@gmail.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Dict
+from typing import Any
+
 import pytest
+
 from lodum import lodum, toml
 from lodum.exception import DeserializationError
 
@@ -81,27 +83,25 @@ def test_toml_decode_error():
 
 
 def test_toml_generic_types():
-    from typing import Dict, List
 
     toml_str = "items = [1, 2, 3]\n"
-    data = toml.loads(Dict[str, List[int]], toml_str)
+    data = toml.loads(dict[str, list[int]], toml_str)
     assert data == {"items": [1, 2, 3]}
 
 
 def test_toml_generic_all_primitives():
-    from typing import Dict
 
     toml_str = 'f = 1.1\nb = true\nby = "Ynl0ZXM="\n'
     # Use load() directly to hit non-raw paths for bytes specifically if needed,
     # but loads() with explicit types should also work.
-    data = toml.loads(Dict[str, Any], toml_str)
+    data = toml.loads(dict[str, Any], toml_str)
     assert data["f"] == 1.1
     assert data["b"] is True
 
     # Test explicit float and bool in generic dict
-    data2 = toml.loads(Dict[str, float], "f = 1.1\n")
+    data2 = toml.loads(dict[str, float], "f = 1.1\n")
     assert data2["f"] == 1.1
-    data3 = toml.loads(Dict[str, bool], "b = true\n")
+    data3 = toml.loads(dict[str, bool], "b = true\n")
     assert data3["b"] is True
 
 
@@ -112,14 +112,13 @@ def test_toml_dump_bytes():
 
 
 def test_toml_load_bytes():
-    from typing import Dict
 
     toml_str = 'by = "aGVsbG8="'
-    data = toml.loads(Dict[str, bytes], toml_str)
+    data = toml.loads(dict[str, bytes], toml_str)
     assert data["by"] == b"hello"
 
 
 def test_toml_loads_max_size():
     """Tests that max_size is enforced in loads."""
     with pytest.raises(DeserializationError, match="exceeds maximum allowed"):
-        toml.loads(Dict[str, int], "a = 1", max_size=1)
+        toml.loads(dict[str, int], "a = 1", max_size=1)
