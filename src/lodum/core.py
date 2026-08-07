@@ -129,6 +129,9 @@ class Dumper(Protocol):
     def dump_bytes(
         self, value: bytes, depth: int = 0, seen: Optional[set] = None
     ) -> Any: ...
+    def dump_buffer(
+        self, value: Any, depth: int = 0, seen: Optional[set] = None
+    ) -> Any: ...
     def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any: ...
     def dump_list(
         self, value: List[Any], depth: int = 0, seen: Optional[set] = None
@@ -194,6 +197,13 @@ class BaseDumper:
     def dump_bytes(
         self, value: bytes, depth: int = 0, seen: Optional[set] = None
     ) -> Any:
+        return value
+
+    def dump_buffer(
+        self, value: Any, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        if isinstance(value, (bytes, bytearray)):
+            return memoryview(value)
         return value
 
     def dump_none(self, depth: int = 0, seen: Optional[set] = None) -> Any:

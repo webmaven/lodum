@@ -25,6 +25,8 @@ def _dump_bytes(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
 
 
 def _dump_bytearray(obj: Any, d: Dumper, depth: int, seen: Optional[set]) -> Any:
+    if hasattr(d, "dump_buffer"):
+        return d.dump_buffer(obj, depth, seen)
     return d.dump_bytes(bytes(obj), depth, seen)
 
 

@@ -145,6 +145,15 @@ class JsonDumper(BaseDumper):
 
         return base64.b64encode(value).decode("ascii")
 
+    def dump_buffer(
+        self, value: Any, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        if hasattr(value, "tolist"):
+            return value.tolist()
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return self.dump_bytes(bytes(value), depth, seen)
+        return value
+
 
 class JsonStreamingDumper(StreamingDumper):
     """
@@ -175,6 +184,16 @@ class JsonStreamingDumper(StreamingDumper):
 
         encoded = base64.b64encode(value).decode("ascii")
         self.write_raw(json.dumps(encoded))
+
+    def dump_buffer(
+        self, value: Any, depth: int = 0, seen: Optional[set] = None
+    ) -> Any:
+        if hasattr(value, "tolist"):
+            from .internal import dump as _dump
+            return _dump(value.tolist(), self, depth + 1, seen)
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return self.dump_bytes(bytes(value), depth, seen)
+        return value
 
     def dump_list(
         self, value: list[Any], depth: int = 0, seen: Optional[set] = None
