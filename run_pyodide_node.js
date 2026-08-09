@@ -35,6 +35,7 @@ async function main() {
     "ruamel.yaml",
     "numpy",
     "pandas",
+    "ijson",
   ]);
 
   // Copy tests to emulated FS
@@ -60,7 +61,8 @@ ignore_args = [
     "--ignore=tests/test_polars.py",
     "--ignore=tests/test_yaml.py",  # ruamel.yaml has C extensions
     "--ignore=tests/test_bson.py",  # pymongo has C extensions
-    "-k not thread_safety and not bson and not test_format_parity_bytes", # Pyodide doesn't support threading.Thread and we don't have pymongo
+    "--ignore=tests/test_json_streaming.py",  # ijson streaming
+    "-k not thread_safety and not bson and not test_format_parity_bytes and not json_stream", # Pyodide doesn't support threading.Thread and we don't have pymongo
 ]
 
 try:
