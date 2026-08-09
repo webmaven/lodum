@@ -44,9 +44,7 @@ def _get_yaml():
 # --- Public API ---
 
 
-def dump(
-    obj: Any, target: IO[str] | Path | None = None, **kwargs: Any
-) -> str | None:
+def dump(obj: Any, target: IO[str] | Path | None = None, **kwargs: Any) -> str | None:
     """
     Encodes a Python object to YAML.
 
@@ -158,9 +156,7 @@ class YamlDumper(BaseDumper):
     Encodes Python objects into a YAML-compatible intermediate representation.
     """
 
-    def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: set | None = None) -> Any:
         # YAML can handle bytes natively if using certain tags,
         # but for simplicity and cross-format consistency, we'll use base64 like JSON.
         import base64

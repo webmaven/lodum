@@ -53,7 +53,7 @@ def test_custom_dict_reconstitution():
 
 
 def test_custom_list_reconstitution():
-    json_str = '[1, 2, 3]'
+    json_str = "[1, 2, 3]"
     res = lodum.json.loads(CustomList, json_str)
     assert isinstance(res, CustomList)
     assert type(res) is CustomList
@@ -133,7 +133,15 @@ def test_lodum_class_field_subclass_reconstitution():
 def test_builtin_collections_not_affected():
     # Built-in collection types should still return their standard types
     assert type(lodum.json.loads(dict, '{"a": 1}')) is dict
-    assert type(lodum.json.loads(list, '[1, 2]')) is list
-    assert type(lodum.json.loads(collections.defaultdict, '{"a": 1}')) is collections.defaultdict
-    assert type(lodum.json.loads(collections.OrderedDict, '{"a": 1}')) is collections.OrderedDict
-    assert type(lodum.json.loads(collections.Counter, '{"a": 1}')) is collections.Counter
+    assert type(lodum.json.loads(list, "[1, 2]")) is list
+    assert (
+        type(lodum.json.loads(collections.defaultdict, '{"a": 1}'))
+        is collections.defaultdict
+    )
+    assert (
+        type(lodum.json.loads(collections.OrderedDict, '{"a": 1}'))
+        is collections.OrderedDict
+    )
+    assert (
+        type(lodum.json.loads(collections.Counter, '{"a": 1}')) is collections.Counter
+    )

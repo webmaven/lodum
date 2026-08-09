@@ -26,9 +26,7 @@ T = TypeVar("T")
 # --- Public API ---
 
 
-def dump(
-    obj: Any, target: IO[str] | Path | None = None, **kwargs: Any
-) -> str | None:
+def dump(obj: Any, target: IO[str] | Path | None = None, **kwargs: Any) -> str | None:
     """
     Encodes a Python object to JSON.
 
@@ -143,16 +141,12 @@ def schema(cls: type[Any]) -> dict[str, Any]:
 
 
 class JsonDumper(BaseDumper):
-    def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: set | None = None) -> Any:
         import base64
 
         return base64.b64encode(value).decode("ascii")
 
-    def dump_buffer(
-        self, value: Any, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
         if hasattr(value, "tolist"):
             return value.tolist()
         if isinstance(value, (bytes, bytearray, memoryview)):
@@ -171,9 +165,7 @@ class JsonStreamingDumper(StreamingDumper):
     def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw(json.dumps(value))
 
-    def dump_float(
-        self, value: float, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_float(self, value: float, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw(str(value))
 
     def dump_bool(self, value: bool, depth: int = 0, seen: set | None = None) -> Any:
@@ -182,19 +174,16 @@ class JsonStreamingDumper(StreamingDumper):
     def dump_none(self, depth: int = 0, seen: set | None = None) -> Any:
         self.write_raw("null")
 
-    def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: set | None = None) -> Any:
         import base64
 
         encoded = base64.b64encode(value).decode("ascii")
         self.write_raw(json.dumps(encoded))
 
-    def dump_buffer(
-        self, value: Any, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
         if hasattr(value, "tolist"):
             from .internal import dump as _dump
+
             return _dump(value.tolist(), self, depth + 1, seen)
         if isinstance(value, (bytes, bytearray, memoryview)):
             return self.dump_bytes(bytes(value), depth, seen)

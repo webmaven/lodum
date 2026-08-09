@@ -363,9 +363,10 @@ def bench(func, name: str = "unknown"):
 
 def calibrate():
     """Runs a reference workload (json.dumps + json.loads) to calibrate runner speed."""
+
     def ref():
         json.loads(json.dumps(complex_data))
-    
+
     res = bench(ref, name="Calibration Reference")
     return res["mean"] if res else 1.0
 
@@ -402,10 +403,16 @@ def run_group(
                 reference_us = reference_us if reference_us > 0 else 1.0
                 scale = 100.0
                 results_collector.append(
-                    {"name": full_name, "unit": "pts", "value": (res["mean"] / reference_us) * scale,
-                     "stdev": (res["stdev"] / reference_us) * scale, "iterations": res["iterations"],
-                     "normalized": res["mean"] / reference_us,
-                     "raw_value": res["mean"], "raw_unit": "us"}
+                    {
+                        "name": full_name,
+                        "unit": "pts",
+                        "value": (res["mean"] / reference_us) * scale,
+                        "stdev": (res["stdev"] / reference_us) * scale,
+                        "iterations": res["iterations"],
+                        "normalized": res["mean"] / reference_us,
+                        "raw_value": res["mean"],
+                        "raw_unit": "us",
+                    }
                 )
                 if "cold" in res:
                     results_collector.append(
@@ -473,7 +480,7 @@ def get_commit_info(target_sha=None):
 def run_all():
     is_json = "--json" in sys.argv
     use_baselines = "--use-baselines" in sys.argv
-    
+
     only_filter = None
     scenario_filter = None
     for arg in sys.argv:
@@ -499,15 +506,17 @@ def run_all():
     def run_filtered_group(name, benchmarks, results, reference_us=1.0):
         if only_filter and only_filter not in name:
             return
-        
+
         filtered_benchmarks = {}
         for lib, scenarios in benchmarks.items():
             if scenario_filter:
                 if scenario_filter in scenarios:
-                    filtered_benchmarks[lib] = {scenario_filter: scenarios[scenario_filter]}
+                    filtered_benchmarks[lib] = {
+                        scenario_filter: scenarios[scenario_filter]
+                    }
             else:
                 filtered_benchmarks[lib] = scenarios
-        
+
         if filtered_benchmarks:
             run_group(name, filtered_benchmarks, results, reference_us=reference_us)
 
@@ -539,7 +548,7 @@ def run_all():
             },
         },
         all_results,
-        reference_us=reference_us
+        reference_us=reference_us,
     )
 
     # JSON Deserialization
@@ -563,7 +572,7 @@ def run_all():
             },
         },
         all_results,
-        reference_us=reference_us
+        reference_us=reference_us,
     )
 
     # MsgPack

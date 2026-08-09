@@ -17,9 +17,7 @@ def _dump_polars_dataframe(
     return dump(obj.to_dict(), dumper, depth + 1, seen)
 
 
-def _dump_polars_series(
-    obj: Any, dumper: Dumper, depth: int, seen: set | None
-) -> Any:
+def _dump_polars_series(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> Any:
     from ..internal import dump
 
     return dump(obj.to_list(), dumper, depth + 1, seen)

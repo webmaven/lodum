@@ -110,12 +110,8 @@ class Dumper(Protocol):
     Defines the interface for a data format dumper (encoder).
     """
 
-    def dump_int(
-        self, value: int, depth: int = 0, seen: set | None = None
-    ) -> Any: ...
-    def dump_str(
-        self, value: str, depth: int = 0, seen: set | None = None
-    ) -> Any: ...
+    def dump_int(self, value: int, depth: int = 0, seen: set | None = None) -> Any: ...
+    def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any: ...
     def dump_float(
         self, value: float, depth: int = 0, seen: set | None = None
     ) -> Any: ...
@@ -182,22 +178,16 @@ class BaseDumper:
     def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
-    def dump_float(
-        self, value: float, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_float(self, value: float, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
     def dump_bool(self, value: bool, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
-    def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: set | None = None) -> Any:
         return value
 
-    def dump_buffer(
-        self, value: Any, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
         """
         Extracts a zero-copy memoryview or buffer view for binary buffers or arrays.
         Dumpers supporting buffer transfer (e.g. BaseDumper for in-memory transfer or WASM FFI)

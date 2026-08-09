@@ -5,6 +5,7 @@ import tracemalloc
 import sys
 import subprocess
 from typing import List, Optional, Type, Any
+
 try:
     from lodum import lodum, json as lodum_json
 except ImportError:
@@ -34,8 +35,12 @@ except ImportError:
     BaseModel = object  # type: ignore
 
 
-def _dummy_decorator(c): return c
+def _dummy_decorator(c):
+    return c
+
+
 decorator = lodum if lodum else _dummy_decorator
+
 
 @decorator
 class LargeItem:
@@ -123,6 +128,7 @@ def run_benchmark(count: int):
 
     scenarios = []
     if lodum_json and hasattr(lodum_json, "loads"):
+
         def lodum_std_load(data):
             try:
                 # Modern API supports max_size
@@ -134,12 +140,14 @@ def run_benchmark(count: int):
                 return lodum_json.loads(List[LargeItem], data.decode("utf-8"))
 
         scenarios.append(("Lodum Standard (loads)", lodum_std_load))
-    
+
     if lodum_json and hasattr(lodum_json, "load_stream"):
-        scenarios.append((
-            "Lodum Streaming (load_stream)",
-            lambda data: list(lodum_json.load_stream(LargeItem, io.BytesIO(data))),
-        ))
+        scenarios.append(
+            (
+                "Lodum Streaming (load_stream)",
+                lambda data: list(lodum_json.load_stream(LargeItem, io.BytesIO(data))),
+            )
+        )
 
     if TypeAdapter:  # type: ignore
         scenarios.append(

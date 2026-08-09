@@ -188,9 +188,7 @@ def _compile_dump_handler(cls: type[Any]) -> DumpHandler:
     return lambda obj, dumper, depth, seen: compiled_fn(obj, dumper, dump, depth, seen)
 
 
-def _get_dump_handler(
-    t: type[Any], excluding: type[Any] | None = None
-) -> DumpHandler:
+def _get_dump_handler(t: type[Any], excluding: type[Any] | None = None) -> DumpHandler:
     if isinstance(t, str):
         t = ForwardRef(t)
 
@@ -264,9 +262,7 @@ def _get_dump_handler(
             v_type = args[1] if len(args) == 2 else Any
         v_handler = _get_dump_handler(v_type, excluding=excluding)
 
-        def dump_mapping(
-            obj: Any, dumper: Dumper, depth: int, seen: set | None
-        ) -> Any:
+        def dump_mapping(obj: Any, dumper: Dumper, depth: int, seen: set | None) -> Any:
             # We treat generic dicts as anonymous structs
             dumper.begin_struct(dict)
             for k, v in obj.items():
@@ -319,9 +315,7 @@ def _compile_load_handler(cls: type[Any]) -> LoadHandler:
     )
 
 
-def _get_load_handler(
-    t: type[Any], excluding: type[Any] | None = None
-) -> LoadHandler:
+def _get_load_handler(t: type[Any], excluding: type[Any] | None = None) -> LoadHandler:
     if isinstance(t, str):
         t = ForwardRef(t)
 
@@ -407,7 +401,11 @@ def _get_load_handler(
         return _load_union
 
     # Registry lookup for origin (e.g., list, dict) or concrete type
-    is_list_subclass = inspect.isclass(origin) and issubclass(origin, (list, collections.UserList)) and origin not in (list, array.array, collections.deque)
+    is_list_subclass = (
+        inspect.isclass(origin)
+        and issubclass(origin, (list, collections.UserList))
+        and origin not in (list, array.array, collections.deque)
+    )
     if origin in (list, array.array) or is_list_subclass:
         args = get_args(t)
         item_type = args[0] if args else Any
@@ -439,9 +437,20 @@ def _get_load_handler(
             ctx.load_cache[t] = load_list
         return load_list
 
-    is_dict_subclass = inspect.isclass(origin) and issubclass(origin, (dict, collections.UserDict)) and origin not in (dict, collections.defaultdict, collections.OrderedDict, collections.Counter)
+    is_dict_subclass = (
+        inspect.isclass(origin)
+        and issubclass(origin, (dict, collections.UserDict))
+        and origin
+        not in (
+            dict,
+            collections.defaultdict,
+            collections.OrderedDict,
+            collections.Counter,
+        )
+    )
     if (
-        origin in (
+        origin
+        in (
             dict,
             collections.defaultdict,
             collections.OrderedDict,
@@ -516,13 +525,13 @@ def generate_schema(t: type[Any]) -> dict[str, Any]:
 
 def _register_builtin_handlers(target: Any) -> None:
     reg = target.registry if hasattr(target, "registry") else target
-    name_to_type = target.name_to_type_cache if hasattr(target, "name_to_type_cache") else None
+    name_to_type = (
+        target.name_to_type_cache if hasattr(target, "name_to_type_cache") else None
+    )
 
     reg.register(int, TypeHandler(_dump_int, _load_primitive, _schema_int))
     reg.register(str, TypeHandler(_dump_str, _load_primitive, _schema_str))
-    reg.register(
-        float, TypeHandler(_dump_float, _load_primitive, _schema_float)
-    )
+    reg.register(float, TypeHandler(_dump_float, _load_primitive, _schema_float))
     reg.register(bool, TypeHandler(_dump_bool, _load_primitive, _schema_bool))
     reg.register(
         type(None), TypeHandler(_dump_primitive, _load_primitive, _schema_none)
@@ -532,9 +541,7 @@ def _register_builtin_handlers(target: Any) -> None:
     # Containers
     reg.register(list, TypeHandler(_dump_sequence, _load_list, _schema_list))
     reg.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
-    reg.register(
-        tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple)
-    )
+    reg.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
     reg.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
     reg.register(Union, TypeHandler(dump, _load_union, _schema_union))  # type: ignore[arg-type]
 
@@ -544,17 +551,13 @@ def _register_builtin_handlers(target: Any) -> None:
     )
     reg.register(enum.Enum, TypeHandler(_dump_enum, _load_enum, _schema_enum))
     reg.register(uuid.UUID, TypeHandler(_dump_uuid, _load_uuid, _schema_uuid))
-    reg.register(
-        Decimal, TypeHandler(_dump_decimal, _load_decimal, _schema_decimal)
-    )
+    reg.register(Decimal, TypeHandler(_dump_decimal, _load_decimal, _schema_decimal))
     reg.register(Path, TypeHandler(_dump_path, _load_path, _schema_path))
     reg.register(bytes, TypeHandler(_dump_bytes, _load_bytes, _schema_bytes))
     reg.register(
         bytearray, TypeHandler(_dump_bytearray, _load_bytearray, _schema_bytes)
     )
-    reg.register(
-        array.array, TypeHandler(_dump_array, _load_array, _schema_list)
-    )
+    reg.register(array.array, TypeHandler(_dump_array, _load_array, _schema_list))
 
     # Collections
     reg.register(

@@ -37,9 +37,7 @@ T = TypeVar("T")
 # --- Public API ---
 
 
-def dump(
-    obj: Any, target: IO[str] | Path | None = None, **kwargs: Any
-) -> str | None:
+def dump(obj: Any, target: IO[str] | Path | None = None, **kwargs: Any) -> str | None:
     """
     Encodes a Python object to TOML.
 
@@ -131,9 +129,7 @@ def schema(cls: type[Any]) -> dict[str, Any]:
 
 
 class TomlDumper(BaseDumper):
-    def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: set | None = None) -> Any:
         import base64
 
         return base64.b64encode(value).decode("ascii")

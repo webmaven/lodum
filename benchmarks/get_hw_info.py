@@ -4,6 +4,7 @@ import platform
 import subprocess
 import sys
 
+
 def get_cpu_info():
     try:
         if platform.system() == "Windows":
@@ -16,17 +17,22 @@ def get_cpu_info():
                     if "model name" in line:
                         return line.split(":")[1].strip()
         elif platform.system() == "Darwin":
-            return subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"]).decode().strip()
+            return (
+                subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"])
+                .decode()
+                .strip()
+            )
     except Exception:
         return "Unknown CPU"
     return "Unknown CPU"
+
 
 def main():
     if "--init" in sys.argv:
         info = {
             "system": platform.system(),
             "cpu": get_cpu_info(),
-            "machine": platform.machine()
+            "machine": platform.machine(),
         }
         filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
         os.makedirs("benchmarks/metadata", exist_ok=True)
@@ -36,18 +42,20 @@ def main():
     elif "--check" in sys.argv:
         filename = f"benchmarks/metadata/hardware_{platform.system().lower()}.json"
         if not os.path.exists(filename):
-            print(f"Warning: Baseline hardware file {filename} not found. Skipping check.")
+            print(
+                f"Warning: Baseline hardware file {filename} not found. Skipping check."
+            )
             return
-        
+
         with open(filename, "r") as f:
             baseline = json.load(f)
-        
+
         current = {
             "system": platform.system(),
             "cpu": get_cpu_info(),
-            "machine": platform.machine()
+            "machine": platform.machine(),
         }
-        
+
         if current != baseline:
             print("HARDWARE CHANGE DETECTED!")
             print(f"Baseline: {baseline}")
@@ -59,6 +67,7 @@ def main():
                 sys.exit(1)
         else:
             print(f"Hardware validation successful: {current['cpu']}")
+
 
 if __name__ == "__main__":
     main()

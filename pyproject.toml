@@ -71,6 +71,9 @@ docs-serve = "mkdocs serve"
 [tool.ruff]
 line-length = 88
 target-version = "py39"
+exclude = [
+    "benchmarks/results",
+]
 
 [tool.ruff.lint]
 select = ["E", "F"]

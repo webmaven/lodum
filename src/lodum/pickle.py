@@ -32,22 +32,16 @@ class ValidationDumper(Dumper):
     def dump_str(self, value: str, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
-    def dump_float(
-        self, value: float, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_float(self, value: float, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
     def dump_bool(self, value: bool, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
-    def dump_bytes(
-        self, value: bytes, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_bytes(self, value: bytes, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
-    def dump_buffer(
-        self, value: Any, depth: int = 0, seen: set | None = None
-    ) -> Any:
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
         pass
 
     def dump_list(

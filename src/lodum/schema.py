@@ -182,9 +182,7 @@ def _schema_set(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]
     return {"type": "array", "items": item_schema, "uniqueItems": True}
 
 
-def _schema_datetime(
-    t: type[Any], depth: int, visited: set | None
-) -> dict[str, Any]:
+def _schema_datetime(t: type[Any], depth: int, visited: set | None) -> dict[str, Any]:
     return {"type": "string", "format": "date-time"}
 
 
