@@ -379,6 +379,6 @@ class BaseLoader:
         return self.load_bytes_value(self._data)
 
     def load_bytes_value(self, value: Any) -> bytes:
-        if not isinstance(value, bytes):
-            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
-        return value
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return bytes(value)
+        raise DeserializationError(f"Expected bytes, got {type(value).__name__}")

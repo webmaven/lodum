@@ -155,7 +155,12 @@ def stream(cls: type[T], source: IO[bytes] | Path) -> Iterator[T]:
 
 
 class BsonDumper(BaseDumper):
-    pass
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
+        if hasattr(value, "tolist"):
+            return value.tolist()
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return bytes(value)
+        return value
 
 
 # --- BSON Loader Implementation ---

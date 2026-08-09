@@ -149,7 +149,12 @@ def stream(cls: type[T], source: IO[bytes] | Path) -> Iterator[T]:
 
 
 class CborDumper(BaseDumper):
-    pass
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
+        if hasattr(value, "tolist"):
+            return value.tolist()
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return bytes(value)
+        return value
 
 
 # --- CBOR Loader Implementation ---
@@ -195,6 +200,6 @@ class CborLoader(BaseLoader):
         return ((k, CborLoader(v)) for k, v in self._data.items())
 
     def load_bytes_value(self, value: Any) -> bytes:
-        if not isinstance(value, bytes):
-            raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
-        return value
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return bytes(value)
+        raise DeserializationError(f"Expected bytes, got {type(value).__name__}")
