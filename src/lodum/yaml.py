@@ -163,6 +163,13 @@ class YamlDumper(BaseDumper):
 
         return base64.b64encode(value).decode("ascii")
 
+    def dump_buffer(self, value: Any, depth: int = 0, seen: set | None = None) -> Any:
+        if hasattr(value, "tolist"):
+            return value.tolist()
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return self.dump_bytes(bytes(value), depth, seen)
+        return value
+
 
 # --- YAML Loader Implementation ---
 
