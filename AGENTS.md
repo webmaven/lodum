@@ -17,7 +17,7 @@ This document is intended for AI agents (like yourself) to quickly understand th
 1.  **Protocol Compliance**: When modifying or adding dumpers, ensure all methods handle `depth: int` and `seen: Optional[set]` arguments. Use sensible defaults (`0` and `None`).
 2.  **Streaming Safety**: Prefer orchestration methods (`begin_struct`, `field`, `list_item`) over direct collection creation in dumpers to maintain O(1) memory compatibility.
 3.  **Eager Analysis**: The `@lodum` decorator performs eager analysis. Do not assume `_lodum_fields` is missing; if it is, the class might not be correctly decorated.
-4.  **WASM Compatibility**: All core changes must be verified against Pyodide. Avoid using native modules or threading primitives directly; use `lodum.concurrency` instead.
+4.  **WASM Compatibility**: All core changes must be verified against Pyodide (`node run_pyodide_node.js`). Note that `json.stream` (requires `ijson`), `lodum.yaml` (`ruamel.yaml`), `lodum.bson` (`pymongo`), and `polars` are not available in Pyodide due to C/Rust extensions; ensure these test files are ignored or skipped in the Pyodide test harness. Avoid using native modules or threading primitives directly; use `lodum.concurrency` instead.
 5.  **Validation**: Every bug fix or feature implementation must include a reproduction script or a new test case in `tests/`.
 
 ## 🧬 AST Compiler Conventions

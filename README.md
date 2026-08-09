@@ -382,9 +382,19 @@ See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed benchmark results an
 * **Typing:** `Optional`, `Union`, `Any`, `TypeVar` (The `@lodum` decorator preserves the type identity of the decorated class using `TypeVar`, ensuring excellent IDE support and static type checking.)
 * **Standard Library:** `datetime.datetime` (encoded as ISO 8601 strings), `enum.Enum` (encoded by value), `uuid.UUID`, `decimal.Decimal`, `pathlib.Path`
 * **Third-Party Libraries:** `numpy.ndarray`, `pandas.DataFrame`, `pandas.Series`, `polars.DataFrame`, `polars.Series`
-* **Custom Objects:** Any class decorated with `@lodum`.
-
 The library is designed to be extended with support for more formats and more complex data types in the future.
+
+## WebAssembly / Pyodide Compatibility
+
+`lodum` fully supports WebAssembly (WASM) and browser environments via Pyodide. However, because browser runtimes impose sandbox restrictions and lack native C-extension compilation, certain optional functionality is unavailable in Pyodide environments:
+
+* **Supported in Pyodide:** Core AST compilation, `json`, `pickle` (pure-Python `SafeUnpickler`), `msgpack` (pure Python / JS FFI), `tomli-w` (pure-Python TOML dumping), `array.array`, `numpy` (via Pyodide packages), and thread-safe fallback execution (`lodum.concurrency`).
+* **Unsupported in Pyodide:**
+  * **JSON Streaming (`json.stream`):** Requires `ijson` (uses C extensions like `yajl` for streaming parser performance).
+  * **YAML (`lodum.yaml`):** Requires `ruamel.yaml` (uses C extensions for fast scanning/emitting).
+  * **BSON (`lodum.bson`):** Requires `pymongo`/`bson` (uses C extension bindings for BSON encoding).
+  * **Polars (`polars.DataFrame` / `Series`):** Polars uses Rust native binaries not currently standard in default Pyodide builds.
+  * **Multi-threading (`threading.Thread`):** Browser JS runtimes are single-threaded by default; `lodum.concurrency` automatically detects this and falls back to safe sequential execution.
 
 ## Contributing
 
