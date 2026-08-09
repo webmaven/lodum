@@ -12,6 +12,7 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from decimal import Decimal
+import types
 from pathlib import Path
 from typing import (
     IO,
@@ -99,6 +100,7 @@ from .schema import (
 # Re-export schema generation
 
 T = TypeVar("T")
+UNION_TYPES = (Union, types.UnionType) if hasattr(types, "UnionType") else (Union,)
 
 
 @contextmanager
@@ -353,10 +355,10 @@ def _get_load_handler(t: type[Any], excluding: type[Any] | None = None) -> LoadH
     origin = get_origin(t) or t
     args = get_args(t)
 
-    if origin is Union and len(args) == 2 and args[1] is type(None):
+    if origin in UNION_TYPES and len(args) == 2 and args[1] is type(None):
         return _load_optional
 
-    if origin is Union:
+    if origin in UNION_TYPES:
         # Check if it's a Tagged Union
         tag_names = set()
         for arg in args:
@@ -543,7 +545,8 @@ def _register_builtin_handlers(target: Any) -> None:
     reg.register(dict, TypeHandler(_dump_dict, _load_dict, _schema_dict))
     reg.register(tuple, TypeHandler(_dump_sequence, _load_tuple, _schema_tuple))
     reg.register(set, TypeHandler(_dump_sequence, _load_set, _schema_set))
-    reg.register(Union, TypeHandler(dump, _load_union, _schema_union))  # type: ignore[arg-type]
+    for u_type in UNION_TYPES:
+        reg.register(u_type, TypeHandler(dump, _load_union, _schema_union))  # type: ignore[arg-type]
 
     # Library types
     reg.register(
