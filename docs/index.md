@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg?style=flat-square&color=blue" alt="PyPI"></a>
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg?style=flat-square&logo=python&logoColor=white" alt="Python versions"></a>
+  <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/badge/Pyodide-WASM-blue?style=flat-square&logo=webassembly&logoColor=white" alt="Pyodide/WASM"></a>
   <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg?style=flat-square&color=green" alt="License"></a>
   <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/github/actions/workflow/status/webmaven/lodum/ci.yml?branch=main&style=flat-square&logo=github" alt="CI Status"></a>
 </p>
@@ -21,8 +22,9 @@
 | :--- | :--- |
 | **🚀 Fast** | **~64% faster** dumps than standard introspection using AST bytecode generation. |
 | **🛡️ Safe** | Secure-by-default design. Blocks arbitrary code execution in `pickle`. |
-| **📦 Universal** | One API for **JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle**. |
-| **🧩 Extensible** | Native support for `numpy`, `pandas`, and `polars` without extra glue code. |
+| **📦 Universal** | One API for **JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle**. Native support for Python `@dataclass` without extra decorators. |
+| **⚡ Zero-Copy** | `dump_buffer` and fast-path O(1) buffer reconstitution for NumPy arrays and binary buffers. |
+| **🧩 Extensible** | Native support for `numpy`, `pandas`, `polars`, and custom `dict`/`list` collection subclasses. |
 | **✅ Validated** | Built-in validators (`Range`, `Length`) and schema generation. |
 
 ## Installation
@@ -383,6 +385,18 @@ See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmark results and comparis
 * **Custom Objects:** Any class decorated with `@lodum`.
 
 The library is designed to be extended with support for more formats and more complex data types in the future.
+
+## WebAssembly / Pyodide Compatibility
+
+`lodum` fully supports WebAssembly (WASM) and browser environments via Pyodide. However, because browser runtimes impose sandbox restrictions and lack native C-extension compilation, certain optional functionality is unavailable in Pyodide environments:
+
+* **Supported in Pyodide:** Core AST compilation, `json`, `pickle` (pure-Python `SafeUnpickler`), `msgpack` (pure Python / JS FFI), `tomli-w` (pure-Python TOML dumping), `array.array`, `numpy` (via Pyodide packages), and thread-safe fallback execution (`lodum.concurrency`).
+* **Unsupported in Pyodide:**
+  * **JSON Streaming (`json.stream`):** Requires `ijson` (uses C extensions like `yajl` for streaming parser performance).
+  * **YAML (`lodum.yaml`):** Requires `ruamel.yaml` (uses C extensions for fast scanning/emitting).
+  * **BSON (`lodum.bson`):** Requires `pymongo`/`bson` (uses C extension bindings for BSON encoding).
+  * **Polars (`polars.DataFrame` / `Series`):** Polars uses Rust native binaries not currently standard in default Pyodide builds.
+  * **Multi-threading (`threading.Thread`):** Browser JS runtimes are single-threaded by default; `lodum.concurrency` automatically detects this and falls back to safe sequential execution.
 
 ## Contributing
 
