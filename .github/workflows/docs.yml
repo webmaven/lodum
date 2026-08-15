@@ -32,16 +32,17 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Fetch gh-pages branch
-        run: git fetch origin gh-pages --depth=1 || true
+        run: |
+          git fetch origin gh-pages:gh-pages || true
 
       - name: Build and Deploy
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             # Extract version from tag (e.g., v0.4.0 -> 0.4.0)
             VERSION=${GITHUB_REF#refs/tags/v}
-            PYTHONPATH=src mike deploy --push --update-aliases "$VERSION" latest
-            PYTHONPATH=src mike set-default --push latest
+            PYTHONPATH=src mike deploy --push --update-aliases -b gh-pages "$VERSION" latest
+            PYTHONPATH=src mike set-default --push -b gh-pages latest
           else
             # Deploy current main as 'dev'
-            PYTHONPATH=src mike deploy --push --update-aliases dev
+            PYTHONPATH=src mike deploy --push --update-aliases -b gh-pages dev
           fi
