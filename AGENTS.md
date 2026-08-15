@@ -14,11 +14,11 @@ This document is intended for AI agents (like yourself) to quickly understand th
 
 ## 🛠️ Core Mandates for Development
 
-1.  **Protocol Compliance**: When modifying or adding dumpers, ensure all methods handle `depth: int` and `seen: Optional[set]` arguments. Use sensible defaults (`0` and `None`).
+1.  **Protocol Compliance & Buffer Handling**: When modifying or adding dumpers, ensure all methods handle `depth: int` and `seen: Optional[set]` arguments. **Crucial:** Every format dumper (`YamlDumper`, `BsonDumper`, `CborDumper`, etc.) must implement `dump_buffer`. Failing to do so causes `BaseDumper`'s zero-copy `memoryview` to leak into underlying serializers (e.g. `ruamel.yaml`), corrupting global emitter state and causing cascading `EmitterError` / `closed file` failures across subsequent tests.
 2.  **Streaming Safety**: Prefer orchestration methods (`begin_struct`, `field`, `list_item`) over direct collection creation in dumpers to maintain O(1) memory compatibility.
-3.  **Eager Analysis**: The `@lodum` decorator performs eager analysis. Do not assume `_lodum_fields` is missing; if it is, the class might not be correctly decorated.
-4.  **WASM Compatibility**: All core changes must be verified against Pyodide (`node run_pyodide_node.js`). Note that `json.stream` (requires `ijson`), `lodum.yaml` (`ruamel.yaml`), `lodum.bson` (`pymongo`), and `polars` are not available in Pyodide due to C/Rust extensions; ensure these test files are ignored or skipped in the Pyodide test harness. Avoid using native modules or threading primitives directly; use `lodum.concurrency` instead.
-5.  **Validation**: Every bug fix or feature implementation must include a reproduction script or a new test case in `tests/`.
+3.  **Eager Analysis & Annotation Safety**: The `@lodum` decorator performs eager analysis. **Do not use `from __future__ import annotations`** in models or handler dispatch files; stringified annotations break runtime type inspection and cause `DeserializationError: 'str' object has no attribute '__name__'`.
+4.  **WASM / Pyodide Compatibility**: All core changes must be verified against Pyodide (`node run_pyodide_node.js`). Note that `json.stream` (requires `ijson`), `lodum.yaml` (`ruamel.yaml`), `lodum.bson` (`pymongo`), and `polars` are not available in Pyodide due to C/Rust extensions. When adding new modules with native C/Rust dependencies or threading primitives, you must immediately update `run_pyodide_node.js` (`ignore_args` and `-k "not ..."`) to skip them in Pyodide. Avoid using native modules or threading primitives directly; use `lodum.concurrency` instead.
+5.  **Validation & Test Environment**: Every bug fix or feature implementation must include a reproduction script or a new test case in `tests/`. Always run tests with `PYTHONPATH=src .venv/bin/pytest` or `hatch run test`.
 
 ## 🧬 AST Compiler Conventions
 
