@@ -43,3 +43,57 @@ node = b.call('print', [b.const('hello')])
 ## 🛡️ Security Note
 
 The `lodum.pickle` module contains a `SafeUnpickler`. Any changes to this module must rigorously maintain the "Secure-by-Default" stance by blocking arbitrary module imports and code execution.
+
+## 🚀 Release Workflow
+
+**PyPI releases are intentionally manual** — there is no automatic publish on tag push.  Before cutting any release, always run the pre-release gate script:
+
+```bash
+python scripts/check_release.py X.Y.Z
+# or:
+hatch run check-release X.Y.Z
+```
+
+The script verifies **7 gates** in sequence:
+
+1. `pyproject.toml` version matches target
+2. `CHANGELOG.md` and `docs/NEWS.md` both contain an entry for `[X.Y.Z]`
+3. Neither changelog has a stale `[Unreleased]` section
+4. `ruff check` + `ruff format --check` pass
+5. `mypy src` passes
+6. Test suite passes (import-only failures for missing optional extras are tolerated — CI with `[all]` extras enforces 90% coverage)
+7. `python -m build` succeeds and `twine check` validates the artifacts
+
+Only after all 7 pass: tag, push, wait for CI and Docs workflows to go green, then `twine upload dist/lodum-X.Y.Z*`.
+
+**Full human-readable runbook**: `docs/RELEASING.md`
+
+## 📄 Docs Architecture
+
+### Single source of truth
+
+`docs/index.md` is a thin 3-line wrapper that includes `README.md` via `mkdocs-include-markdown-plugin`:
+
+```
+{%
+  include-markdown "../README.md"
+  rewrite-relative-urls=false
+%}
+```
+
+**Do not edit `docs/index.md` for content** — edit `README.md` instead.  The docs site picks up changes automatically.
+
+### README.md link rules (critical)
+
+Because `README.md` is included verbatim into the docs build, broken links produce mkdocs warnings:
+
+- **Docs-site links** (Performance, Contributing, etc.) must use absolute `https://webmaven.github.io/lodum/…` URLs, **not** `docs/`-prefixed relative paths.
+- **Images** must use `https://raw.githubusercontent.com/…` absolute URLs so they render on both GitHub and the docs site.
+
+### Versioned docs
+
+The Docs GitHub Actions workflow uses `mike` (see `.github/workflows/docs.yml`):
+- Push to `main` → deploys as `dev`
+- Push of `vX.Y.Z` tag → deploys as `X.Y.Z` and sets `latest`
+
+The workflow has `concurrency: group: docs-${{ github.ref_name }}` to prevent push races on the `gh-pages` branch.

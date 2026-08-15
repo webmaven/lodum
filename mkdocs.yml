@@ -79,6 +79,7 @@ nav:
       - IDE Plugin: plans/ide_plugin.md
     - Security: SECURITY.md
     - Contributing: CONTRIBUTING.md
+    - Releasing: RELEASING.md
 
 plugins:
   - include-markdown
