@@ -4,7 +4,7 @@
 import io
 
 try:
-    import cbor2
+    import cbor2  # type: ignore[import-untyped,import-not-found]
 except ImportError:
     cbor2 = None  # type: ignore
 from collections.abc import Iterator

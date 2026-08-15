@@ -136,3 +136,5 @@ node_modules/
 .pyre/
 docs/api/
 .aider*
+.DS_Store
+pytest-of-*/

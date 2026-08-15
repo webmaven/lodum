@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any
 
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped,import-not-found]
 
 from ..core import Dumper, Loader
 from ..registry import TypeHandler
