@@ -355,15 +355,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#040-unreleased" class="md-nav__link">
+  <a href="#040-2026-08-15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        [0.4.0] - Unreleased
+        [0.4.0] - 2026-08-15
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[0.4.0] - Unreleased">
+    <nav class="md-nav" aria-label="[0.4.0] - 2026-08-15">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -371,6 +371,28 @@
     <span class="md-ellipsis">
       
         Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
       
     </span>
   </a>
@@ -434,7 +456,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changed" class="md-nav__link">
+  <a href="#changed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1457,15 +1479,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#040-unreleased" class="md-nav__link">
+  <a href="#040-2026-08-15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        [0.4.0] - Unreleased
+        [0.4.0] - 2026-08-15
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[0.4.0] - Unreleased">
+    <nav class="md-nav" aria-label="[0.4.0] - 2026-08-15">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1473,6 +1495,28 @@
     <span class="md-ellipsis">
       
         Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
       
     </span>
   </a>
@@ -1536,7 +1580,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changed" class="md-nav__link">
+  <a href="#changed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1599,11 +1643,28 @@
 <p>All notable changes to this project will be documented in this file.</p>
 <p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<h2 id="040-unreleased">[0.4.0] - Unreleased</h2>
+<h2 id="040-2026-08-15">[0.4.0] - 2026-08-15</h2>
 <h3 id="added">Added</h3>
 <ul>
+<li><strong>Zero-Copy Buffer Extraction</strong>: Added <code>dump_buffer</code> method to <code>Dumper</code> protocol for zero-copy in-memory buffer passing.</li>
+<li><strong>O(1) NumPy Reconstitution</strong>: Fast-path O(1) buffer deserialization using <code>np.frombuffer</code> for NumPy arrays and binary buffers.</li>
+<li><strong>Collection Subclass Reconstitution</strong>: Automatic preservation and instantiation of custom <code>dict</code> and <code>list</code> subclasses (<code>collections.UserDict</code>, <code>collections.UserList</code>, custom mapping types) across serialization boundaries.</li>
+<li><strong>Native <code>@dataclass</code> Support</strong>: Direct serialization and hydration of standard Python <code>@dataclass</code> instances without requiring the <code>@lodum</code> decorator.</li>
 <li><strong>O(1) Streaming JSON Serialization</strong>: Fully implemented the stateful <code>Dumper</code> protocol, enabling constant-memory JSON serialization via <code>dump_stream</code>.</li>
 <li><strong>Eager Metadata Analysis</strong>: The <code>@lodum</code> decorator now performs eager analysis of classes, ensuring metadata is immediately available for tests and schema generation without requiring a prior serialization call.</li>
+<li><strong>WASM &amp; Pyodide Support Guidance</strong>: Explicit documentation of WebAssembly runtime capabilities and constraints.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><strong>YAML / BSON / CBOR Buffer Handling</strong>: Implemented <code>dump_buffer</code> across all format dumpers to prevent <code>memoryview</code> leaks that caused serializer state corruption and cascading emitter crashes.</li>
+<li><strong>Loader Protocol Enhancements</strong>: Extended <code>BaseLoader</code> and <code>CborLoader</code> <code>load_bytes_value</code> to support <code>bytearray</code> and <code>memoryview</code> instances cleanly.</li>
+<li><strong>Multithreaded Compiler Race Condition</strong>: Global handler registry initialization for worker threads to prevent concurrency cache corruption.</li>
+<li><strong>Protocol Compliance</strong>: Strict propagation of <code>depth</code> and <code>seen</code> context parameters across all standard library collection handlers.</li>
+<li><strong>Pyodide Test Harness Synchronization</strong>: Updated test suite runner exclusions to skip unsupported C-extension dependencies (<code>ijson</code>, <code>ruamel.yaml</code>, <code>pymongo</code>) in WebAssembly testing.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong>Minimum Python Version</strong>: Bumped minimum supported Python version to <code>&gt;=3.10</code> to natively leverage PEP 604 union syntax (<code>|</code>) and modern typing features.</li>
 </ul>
 <h2 id="030-2026-02-21">[0.3.0] - 2026-02-21</h2>
 <h3 id="added_1">Added</h3>
@@ -1629,7 +1690,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Comprehensive documentation suite including Architecture, Performance, and User Guides.</li>
 <li>GitHub community templates and governance documents.</li>
 </ul>
-<h3 id="changed">Changed</h3>
+<h3 id="changed_1">Changed</h3>
 <ul>
 <li>Refactored core engine into modular <code>compiler/</code> and <code>handlers/</code> subpackages.</li>
 <li>Promoted <code>lodum.schema()</code> as the primary entry point for schema generation.</li>
@@ -1661,7 +1722,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="August 15, 2026 12:27:52 UTC">August 15, 2026 12:27:52</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="August 15, 2026 12:33:38 UTC">August 15, 2026 12:33:38</span>
   </span>
 
     
@@ -1671,7 +1732,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="August 15, 2026 12:27:52 UTC">August 15, 2026 12:27:52</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="February 8, 2026 23:01:57 UTC">February 8, 2026 23:01:57</span>
   </span>
 
     
