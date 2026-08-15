@@ -1,0 +1,22 @@
+:root {
+  --md-primary-fg-color: #fbc929;
+  --md-primary-fg-color--light: #ffe066;
+  --md-primary-fg-color--dark: #c7a000;
+}
+
+/* Ensure text on primary yellow is dark enough for accessibility */
+[data-md-color-scheme="default"] .md-header {
+  color: #1e1e1e;
+}
+
+[data-md-color-scheme="default"] .md-header__button {
+  color: #1e1e1e;
+}
+
+[data-md-color-scheme="default"] .md-tabs__link {
+  color: rgba(30, 30, 30, 0.7);
+}
+
+[data-md-color-scheme="default"] .md-tabs__link--active {
+  color: #1e1e1e;
+}
