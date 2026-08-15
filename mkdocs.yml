@@ -81,6 +81,7 @@ nav:
     - Contributing: CONTRIBUTING.md
 
 plugins:
+  - include-markdown
   - git-revision-date-localized:
       type: datetime
       enable_creation_date: true

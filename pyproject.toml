@@ -58,6 +58,11 @@ dependencies = [
   "mkdocs-material",
   "mkdocstrings[python]",
   "mkdocs-git-revision-date-localized-plugin",
+  "mkdocs-include-markdown-plugin",
+  "build",
+  "twine",
+  "mypy",
+  "ruff",
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -67,6 +72,7 @@ format = "ruff format src tests benchmarks"
 typecheck = "mypy src tests"
 docs-build = "mkdocs build"
 docs-serve = "mkdocs serve"
+check-release = "python scripts/check_release.py {args}"
 
 [tool.ruff]
 line-length = 88

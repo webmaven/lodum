@@ -347,7 +347,7 @@ This approach eliminates the overhead of generic introspection and `getattr` cal
 - **~64% faster dumping** (serialization) than the baseline.
 - **~35% faster loading** (deserialization) than the baseline.
 
-See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed benchmark results and comparisons with other libraries.
+See the [PERFORMANCE](https://webmaven.github.io/lodum/User%20Guide/Performance) report for detailed benchmark results and comparisons with other libraries.
 
 ## Binary Data
 
@@ -398,7 +398,7 @@ The library is designed to be extended with support for more formats and more co
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing Guidelines](docs/CONTRIBUTING.md) for more information.
+Contributions are welcome! Please see the [Contributing Guidelines](https://webmaven.github.io/lodum/Project/Contributing) for more information.
 
 ## Internals & Roadmap
 
