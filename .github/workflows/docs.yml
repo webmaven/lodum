@@ -40,9 +40,9 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             # Extract version from tag (e.g., v0.4.0 -> 0.4.0)
             VERSION=${GITHUB_REF#refs/tags/v}
-            PYTHONPATH=src mike deploy --push --update-aliases --branch gh-pages --remote origin "$VERSION" latest
-            PYTHONPATH=src mike set-default --push --branch gh-pages --remote origin latest
+            PYTHONPATH=src mike deploy --push --update-aliases --allow-empty --branch gh-pages --remote origin "$VERSION" latest
+            PYTHONPATH=src mike set-default --push --allow-empty --branch gh-pages --remote origin latest
           else
             # Deploy current main as 'dev'
-            PYTHONPATH=src mike deploy --push --update-aliases --branch gh-pages --remote origin dev
+            PYTHONPATH=src mike deploy --push --update-aliases --allow-empty --branch gh-pages --remote origin dev
           fi
