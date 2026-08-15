@@ -3,6 +3,7 @@ name: Docs
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
 
 jobs:
   deploy:
@@ -11,6 +12,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,5 +36,12 @@ jobs:
 
       - name: Build and Deploy
         run: |
-          # Deploy current main as 'dev'
-          PYTHONPATH=src mike deploy --push --update-aliases dev
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Extract version from tag (e.g., v0.4.0 -> 0.4.0)
+            VERSION=${GITHUB_REF#refs/tags/v}
+            PYTHONPATH=src mike deploy --push --update-aliases "$VERSION" latest
+            PYTHONPATH=src mike set-default --push latest
+          else
+            # Deploy current main as 'dev'
+            PYTHONPATH=src mike deploy --push --update-aliases dev
+          fi
