@@ -599,6 +599,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#webassembly-pyodide-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebAssembly / Pyodide Compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contributing" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1930,6 +1941,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#webassembly-pyodide-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebAssembly / Pyodide Compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contributing" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2005,6 +2027,7 @@
 <p align="center">
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/v/lodum.svg?style=flat-square&color=blue" alt="PyPI"></a>
   <a href="https://pypi.org/project/lodum/"><img src="https://img.shields.io/pypi/pyversions/lodum.svg?style=flat-square&logo=python&logoColor=white" alt="Python versions"></a>
+  <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/badge/Pyodide-WASM-blue?style=flat-square&logo=webassembly&logoColor=white" alt="Pyodide/WASM"></a>
   <a href="https://github.com/webmaven/lodum/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/lodum.svg?style=flat-square&color=green" alt="License"></a>
   <a href="https://github.com/webmaven/lodum/actions"><img src="https://img.shields.io/github/actions/workflow/status/webmaven/lodum/ci.yml?branch=main&style=flat-square&logo=github" alt="CI Status"></a>
 </p>
@@ -2032,11 +2055,15 @@
 </tr>
 <tr>
 <td style="text-align: left;"><strong>📦 Universal</strong></td>
-<td style="text-align: left;">One API for <strong>JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle</strong>.</td>
+<td style="text-align: left;">One API for <strong>JSON, YAML, TOML, MsgPack, CBOR, BSON, and Pickle</strong>. Native support for Python <code>@dataclass</code> without extra decorators.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>⚡ Zero-Copy</strong></td>
+<td style="text-align: left;"><code>dump_buffer</code> and fast-path O(1) buffer reconstitution for NumPy arrays and binary buffers.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>🧩 Extensible</strong></td>
-<td style="text-align: left;">Native support for <code>numpy</code>, <code>pandas</code>, and <code>polars</code> without extra glue code.</td>
+<td style="text-align: left;">Native support for <code>numpy</code>, <code>pandas</code>, <code>polars</code>, and custom <code>dict</code>/<code>list</code> collection subclasses.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>✅ Validated</strong></td>
@@ -2339,6 +2366,17 @@
 <li><strong>Custom Objects:</strong> Any class decorated with <code>@lodum</code>.</li>
 </ul>
 <p>The library is designed to be extended with support for more formats and more complex data types in the future.</p>
+<h2 id="webassembly-pyodide-compatibility">WebAssembly / Pyodide Compatibility</h2>
+<p><code>lodum</code> fully supports WebAssembly (WASM) and browser environments via Pyodide. However, because browser runtimes impose sandbox restrictions and lack native C-extension compilation, certain optional functionality is unavailable in Pyodide environments:</p>
+<ul>
+<li><strong>Supported in Pyodide:</strong> Core AST compilation, <code>json</code>, <code>pickle</code> (pure-Python <code>SafeUnpickler</code>), <code>msgpack</code> (pure Python / JS FFI), <code>tomli-w</code> (pure-Python TOML dumping), <code>array.array</code>, <code>numpy</code> (via Pyodide packages), and thread-safe fallback execution (<code>lodum.concurrency</code>).</li>
+<li><strong>Unsupported in Pyodide:</strong></li>
+<li><strong>JSON Streaming (<code>json.stream</code>):</strong> Requires <code>ijson</code> (uses C extensions like <code>yajl</code> for streaming parser performance).</li>
+<li><strong>YAML (<code>lodum.yaml</code>):</strong> Requires <code>ruamel.yaml</code> (uses C extensions for fast scanning/emitting).</li>
+<li><strong>BSON (<code>lodum.bson</code>):</strong> Requires <code>pymongo</code>/<code>bson</code> (uses C extension bindings for BSON encoding).</li>
+<li><strong>Polars (<code>polars.DataFrame</code> / <code>Series</code>):</strong> Polars uses Rust native binaries not currently standard in default Pyodide builds.</li>
+<li><strong>Multi-threading (<code>threading.Thread</code>):</strong> Browser JS runtimes are single-threaded by default; <code>lodum.concurrency</code> automatically detects this and falls back to safe sequential execution.</li>
+</ul>
 <h2 id="contributing">Contributing</h2>
 <p>Contributions are welcome! Please see the <a href="CONTRIBUTING/">Contributing Guidelines</a> for more information.</p>
 <h2 id="internals-roadmap">Internals &amp; Roadmap</h2>
@@ -2375,7 +2413,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="July 26, 2026 02:35:37 UTC">July 26, 2026 02:35:37</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="August 15, 2026 13:02:27 UTC">August 15, 2026 13:02:27</span>
   </span>
 
     
